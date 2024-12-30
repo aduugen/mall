@@ -2,20 +2,33 @@ version: '3'
 services:
   mysql:
     image: mysql:5.7
+    privileged: true
     container_name: mysql
-    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      labnet:
+        aliases:
+          - db
+        ipv4_address: 172.20.0.5
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci  --explicit_defaults_for_timestamp
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root #设置root帐号密码
     ports:
       - 3306:3306
     volumes:
+      - /mydata/mysql/conf/my.cnf:/etc/my.cnf  # 挂载自定义配置文件
       - /mydata/mysql/data:/var/lib/mysql #数据文件目录挂载
-      - /mydata/mysql/conf:/etc/mysql #配置文件目录挂载
+      #- /mydata/mysql/conf:/etc/mysql #配置文件目录挂载
+      - /mydata/mysql/conf/conf.d:/etc/mysql/conf.d  # 显式地挂载conf.d目录
       - /mydata/mysql/log:/var/log/mysql #日志文件目录挂载
   redis:
     image: redis:7
     container_name: redis
+    networks:
+      labnet:
+        aliases:
+          - redis
+        ipv4_address: 172.20.0.6
     command: redis-server --appendonly yes
     volumes:
       - /mydata/redis/data:/data #数据文件目录挂载
@@ -23,31 +36,59 @@ services:
       - 6379:6379
   nginx:
     image: nginx:1.22
+    privileged: true
     container_name: nginx
+    networks:
+      labnet:
+        aliases:
+          - nginx
+        ipv4_address: 172.20.0.7
     volumes:
-      - /mydata/nginx/conf:/etc/nginx #配置文件目录挂载
+      - /mydata/nginx/conf:/etc/nginx/conf #配置文件目录挂载
       - /mydata/nginx/html:/usr/share/nginx/html #静态资源根目录挂载
       - /mydata/nginx/logs:/var/log/nginx #日志文件目录挂载
     ports:
       - 80:80
   rabbitmq:
     image: rabbitmq:3.9.11-management
+    privileged: true
     container_name: rabbitmq
+    networks:
+      labnet:
+        aliases:
+          - rabbit
+        ipv4_address: 172.20.0.8
+    command: /bin/sh -c "chmod 400 /var/lib/rabbitmq && rabbitmq-server"
     volumes:
       - /mydata/rabbitmq/data:/var/lib/rabbitmq #数据文件目录挂载
     ports:
       - 5672:5672
       - 15672:15672
   elasticsearch:
-    image: elasticsearch:7.17.3
+    build: .  # 使用当前目录中的 Dockerfile
+    #image: elasticsearch:7.17.3
+    privileged: true
     container_name: elasticsearch
+    #restart: always
+    #user: "1000:1000"  # 使用非 root 用户
+    #command: /bin/sh -c "chmod 777 /usr/share/elasticsearch"
+    #command: /bin/sh -c "chown -R elasticsearch:elasticsearch /usr/share/elasticsearch"
+    #command: sh -c "chown -R elasticsearch:elasticsearch /usr/share/elasticsearch && elasticsearch-plugin install --batch https://get.infini.cloud/elasticsearch/analysis-ik/7.17.3 && gosu elasticsearch elasticsearch"
+    #command: /bin/sh -c "if ! elasticsearch-plugin list | grep -q 'analysis-ik'; then elasticsearch-plugin install https://get.infini.cloud/elasticsearch/analysis-ik/7.17.3 && sleep 50 && kill -HUP 1; fi"
+    networks:
+      labnet:
+        aliases:
+          - es
+        ipv4_address: 172.20.0.9
     environment:
       - "cluster.name=elasticsearch" #设置集群名称为elasticsearch
       - "discovery.type=single-node" #以单一节点模式启动
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m" #设置es使用的jvm内存大小
+      - ELASTIC_PASSWORD=elastic
     volumes:
       - /mydata/elasticsearch/plugins:/usr/share/elasticsearch/plugins #插件文件目录挂载
       - /mydata/elasticsearch/data:/usr/share/elasticsearch/data #数据文件目录挂载
+      - /mydata/elasticsearch/logs:/usr/share/elasticsearch/logs
     ports:
       - 9200:9200
       - 9300:9300
@@ -60,8 +101,13 @@ services:
       - /mydata/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf #配置文件挂载
     depends_on:
       - elasticsearch #kibana在elasticsearch启动之后再启动
-    links:
-      - elasticsearch:es #可以用es这个域名访问elasticsearch服务
+    #links:
+    #  - elasticsearch:es #可以用es这个域名访问elasticsearch服务
+    networks:
+      labnet:
+        aliases:
+          - logstash
+        ipv4_address: 172.20.0.10
     ports:
       - 4560:4560
       - 4561:4561
@@ -70,17 +116,27 @@ services:
   kibana:
     image: kibana:7.17.3
     container_name: kibana
-    links:
-      - elasticsearch:es #可以用es这个域名访问elasticsearch服务
+    #links:
+    #  - elasticsearch:es #可以用es这个域名访问elasticsearch服务
+    networks:
+      labnet:
+        aliases:
+          - kibana
+        ipv4_address: 172.20.0.11
     depends_on:
       - elasticsearch #kibana在elasticsearch启动之后再启动
     environment:
-      - "elasticsearch.hosts=http://es:9200" #设置访问elasticsearch的地址
+      - "elasticsearch.hosts=http://labnet:9200" #设置访问elasticsearch的地址
     ports:
       - 5601:5601
   mongo:
     image: mongo:4
     container_name: mongo
+    networks:
+      labnet:
+        aliases:
+          - mongo
+        ipv4_address: 172.20.0.12
     volumes:
       - /mydata/mongo/db:/data/db #数据文件目录挂载
     ports:
@@ -88,6 +144,11 @@ services:
   minio:
     image: minio/minio
     container_name: minio
+    networks:
+      labnet:
+        aliases:
+          - minio
+        ipv4_address: 172.20.0.13
     command: server /data --console-address ":9001" #指定数据目录及console运行端口启动
     volumes:
       - /mydata/minio/data:/data #数据目录挂载
@@ -97,3 +158,10 @@ services:
     ports:
       - 9090:9000
       - 9001:9001
+networks:
+  labnet:
+    driver: bridge  # 使用桥接网络模式
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16  # 指定 labnet 网络的子网
+          gateway: 172.20.0.1  # 指定网关地址
