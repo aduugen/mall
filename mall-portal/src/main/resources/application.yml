@@ -29,6 +29,7 @@ secure:
       - /**/*.css
       - /**/*.png
       - /**/*.map
+      - /images/**
       - /favicon.ico
       - /druid/**
       - /actuator/**

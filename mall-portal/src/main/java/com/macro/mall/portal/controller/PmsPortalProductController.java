@@ -35,8 +35,8 @@ public class PmsPortalProductController {
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<CommonPage<PmsProduct>> search(@RequestParam(required = false) String keyword,
-                                                       @RequestParam(required = false) Long brandId,
-                                                       @RequestParam(required = false) Long productCategoryId,
+                                                       @RequestParam(required = false, defaultValue = "0") Long brandId,
+                                                       @RequestParam(required = false, defaultValue = "0") Long productCategoryId,
                                                        @RequestParam(required = false, defaultValue = "0") Integer pageNum,
                                                        @RequestParam(required = false, defaultValue = "5") Integer pageSize,
                                                        @RequestParam(required = false, defaultValue = "0") Integer sort) {

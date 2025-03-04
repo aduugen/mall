@@ -94,7 +94,7 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
 
     @Override
     public Map<String, Object> generateOrder(OrderParam orderParam) {
-        List<OmsOrderItem> orderItemList = new ArrayList<>();
+         List<OmsOrderItem> orderItemList = new ArrayList<>();
         //校验收货地址
         if(orderParam.getMemberReceiveAddressId()==null){
             Asserts.fail("请选择收货地址！");

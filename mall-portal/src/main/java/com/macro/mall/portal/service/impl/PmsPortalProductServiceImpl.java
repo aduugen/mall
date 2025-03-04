@@ -51,10 +51,10 @@ public class PmsPortalProductServiceImpl implements PmsPortalProductService {
         if (StrUtil.isNotEmpty(keyword)) {
             criteria.andNameLike("%" + keyword + "%");
         }
-        if (brandId != null) {
+        if (brandId != 0) {
             criteria.andBrandIdEqualTo(brandId);
         }
-        if (productCategoryId != null) {
+        if (productCategoryId != 0) {
             criteria.andProductCategoryIdEqualTo(productCategoryId);
         }
         //1->按新品；2->按销量；3->价格从低到高；4->价格从高到低
