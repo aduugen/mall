@@ -55,4 +55,10 @@ public interface OmsOrderService {
      */
     @Transactional
     int updateNote(Long id, String note, Integer status);
+
+    /**
+     * 获取今日订单数
+     */
+    int getTodayOrdersCount();
+
 }

@@ -111,4 +111,15 @@ public class OmsOrderController {
         }
         return CommonResult.failed();
     }
+
+    @ApiOperation("获取今日订单总数")
+    @RequestMapping(value = "/todayOrdersCount", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult getTodayOrdersCount() {
+        int count = orderService.getTodayOrdersCount();
+        if (count >= 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
 }

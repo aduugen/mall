@@ -87,4 +87,10 @@
             o.id = #{id}
         ORDER BY oi.id ASC,oh.create_time DESC
     </select>
+    <!-- 查询以获取今日订单数 -->
+    <select id="getTodayOrdersCount" resultType="int">
+        SELECT COUNT(*) AS today_orders_cnt
+        FROM oms_order
+        WHERE DATE(payment_time) = CURDATE();
+    </select>
 </mapper>

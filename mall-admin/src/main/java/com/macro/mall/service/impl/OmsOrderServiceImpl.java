@@ -150,4 +150,9 @@ public class OmsOrderServiceImpl implements OmsOrderService {
         orderOperateHistoryMapper.insert(history);
         return count;
     }
+
+    @Override
+    public int getTodayOrdersCount() {
+        return orderDao.getTodayOrdersCount();
+    }
 }
