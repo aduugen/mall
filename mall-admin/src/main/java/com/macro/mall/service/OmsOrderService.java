@@ -61,4 +61,9 @@ public interface OmsOrderService {
      */
     int getTodayOrdersCount();
 
+    /**
+     * 获取今日销售总额
+     */
+    int getTodaySalesAmount();
+
 }

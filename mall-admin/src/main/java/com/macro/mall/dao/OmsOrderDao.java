@@ -32,4 +32,9 @@ public interface OmsOrderDao {
      * 获取今日订单数
      */
     int getTodayOrdersCount();
+
+    /**
+     * 获取今日销售总额
+     */
+    int getTodaySalesAmount();
 }

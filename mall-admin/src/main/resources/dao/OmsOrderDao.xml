@@ -93,4 +93,10 @@
         FROM oms_order
         WHERE DATE(payment_time) = CURDATE();
     </select>
+    <!-- 查询获取今日销售总额-->
+    <select id="getTodaySalesAmount" resultType="int">
+        SELECT SUM(pay_amount) AS today_sales_amount 
+        FROM oms_order 
+        WHERE DATE(payment_time) = CURDATE();
+    </select>
 </mapper>

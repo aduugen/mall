@@ -122,4 +122,15 @@ public class OmsOrderController {
         }
         return CommonResult.failed();
     }
+
+    @ApiOperation("获取今日销售总额")
+    @RequestMapping(value = "/todaySalesAmount", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult getTodaySalesAmount() {
+        int amount = orderService.getTodaySalesAmount();
+        if (amount >= 0) {
+            return CommonResult.success(amount);
+        }
+        return CommonResult.failed();
+    }
 }
