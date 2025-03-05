@@ -13,9 +13,12 @@
 
  Date: 11/05/2023 15:48:15
 */
-
+use mall;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+ 
+-- 启用事件调度器（如果未启用）
+SET GLOBAL event_scheduler = ON;
 
 -- ----------------------------
 -- Table structure for cms_help
@@ -1773,6 +1776,42 @@ INSERT INTO `pms_sku_stock` VALUES (241, 45, '202211080045003', 2299.00, 250, NU
 INSERT INTO `pms_sku_stock` VALUES (242, 45, '202211080045004', 2499.00, 250, NULL, 'http://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/images/20221108/oppo_r8_02.jpg', NULL, NULL, 0, '[{\"key\":\"颜色\",\"value\":\"晴空蓝\"},{\"key\":\"容量\",\"value\":\"256G\"}]');
 
 -- ----------------------------
+-- Table structure for pms_product_overview
+-- ----------------------------
+DROP TABLE IF EXISTS `pms_product_overview`;
+CREATE TABLE `pms_product_overview` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `create_time` datetime NULL DEFAULT NULL,
+    `product_total_count` int NOT NULL,
+    `product_on_shelf_count` int NOT NULL,
+    `product_off_shelf_count` int NOT NULL,
+    PRIMARY KEY (`id`) USING BTREE
+);
+
+-- 更改分隔符为两个美元符号 ($$)
+DELIMITER $$
+
+-- 删除已存在的事件（如果存在）
+DROP EVENT IF EXISTS `daily_product_overview`$$
+
+CREATE EVENT `daily_product_overview`
+ON SCHEDULE EVERY 1 DAY
+STARTS (CASE WHEN HOUR(NOW()) >= 23 THEN CURDATE() + INTERVAL 1 DAY + INTERVAL '23:30:00' HOUR_SECOND ELSE CURDATE() + INTERVAL '23:30:00' HOUR_SECOND END)
+DO
+BEGIN
+    -- 插入统计结果到pms_product_overview表
+    INSERT INTO pms_product_overview (create_time, product_total_count, product_on_shelf_count, product_off_shelf_count)
+    SELECT NOW(),
+           COUNT(*) AS total_count,
+           SUM(CASE WHEN publish_status = 1 THEN 1 ELSE 0 END) AS on_shelf_count,
+           SUM(CASE WHEN publish_status = 0 THEN 1 ELSE 0 END) AS off_shelf_count
+    FROM pms_product;
+END$$
+
+-- 将分隔符改回默认的分号 (;)
+DELIMITER ;
+
+-- ----------------------------
 -- Table structure for sms_coupon
 -- ----------------------------
 DROP TABLE IF EXISTS `sms_coupon`;
@@ -2171,7 +2210,7 @@ CREATE TABLE `ums_admin`  (
 -- Records of ums_admin
 -- ----------------------------
 INSERT INTO `ums_admin` VALUES (1, 'test', '$2a$10$NZ5o7r2E.ayT2ZoxgjlI.eJ6OEYqjH7INR/F.mXDbjZJi9HF0YCVG', 'https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_02.png', 'test@qq.com', '测试账号', NULL, '2018-09-29 13:55:30', '2018-09-29 13:55:39', 1);
-INSERT INTO `ums_admin` VALUES (3, 'admin', '$2a$10$.E1FokumK5GIXWgKlg.Hc.i/0/2.qdAwYFL1zc5QHdyzpXOr38RZO', 'https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_01.png', 'admin@163.com', '系统管理员', '系统管理员', '2018-10-08 13:32:47', '2019-04-20 12:45:16', 1);
+INSERT INTO `ums_admin` VALUES (3, 'admin', '$2a$10$j3GNL9t8IXf.vcsH3rDuJ.yhsCrkuwO1TLKENHAvcT8vWGXyN8bFm', 'https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_01.png', 'admin@163.com', '系统管理员', '系统管理员', '2018-10-08 13:32:47', '2019-04-20 12:45:16', 1);
 INSERT INTO `ums_admin` VALUES (4, 'macro', '$2a$10$Bx4jZPR7GhEpIQfefDQtVeS58GfT5n6mxs/b4nLLK65eMFa16topa', 'https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_01.png', 'macro@qq.com', 'macro', 'macro专用', '2019-10-06 15:53:51', '2020-02-03 14:55:55', 1);
 INSERT INTO `ums_admin` VALUES (6, 'productAdmin', '$2a$10$6/.J.p.6Bhn7ic4GfoB5D.pGd7xSiD1a9M6ht6yO0fxzlKJPjRAGm', 'https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_03.png', 'product@qq.com', '商品管理员', '只有商品权限', '2020-02-07 16:15:08', NULL, 1);
 INSERT INTO `ums_admin` VALUES (7, 'orderAdmin', '$2a$10$UqEhA9UZXjHHA3B.L9wNG.6aerrBjC6WHTtbv1FdvYPUI.7lkL6E.', 'https://macro-oss.oss-cn-shenzhen.aliyuncs.com/mall/icon/github_icon_04.png', 'order@qq.com', '订单管理员', '只有订单管理权限', '2020-02-07 16:15:50', NULL, 1);
