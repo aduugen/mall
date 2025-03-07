@@ -2,6 +2,7 @@ package com.macro.mall.controller;
 
 import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
+import com.macro.mall.dto.PmsProductOverviewDTO;
 import com.macro.mall.dto.PmsProductParam;
 import com.macro.mall.dto.PmsProductQueryParam;
 import com.macro.mall.dto.PmsProductResult;
@@ -141,6 +142,21 @@ public class PmsProductController {
             return CommonResult.success(count);
         } else {
             return CommonResult.failed();
+        }
+    }
+
+    @ApiOperation("商品总览信息查询")
+    @RequestMapping(value = "/overview", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<PmsProductOverviewDTO> getLastProductOverview() {
+        try {
+            PmsProductOverviewDTO productOverviewDto = productService.getLastProductOverview();
+            return CommonResult.success(productOverviewDto);
+        } catch (Exception e) {
+            // 记录异常日志
+            e.printStackTrace();
+            // 返回失败结果
+            return CommonResult.failed(e.getMessage());
         }
     }
 }

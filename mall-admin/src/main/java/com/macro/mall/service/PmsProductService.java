@@ -1,5 +1,6 @@
 package com.macro.mall.service;
 
+import com.macro.mall.dto.PmsProductOverviewDTO;
 import com.macro.mall.dto.PmsProductParam;
 import com.macro.mall.dto.PmsProductQueryParam;
 import com.macro.mall.dto.PmsProductResult;
@@ -70,4 +71,9 @@ public interface PmsProductService {
      * 根据商品名称或者货号模糊查询
      */
     List<PmsProduct> list(String keyword);
+
+    /**
+     * 获取最新商品总览信息
+     */
+    PmsProductOverviewDTO getLastProductOverview();
 }

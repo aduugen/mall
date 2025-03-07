@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
 import com.macro.mall.dao.*;
+import com.macro.mall.dto.PmsProductOverviewDTO;
 import com.macro.mall.dto.PmsProductParam;
 import com.macro.mall.dto.PmsProductQueryParam;
 import com.macro.mall.dto.PmsProductResult;
@@ -64,6 +65,8 @@ public class PmsProductServiceImpl implements PmsProductService {
     private PmsProductDao productDao;
     @Autowired
     private PmsProductVertifyRecordDao productVertifyRecordDao;
+    @Autowired
+    private PmsProductOverviewDao productOverviewDao;
 
     @Override
     public int create(PmsProductParam productParam) {
@@ -298,6 +301,11 @@ public class PmsProductServiceImpl implements PmsProductService {
             productExample.or().andDeleteStatusEqualTo(0).andProductSnLike("%" + keyword + "%");
         }
         return productMapper.selectByExample(productExample);
+    }
+
+    @Override
+    public PmsProductOverviewDTO getLastProductOverview() {
+        return productOverviewDao.getLastProductOverview();
     }
 
     /**
