@@ -5,6 +5,7 @@ import com.macro.mall.common.api.CommonResult;
 import com.macro.mall.dto.OmsOrderReturnApplyResult;
 import com.macro.mall.dto.OmsReturnApplyQueryParam;
 import com.macro.mall.dto.OmsUpdateStatusParam;
+import com.macro.mall.dto.OmsReturnApplyStatistic;
 import com.macro.mall.model.OmsOrderReturnApply;
 import com.macro.mall.service.OmsOrderReturnApplyService;
 import io.swagger.annotations.Api;
@@ -68,4 +69,11 @@ public class OmsOrderReturnApplyController {
         return CommonResult.failed();
     }
 
+    @ApiOperation("获取退货申请状态统计")
+    @RequestMapping(value = "/statusStatistic", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<OmsReturnApplyStatistic> getStatusStatistic() {
+        OmsReturnApplyStatistic returnApplyStatistic = returnApplyService.getReturnApplyStatistic();
+        return CommonResult.success(returnApplyStatistic);
+    }
 }

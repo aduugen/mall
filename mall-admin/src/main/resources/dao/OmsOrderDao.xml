@@ -99,4 +99,15 @@
         FROM oms_order 
         WHERE DATE(payment_time) = CURDATE();
     </select>
+    <!-- 查询获取订单状态统计 -->
+    <select id="getOrderStatusStatistic" resultType="com.macro.mall.dto.OmsOrderStatistic">
+        SELECT 
+            COUNT(CASE WHEN status = 0 THEN 1 END) AS wait_pay_count,
+            COUNT(CASE WHEN status = 1 THEN 1 END) AS wait_ship_count,
+            COUNT(CASE WHEN status = 2 THEN 1 END) AS shipped_count,
+            COUNT(CASE WHEN status = 3 THEN 1 END) AS completed_count,
+            COUNT(CASE WHEN status = 4 THEN 1 END) AS closed_count,
+            COUNT(CASE WHEN status = 5 THEN 1 END) AS invalid_count
+        FROM oms_order;
+    </select>
 </mapper>

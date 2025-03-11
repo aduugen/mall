@@ -2,6 +2,7 @@ package com.macro.mall.dao;
 
 import com.macro.mall.dto.OmsOrderReturnApplyResult;
 import com.macro.mall.dto.OmsReturnApplyQueryParam;
+import com.macro.mall.dto.OmsReturnApplyStatistic;
 import com.macro.mall.model.OmsOrderReturnApply;
 import org.apache.ibatis.annotations.Param;
 
@@ -21,4 +22,9 @@ public interface OmsOrderReturnApplyDao {
      * 获取申请详情
      */
     OmsOrderReturnApplyResult getDetail(@Param("id")Long id);
+
+    /**
+     * 获取退货申请状态统计
+     */
+    OmsReturnApplyStatistic getReturnApplyStatistic();
 }

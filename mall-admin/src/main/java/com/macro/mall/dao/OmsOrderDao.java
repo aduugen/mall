@@ -3,6 +3,7 @@ package com.macro.mall.dao;
 import com.macro.mall.dto.OmsOrderDeliveryParam;
 import com.macro.mall.dto.OmsOrderDetail;
 import com.macro.mall.dto.OmsOrderQueryParam;
+import com.macro.mall.dto.OmsOrderStatistic;
 import com.macro.mall.model.OmsOrder;
 import org.apache.ibatis.annotations.Param;
 
@@ -37,4 +38,9 @@ public interface OmsOrderDao {
      * 获取今日销售总额
      */
     int getTodaySalesAmount();
+
+    /**
+     * 获取订单状态统计
+     */
+    OmsOrderStatistic getOrderStatusStatistic();
 }

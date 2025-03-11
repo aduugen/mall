@@ -133,4 +133,12 @@ public class OmsOrderController {
         }
         return CommonResult.failed();
     }
+
+    @ApiOperation("获取订单状态统计")
+    @RequestMapping(value = "/statusStatistic", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<OmsOrderStatistic> getOrderStatusStatistic() {
+        OmsOrderStatistic orderStatusStatistic = orderService.getOrderStatusStatistic();
+        return CommonResult.success(orderStatusStatistic);
+    }
 }
