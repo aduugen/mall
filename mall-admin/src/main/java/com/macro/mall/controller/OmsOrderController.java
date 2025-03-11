@@ -139,6 +139,9 @@ public class OmsOrderController {
     @ResponseBody
     public CommonResult<OmsOrderStatistic> getOrderStatusStatistic() {
         OmsOrderStatistic orderStatusStatistic = orderService.getOrderStatusStatistic();
+        if (orderStatusStatistic == null) {
+            return CommonResult.failed();
+        }
         return CommonResult.success(orderStatusStatistic);
     }
 }

@@ -8,11 +8,11 @@ import lombok.Setter;
 @Setter
 public class OmsReturnApplyStatistic {
     @ApiModelProperty("待处理退货申请数量")
-    private Integer waitHandleCount;
-    @ApiModelProperty("退货中数量")
-    private Integer returnProcessingCount;
+    private Integer wait_handle_count;
+    @ApiModelProperty("退货处理中订单数量")
+    private Integer return_processing_count;
     @ApiModelProperty("退货已接收数量")
-    private Integer returnReceivedCount;
+    private Integer return_received_count;
     @ApiModelProperty("已拒绝退货数量")
-    private Integer rejectedCount;
+    private Integer rejected_count;
 }
