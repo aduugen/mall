@@ -428,4 +428,8 @@
       history_integration = #{historyIntegration,jdbcType=INTEGER}
     where id = #{id,jdbcType=BIGINT}
   </update>
+  <select id="getTodayNewMemberCount" resultType="int">
+    select count(*) from ums_member
+    where date_format(create_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d')
+  </select>
 </mapper>

@@ -27,4 +27,6 @@ public interface UmsMemberMapper {
     int updateByPrimaryKeySelective(UmsMember record);
 
     int updateByPrimaryKey(UmsMember record);
+    
+    int getTodayNewMemberCount();
 }
