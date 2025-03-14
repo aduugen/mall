@@ -3233,6 +3233,28 @@ INSERT INTO `ums_role_permission_relation` VALUES (16, 4, 16);
 INSERT INTO `ums_role_permission_relation` VALUES (17, 4, 17);
 
 -- ----------------------------
+-- Table structure for ums_visitor_log
+-- ----------------------------
+DROP TABLE IF EXISTS `ums_visitor_log`;
+CREATE TABLE `ums_visitor_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `member_id` bigint(20) DEFAULT NULL COMMENT '会员ID，未登录时为空',
+  `visit_time` datetime DEFAULT NULL COMMENT '访问时间',
+  `ip` varchar(64) DEFAULT NULL COMMENT '访问IP',
+  `user_agent` varchar(500) DEFAULT NULL COMMENT '浏览器类型',
+  `session_id` varchar(64) DEFAULT NULL COMMENT '会话ID',
+  `referer` varchar(500) DEFAULT NULL COMMENT '访问来源',
+  `page_url` varchar(500) DEFAULT NULL COMMENT '访问页面',
+  `stay_time` int DEFAULT NULL COMMENT '停留时间(秒)',
+  `province` varchar(64) DEFAULT NULL COMMENT '省份',
+  `city` varchar(64) DEFAULT NULL COMMENT '城市',
+  PRIMARY KEY (`id`),
+  KEY `idx_visit_time` (`visit_time`),
+  KEY `idx_ip` (`ip`),
+  KEY `idx_member_id` (`member_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='访客记录表';
+
+-- ----------------------------
 -- Table structure for ums_role_resource_relation
 -- ----------------------------
 DROP TABLE IF EXISTS `ums_role_resource_relation`;

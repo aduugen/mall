@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.mapper.UmsVisitorMapper">
+    <resultMap id="BaseResultMap" type="com.macro.mall.model.UmsVisitorLog">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="member_id" jdbcType="BIGINT" property="memberId" />
+        <result column="visit_time" jdbcType="TIMESTAMP" property="visitTime" />
+        <result column="ip" jdbcType="VARCHAR" property="ip" />
+        <result column="user_agent" jdbcType="VARCHAR" property="userAgent" />  
+        <result column="session_id" jdbcType="VARCHAR" property="sessionId" />
+        <result column="referer" jdbcType="VARCHAR" property="referer" />
+        <result column="page_url" jdbcType="VARCHAR" property="pageUrl" />
+        <result column="stay_time" jdbcType="INTEGER" property="stayTime" />
+        <result column="province" jdbcType="VARCHAR" property="province" />
+        <result column="city" jdbcType="VARCHAR" property="city" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.macro.mall.model.UmsVisitorLog">
+        INSERT INTO ums_visitor_log (member_id, visit_time, ip, user_agent, session_id, referer, page_url, stay_time, province, city)
+        VALUES (#{memberId}, #{visitTime}, #{ip}, #{userAgent}, #{sessionId}, #{referer}, #{pageUrl}, #{stayTime}, #{province}, #{city})
+    </insert>
+    
+    <!-- 根据session_id统计访客总数 -->
+    <select id="getTotalVisitorCount" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT session_id) FROM ums_visitor_log WHERE session_id = #{sessionId}
+    </select>
+    <!-- 计算当天的访客统计总数 -->
+    <select id="getTodayVisitorCount" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT session_id) FROM ums_visitor_log WHERE DATE(visit_time) = #{date}
+    </select>
+    <!-- 计算当前30分钟访客统计总数 -->
+    <select id="getOnlineVisitorCount" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT session_id) FROM ums_visitor_log WHERE visit_time >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+    </select> 
+</mapper>
