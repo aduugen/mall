@@ -16,4 +16,9 @@ public class UmsMemberServiceImpl implements UmsMemberService {
         UmsMemberExample example = new UmsMemberExample();
         return memberMapper.countByExample(example);
     }
+
+    @Override
+    public int getTodayNewMemberCount() {
+        return memberMapper.getTodayNewMemberCount();
+    }
 }

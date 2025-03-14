@@ -160,4 +160,9 @@ public class OmsOrderServiceImpl implements OmsOrderService {
     public int getTodaySalesAmount() {
         return orderDao.getTodaySalesAmount();
     }
+
+    @Override
+    public OmsOrderStatistic getOrderStatusStatistic() {
+        return orderDao.getOrderStatusStatistic();
+    }
 }

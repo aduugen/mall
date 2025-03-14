@@ -5,6 +5,7 @@ import com.macro.mall.dao.OmsOrderReturnApplyDao;
 import com.macro.mall.dto.OmsOrderReturnApplyResult;
 import com.macro.mall.dto.OmsReturnApplyQueryParam;
 import com.macro.mall.dto.OmsUpdateStatusParam;
+import com.macro.mall.dto.OmsReturnApplyStatistic;
 import com.macro.mall.mapper.OmsOrderReturnApplyMapper;
 import com.macro.mall.model.OmsOrderReturnApply;
 import com.macro.mall.model.OmsOrderReturnApplyExample;
@@ -74,5 +75,10 @@ public class OmsOrderReturnApplyServiceImpl implements OmsOrderReturnApplyServic
     @Override
     public OmsOrderReturnApplyResult getItem(Long id) {
         return returnApplyDao.getDetail(id);
+    }
+
+    @Override
+    public OmsReturnApplyStatistic getReturnApplyStatistic() {
+        return returnApplyDao.getReturnApplyStatistic();
     }
 }

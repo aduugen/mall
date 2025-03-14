@@ -26,4 +26,12 @@ public class UmsMemberController {
         long totalMemberCount = memberService.geTotalMemberCount();
         return CommonResult.success(totalMemberCount);
     }
+
+    @ApiOperation("获取今日新增注册用户数")
+    @RequestMapping(value = "/todaynewmembercount", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult getTodayNewMemberCount() {
+        int todayNewMemberCount = memberService.getTodayNewMemberCount();
+        return CommonResult.success(todayNewMemberCount);
+    }
 }
