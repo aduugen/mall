@@ -34,8 +34,8 @@
 
     <!-- 计算当前30分钟访客统计总数 -->
     <select id="getCurrentOnlineCount" resultType="java.lang.Integer">
-        SELECT COUNT(DISTINCT session_id)
-        FROM ums_visitor_log
-        WHERE visit_time >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+        SELECT COUNT(DISTINCT session_id) 
+        FROM ums_visitor_log 
+        WHERE visit_time >= DATE_SUB(CONVERT_TZ(NOW(), @@session.time_zone, '+08:00'), INTERVAL 30 MINUTE);
     </select> 
 </mapper>
