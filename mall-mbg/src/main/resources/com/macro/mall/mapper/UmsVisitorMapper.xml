@@ -19,17 +19,23 @@
         INSERT INTO ums_visitor_log (member_id, visit_time, ip, user_agent, session_id, referer, page_url, stay_time, province, city)
         VALUES (#{memberId}, #{visitTime}, #{ip}, #{userAgent}, #{sessionId}, #{referer}, #{pageUrl}, #{stayTime}, #{province}, #{city})
     </insert>
-    
+
     <!-- 根据session_id统计访客总数 -->
     <select id="getTotalVisitorCount" resultType="java.lang.Integer">
-        SELECT COUNT(DISTINCT session_id) FROM ums_visitor_log WHERE session_id = #{sessionId}
+        SELECT COUNT(DISTINCT session_id) FROM ums_visitor_log
     </select>
+
     <!-- 计算当天的访客统计总数 -->
     <select id="getTodayVisitorCount" resultType="java.lang.Integer">
-        SELECT COUNT(DISTINCT session_id) FROM ums_visitor_log WHERE DATE(visit_time) = #{date}
+        SELECT COUNT(DISTINCT session_id)
+        FROM ums_visitor_log
+        WHERE DATE(visit_time) = CURDATE()
     </select>
+
     <!-- 计算当前30分钟访客统计总数 -->
-    <select id="getOnlineVisitorCount" resultType="java.lang.Integer">
-        SELECT COUNT(DISTINCT session_id) FROM ums_visitor_log WHERE visit_time >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+    <select id="getCurrentOnlineCount" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT session_id)
+        FROM ums_visitor_log
+        WHERE visit_time >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
     </select> 
 </mapper>

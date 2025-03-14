@@ -14,12 +14,12 @@ import java.util.HashMap;
 @Controller
 @Api(tags = "UmsVisitorController")
 @Tag(name = "UmsVisitorController", description = "访客统计管理")
-@RequestMapping("/visitor")
+@RequestMapping("admin/visitor")
 public class UmsVisitorController {
     @Autowired
     private UmsVisitorService visitorService;
 
-    @ApiOperation("获取今日访客数量")
+    @ApiOperation("获取今日访客数和在线访客数")
     @RequestMapping(value = "/today", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<Map<String, Integer>> getTodayVisitorStats() {
