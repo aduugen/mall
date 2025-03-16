@@ -432,4 +432,9 @@
     select count(*) from ums_member
     where date_format(create_time, '%Y-%m-%d') = date_format(now(), '%Y-%m-%d')
   </select>
+  <select id="getMemberStatistics" resultType="java.util.Map" parameterType="java.util.Date">
+    SELECT
+      (SELECT COUNT(*) FROM ums_member WHERE DATE(create_time) &lt;= DATE(#{date})) as count,
+      (SELECT COUNT(*) FROM ums_member WHERE DATE(create_time) = DATE(#{date})) as activeCount
+  </select>
 </mapper>

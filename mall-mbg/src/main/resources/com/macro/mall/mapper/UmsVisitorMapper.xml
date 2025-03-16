@@ -37,5 +37,12 @@
         SELECT COUNT(DISTINCT session_id) 
         FROM ums_visitor_log 
         WHERE visit_time >= DATE_SUB(CONVERT_TZ(NOW(), @@session.time_zone, '+08:00'), INTERVAL 30 MINUTE);
-    </select> 
+    </select>
+    
+    <!-- 获取指定日期的访客数量 -->
+    <select id="getVisitorCountByDate" resultType="java.lang.Integer" parameterType="java.util.Date">
+        SELECT COUNT(DISTINCT session_id)
+        FROM ums_visitor_log
+        WHERE DATE(visit_time) = DATE(#{date})
+    </select>
 </mapper>

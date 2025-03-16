@@ -4,6 +4,8 @@ import com.macro.mall.service.UmsVisitorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.macro.mall.mapper.UmsVisitorMapper;
+import java.util.Date;
+import java.util.Random;
 
 @Service
 public class UmsVisitorServiceImpl implements UmsVisitorService {
@@ -23,5 +25,11 @@ public class UmsVisitorServiceImpl implements UmsVisitorService {
     @Override
     public Integer getCurrentOnlineCount() {
         return visitorLogMapper.getCurrentOnlineCount();
+    }
+
+    @Override
+    public Integer getVisitorCountByDate(Date date) {
+        // 查询数据库获取指定日期的访客数量
+        return visitorLogMapper.getVisitorCountByDate(date);
     }
 }
