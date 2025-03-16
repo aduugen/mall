@@ -250,4 +250,14 @@
       create_time = #{createTime,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
+  
+  <!-- 使用REPLACE INTO自动处理唯一键冲突 -->
+  <insert id="replaceInto" parameterType="com.macro.mall.model.HomeStatisticsDaily">
+    REPLACE INTO home_statistics_daily
+    (date, order_count, order_amount, member_count, active_member_count, visitor_count, create_time)
+    VALUES
+    (#{date,jdbcType=DATE}, #{orderCount,jdbcType=INTEGER}, #{orderAmount,jdbcType=DECIMAL},
+     #{memberCount,jdbcType=INTEGER}, #{activeMemberCount,jdbcType=INTEGER}, #{visitorCount,jdbcType=INTEGER},
+     #{createTime,jdbcType=TIMESTAMP})
+  </insert>
 </mapper> 

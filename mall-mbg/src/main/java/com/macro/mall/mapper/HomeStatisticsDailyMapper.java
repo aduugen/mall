@@ -29,4 +29,9 @@ public interface HomeStatisticsDailyMapper {
     int updateByPrimaryKeySelective(HomeStatisticsDaily record);
 
     int updateByPrimaryKey(HomeStatisticsDaily record);
+
+    /**
+     * 使用REPLACE INTO自动处理唯一键冲突
+     */
+    int replaceInto(HomeStatisticsDaily record);
 }

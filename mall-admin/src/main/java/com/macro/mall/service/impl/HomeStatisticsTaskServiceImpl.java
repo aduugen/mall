@@ -78,35 +78,10 @@ public class HomeStatisticsTaskServiceImpl implements HomeStatisticsTaskService 
             // 设置创建时间
             statisticsDaily.setCreateTime(new Date());
 
-            // 使用更可靠的方式处理插入或更新
-            try {
-                // 先尝试插入
-                homeStatisticsDailyMapper.insert(statisticsDaily);
-                LOGGER.info("生成{}的统计数据成功", dateStr);
-            } catch (Exception e) {
-                // 如果插入失败（可能是唯一键冲突），则尝试更新
-                if (e instanceof org.springframework.dao.DuplicateKeyException) {
-                    LOGGER.info("{}的统计数据已存在，尝试更新", dateStr);
+            // 使用REPLACE INTO自动处理唯一键冲突
+            homeStatisticsDailyMapper.replaceInto(statisticsDaily);
+            LOGGER.info("生成或更新{}的统计数据成功", dateStr);
 
-                    // 查询现有记录的ID
-                    HomeStatisticsDailyExample example = new HomeStatisticsDailyExample();
-                    example.createCriteria().andDateEqualTo(date);
-                    List<HomeStatisticsDaily> existingStats = homeStatisticsDailyMapper.selectByExample(example);
-
-                    if (existingStats != null && !existingStats.isEmpty()) {
-                        // 设置ID并更新
-                        statisticsDaily.setId(existingStats.get(0).getId());
-                        homeStatisticsDailyMapper.updateByPrimaryKey(statisticsDaily);
-                        LOGGER.info("更新{}的统计数据成功", dateStr);
-                    } else {
-                        LOGGER.error("无法找到{}的统计数据进行更新", dateStr);
-                        throw e;
-                    }
-                } else {
-                    // 其他类型的异常，直接抛出
-                    throw e;
-                }
-            }
         } catch (ParseException e) {
             LOGGER.error("日期格式错误: {}", dateStr, e);
         } catch (Exception e) {
