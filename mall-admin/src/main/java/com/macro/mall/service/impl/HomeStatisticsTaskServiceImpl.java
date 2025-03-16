@@ -75,13 +75,13 @@ public class HomeStatisticsTaskServiceImpl implements HomeStatisticsTaskService 
 
             // 获取订单统计数据
             Map<String, Object> orderStats = getOrderStatistics(date);
-            statisticsDaily.setOrderCount((Integer) orderStats.get("count"));
+            statisticsDaily.setOrderCount(((Number) orderStats.get("count")).intValue());
             statisticsDaily.setOrderAmount((BigDecimal) orderStats.get("amount"));
 
             // 获取会员统计数据
             Map<String, Object> memberStats = getMemberStatistics(date);
-            statisticsDaily.setMemberCount((Integer) memberStats.get("count"));
-            statisticsDaily.setActiveMemberCount((Integer) memberStats.get("activeCount"));
+            statisticsDaily.setMemberCount(((Number) memberStats.get("count")).intValue());
+            statisticsDaily.setActiveMemberCount(((Number) memberStats.get("activeCount")).intValue());
 
             // 获取访客统计数据
             statisticsDaily.setVisitorCount(getVisitorCount(date));
