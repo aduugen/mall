@@ -64,13 +64,18 @@ public class HomeStatisticsTaskServiceImpl implements HomeStatisticsTaskService 
             List<HomeStatisticsDaily> existingStats = homeStatisticsDailyMapper.selectByExample(example);
 
             HomeStatisticsDaily statisticsDaily;
+            boolean isUpdate = false;
+
             if (existingStats != null && !existingStats.isEmpty()) {
                 // 如果已存在，则更新
                 statisticsDaily = existingStats.get(0);
+                isUpdate = true;
+                LOGGER.info("找到{}的现有统计数据，将进行更新", dateStr);
             } else {
                 // 如果不存在，则创建新记录
                 statisticsDaily = new HomeStatisticsDaily();
                 statisticsDaily.setDate(date);
+                LOGGER.info("未找到{}的统计数据，将创建新记录", dateStr);
             }
 
             // 获取订单统计数据
@@ -90,12 +95,26 @@ public class HomeStatisticsTaskServiceImpl implements HomeStatisticsTaskService 
             statisticsDaily.setCreateTime(new Date());
 
             // 保存或更新统计数据
-            if (statisticsDaily.getId() != null) {
+            if (isUpdate) {
                 homeStatisticsDailyMapper.updateByPrimaryKey(statisticsDaily);
                 LOGGER.info("更新{}的统计数据成功", dateStr);
             } else {
-                homeStatisticsDailyMapper.insert(statisticsDaily);
-                LOGGER.info("生成{}的统计数据成功", dateStr);
+                try {
+                    homeStatisticsDailyMapper.insert(statisticsDaily);
+                    LOGGER.info("生成{}的统计数据成功", dateStr);
+                } catch (Exception e) {
+                    // 如果插入失败，可能是因为并发情况下已经有其他进程插入了记录
+                    // 尝试再次查询并更新
+                    LOGGER.warn("插入{}的统计数据失败，尝试更新操作", dateStr);
+                    List<HomeStatisticsDaily> retryStats = homeStatisticsDailyMapper.selectByExample(example);
+                    if (retryStats != null && !retryStats.isEmpty()) {
+                        statisticsDaily.setId(retryStats.get(0).getId());
+                        homeStatisticsDailyMapper.updateByPrimaryKey(statisticsDaily);
+                        LOGGER.info("更新{}的统计数据成功", dateStr);
+                    } else {
+                        throw e; // 如果仍然找不到记录，则抛出原始异常
+                    }
+                }
             }
         } catch (ParseException e) {
             LOGGER.error("日期格式错误: {}", dateStr, e);
