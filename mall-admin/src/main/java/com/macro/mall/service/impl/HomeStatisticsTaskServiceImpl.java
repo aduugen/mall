@@ -58,25 +58,9 @@ public class HomeStatisticsTaskServiceImpl implements HomeStatisticsTaskService 
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             Date date = dateFormat.parse(dateStr);
 
-            // 检查该日期的统计数据是否已存在
-            HomeStatisticsDailyExample example = new HomeStatisticsDailyExample();
-            example.createCriteria().andDateEqualTo(date);
-            List<HomeStatisticsDaily> existingStats = homeStatisticsDailyMapper.selectByExample(example);
-
-            HomeStatisticsDaily statisticsDaily;
-            boolean isUpdate = false;
-
-            if (existingStats != null && !existingStats.isEmpty()) {
-                // 如果已存在，则更新
-                statisticsDaily = existingStats.get(0);
-                isUpdate = true;
-                LOGGER.info("找到{}的现有统计数据，将进行更新", dateStr);
-            } else {
-                // 如果不存在，则创建新记录
-                statisticsDaily = new HomeStatisticsDaily();
-                statisticsDaily.setDate(date);
-                LOGGER.info("未找到{}的统计数据，将创建新记录", dateStr);
-            }
+            // 准备统计数据
+            HomeStatisticsDaily statisticsDaily = new HomeStatisticsDaily();
+            statisticsDaily.setDate(date);
 
             // 获取订单统计数据
             Map<String, Object> orderStats = getOrderStatistics(date);
@@ -94,26 +78,33 @@ public class HomeStatisticsTaskServiceImpl implements HomeStatisticsTaskService 
             // 设置创建时间
             statisticsDaily.setCreateTime(new Date());
 
-            // 保存或更新统计数据
-            if (isUpdate) {
-                homeStatisticsDailyMapper.updateByPrimaryKey(statisticsDaily);
-                LOGGER.info("更新{}的统计数据成功", dateStr);
-            } else {
-                try {
-                    homeStatisticsDailyMapper.insert(statisticsDaily);
-                    LOGGER.info("生成{}的统计数据成功", dateStr);
-                } catch (Exception e) {
-                    // 如果插入失败，可能是因为并发情况下已经有其他进程插入了记录
-                    // 尝试再次查询并更新
-                    LOGGER.warn("插入{}的统计数据失败，尝试更新操作", dateStr);
-                    List<HomeStatisticsDaily> retryStats = homeStatisticsDailyMapper.selectByExample(example);
-                    if (retryStats != null && !retryStats.isEmpty()) {
-                        statisticsDaily.setId(retryStats.get(0).getId());
+            // 使用更可靠的方式处理插入或更新
+            try {
+                // 先尝试插入
+                homeStatisticsDailyMapper.insert(statisticsDaily);
+                LOGGER.info("生成{}的统计数据成功", dateStr);
+            } catch (Exception e) {
+                // 如果插入失败（可能是唯一键冲突），则尝试更新
+                if (e instanceof org.springframework.dao.DuplicateKeyException) {
+                    LOGGER.info("{}的统计数据已存在，尝试更新", dateStr);
+
+                    // 查询现有记录的ID
+                    HomeStatisticsDailyExample example = new HomeStatisticsDailyExample();
+                    example.createCriteria().andDateEqualTo(date);
+                    List<HomeStatisticsDaily> existingStats = homeStatisticsDailyMapper.selectByExample(example);
+
+                    if (existingStats != null && !existingStats.isEmpty()) {
+                        // 设置ID并更新
+                        statisticsDaily.setId(existingStats.get(0).getId());
                         homeStatisticsDailyMapper.updateByPrimaryKey(statisticsDaily);
                         LOGGER.info("更新{}的统计数据成功", dateStr);
                     } else {
-                        throw e; // 如果仍然找不到记录，则抛出原始异常
+                        LOGGER.error("无法找到{}的统计数据进行更新", dateStr);
+                        throw e;
                     }
+                } else {
+                    // 其他类型的异常，直接抛出
+                    throw e;
                 }
             }
         } catch (ParseException e) {
