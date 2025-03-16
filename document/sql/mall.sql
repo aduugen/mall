@@ -3255,6 +3255,22 @@ CREATE TABLE `ums_visitor_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='访客记录表';
 
 -- ----------------------------
+-- Table structure for home_statistics_daily
+-- ----------------------------
+DROP TABLE IF EXISTS `home_statistics_daily`;
+CREATE TABLE `home_statistics_daily` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL COMMENT '统计日期',
+  `order_count` int(11) DEFAULT '0' COMMENT '订单数量',
+  `order_amount` decimal(10,2) DEFAULT '0.00' COMMENT '订单金额',
+  `member_count` int(11) DEFAULT '0' COMMENT '会员数量',
+  `active_member_count` int(11) DEFAULT '0' COMMENT '活跃会员数量',
+  `visitor_count` int(11) DEFAULT '0' COMMENT '访客数量',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_date` (`date`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='首页统计数据表'; 
+-- ----------------------------
 -- Table structure for ums_role_resource_relation
 -- ----------------------------
 DROP TABLE IF EXISTS `ums_role_resource_relation`;
