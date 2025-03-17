@@ -14,6 +14,7 @@
         <result column="lock_stock" property="lockStock" />
         <result column="sp_data" property="spData" />
         <result column="productName" property="productName" />
+        <result column="productPic" property="productPic" />
     </resultMap>
     
     <insert id="insertList">
@@ -46,7 +47,8 @@
     <select id="getStockAlarmList" resultMap="StockAlarmResultMap">
         SELECT
             s.*,
-            p.name as productName
+            p.name as productName,
+            p.pic as productPic
         FROM
             pms_sku_stock s
         LEFT JOIN
@@ -62,7 +64,8 @@
     <select id="getStockAlarmListByPage" resultMap="StockAlarmResultMap">
         SELECT
             s.*,
-            p.name as productName
+            p.name as productName,
+            p.pic as productPic
         FROM
             pms_sku_stock s
         LEFT JOIN

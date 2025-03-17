@@ -50,10 +50,7 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
         List<PmsSkuStockWithProductNameDTO> stockAlarmList = skuStockDao.getStockAlarmList();
         // 处理图片URL
         for (PmsSkuStockWithProductNameDTO item : stockAlarmList) {
-            if (item.getPic() == null || item.getPic().trim().isEmpty()) {
-                // 如果图片为空，设置一个默认图片
-                item.setPic("/images/default-product.png");
-            }
+            processImageUrl(item);
         }
         return stockAlarmList;
     }
@@ -64,10 +61,7 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
         List<PmsSkuStockWithProductNameDTO> stockAlarmList = skuStockDao.getStockAlarmListByPage(pageSize, startIndex);
         // 处理图片URL
         for (PmsSkuStockWithProductNameDTO item : stockAlarmList) {
-            if (item.getPic() == null || item.getPic().trim().isEmpty()) {
-                // 如果图片为空，设置一个默认图片
-                item.setPic("/images/default-product.png");
-            }
+            processImageUrl(item);
         }
         return stockAlarmList;
     }
@@ -75,5 +69,20 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
     @Override
     public Long getStockAlarmCount() {
         return skuStockDao.getStockAlarmCount();
+    }
+
+    /**
+     * 处理图片URL，优先使用SKU图片，如果为空则使用商品主图
+     */
+    private void processImageUrl(PmsSkuStockWithProductNameDTO item) {
+        // 如果SKU图片为空，则使用商品主图
+        if (item.getPic() == null || item.getPic().trim().isEmpty()) {
+            if (item.getProductPic() != null && !item.getProductPic().trim().isEmpty()) {
+                item.setPic(item.getProductPic());
+            } else {
+                // 如果商品主图也为空，设置一个默认图片
+                item.setPic("/images/default-product.png");
+            }
+        }
     }
 }

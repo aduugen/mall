@@ -13,4 +13,7 @@ import lombok.Setter;
 public class PmsSkuStockWithProductNameDTO extends PmsSkuStock {
     @ApiModelProperty(value = "商品名称")
     private String productName;
+
+    @ApiModelProperty(value = "商品主图")
+    private String productPic;
 }
