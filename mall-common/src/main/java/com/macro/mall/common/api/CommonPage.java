@@ -58,6 +58,19 @@ public class CommonPage<T> {
         return result;
     }
 
+    /**
+     * 将手动分页后的list转为分页信息
+     */
+    public static <T> CommonPage<T> restPage(List<T> list, Long total, Integer pageNum, Integer pageSize) {
+        CommonPage<T> result = new CommonPage<T>();
+        result.setTotalPage((int) Math.ceil((double) total / pageSize));
+        result.setPageNum(pageNum);
+        result.setPageSize(pageSize);
+        result.setTotal(total);
+        result.setList(list);
+        return result;
+    }
+
     public Integer getPageNum() {
         return pageNum;
     }

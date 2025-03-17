@@ -1,5 +1,6 @@
 package com.macro.mall.service;
 
+import com.macro.mall.dto.PmsSkuStockWithProductNameDTO;
 import com.macro.mall.model.PmsSkuStock;
 
 import java.util.List;
@@ -18,4 +19,19 @@ public interface PmsSkuStockService {
      * 批量更新商品库存信息
      */
     int update(Long pid, List<PmsSkuStock> skuStockList);
+
+    /**
+     * 获取库存告警商品列表
+     */
+    List<PmsSkuStockWithProductNameDTO> getStockAlarmList();
+
+    /**
+     * 分页获取库存告警商品列表
+     */
+    List<PmsSkuStockWithProductNameDTO> getStockAlarmList(Integer pageSize, Integer pageNum);
+
+    /**
+     * 获取库存告警商品总数
+     */
+    Long getStockAlarmCount();
 }

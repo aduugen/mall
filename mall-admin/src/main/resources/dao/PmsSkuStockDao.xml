@@ -28,4 +28,49 @@
             #{item.spData,jdbcType=VARCHAR})
         </foreach>
     </insert>
+    <select id="getStockAlarmList" resultType="com.macro.mall.model.PmsSkuStock">
+        SELECT
+            s.*,
+            p.name as productName
+        FROM
+            pms_sku_stock s
+        LEFT JOIN
+            pms_product p ON s.product_id = p.id
+        WHERE
+            s.stock &lt;= s.low_stock
+            AND p.delete_status = 0
+            AND p.publish_status = 1
+        ORDER BY
+            (s.stock / s.low_stock) ASC
+    </select>
+    
+    <select id="getStockAlarmListByPage" resultType="com.macro.mall.model.PmsSkuStock">
+        SELECT
+            s.*,
+            p.name as productName
+        FROM
+            pms_sku_stock s
+        LEFT JOIN
+            pms_product p ON s.product_id = p.id
+        WHERE
+            s.stock &lt;= s.low_stock
+            AND p.delete_status = 0
+            AND p.publish_status = 1
+        ORDER BY
+            (s.stock / s.low_stock) ASC
+        LIMIT #{pageNum}, #{pageSize}
+    </select>
+    
+    <select id="getStockAlarmCount" resultType="java.lang.Long">
+        SELECT
+            COUNT(*)
+        FROM
+            pms_sku_stock s
+        LEFT JOIN
+            pms_product p ON s.product_id = p.id
+        WHERE
+            s.stock &lt;= s.low_stock
+            AND p.delete_status = 0
+            AND p.publish_status = 1
+    </select>
 </mapper>
