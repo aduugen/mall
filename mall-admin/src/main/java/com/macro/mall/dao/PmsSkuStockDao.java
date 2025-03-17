@@ -1,6 +1,7 @@
 package com.macro.mall.dao;
 
 import com.macro.mall.model.PmsSkuStock;
+import com.macro.mall.dto.PmsSkuStockWithProductNameDTO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -23,12 +24,13 @@ public interface PmsSkuStockDao {
     /**
      * 获取库存告警商品
      */
-    List<PmsSkuStock> getStockAlarmList();
+    List<PmsSkuStockWithProductNameDTO> getStockAlarmList();
 
     /**
      * 分页获取库存告警商品
      */
-    List<PmsSkuStock> getStockAlarmListByPage(@Param("pageSize") Integer pageSize, @Param("pageNum") Integer pageNum);
+    List<PmsSkuStockWithProductNameDTO> getStockAlarmListByPage(@Param("pageSize") Integer pageSize,
+            @Param("pageNum") Integer pageNum);
 
     /**
      * 获取库存告警商品总数

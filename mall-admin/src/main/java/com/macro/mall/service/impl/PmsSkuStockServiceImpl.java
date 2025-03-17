@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -46,28 +47,15 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
 
     @Override
     public List<PmsSkuStockWithProductNameDTO> getStockAlarmList() {
-        List<PmsSkuStock> stockAlarmList = skuStockDao.getStockAlarmList();
-        List<PmsSkuStockWithProductNameDTO> result = new ArrayList<>();
-        for (PmsSkuStock skuStock : stockAlarmList) {
-            PmsSkuStockWithProductNameDTO dto = new PmsSkuStockWithProductNameDTO();
-            BeanUtils.copyProperties(skuStock, dto);
-            result.add(dto);
-        }
-        return result;
+        List<PmsSkuStockWithProductNameDTO> stockAlarmList = skuStockDao.getStockAlarmList();
+        return stockAlarmList;
     }
 
     @Override
     public List<PmsSkuStockWithProductNameDTO> getStockAlarmList(Integer pageSize, Integer pageNum) {
-        // 计算起始索引
         Integer startIndex = (pageNum - 1) * pageSize;
-        List<PmsSkuStock> stockAlarmList = skuStockDao.getStockAlarmListByPage(pageSize, startIndex);
-        List<PmsSkuStockWithProductNameDTO> result = new ArrayList<>();
-        for (PmsSkuStock skuStock : stockAlarmList) {
-            PmsSkuStockWithProductNameDTO dto = new PmsSkuStockWithProductNameDTO();
-            BeanUtils.copyProperties(skuStock, dto);
-            result.add(dto);
-        }
-        return result;
+        List<PmsSkuStockWithProductNameDTO> stockAlarmList = skuStockDao.getStockAlarmListByPage(pageSize, startIndex);
+        return stockAlarmList;
     }
 
     @Override
