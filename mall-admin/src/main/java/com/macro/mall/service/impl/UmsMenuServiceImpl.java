@@ -3,11 +3,14 @@ package com.macro.mall.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.macro.mall.dto.UmsMenuNode;
 import com.macro.mall.mapper.UmsMenuMapper;
+import com.macro.mall.mapper.UmsRoleMapper;
+import com.macro.mall.mapper.UmsRoleMenuRelationMapper;
 import com.macro.mall.model.*;
 import com.macro.mall.service.UmsMenuService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -21,12 +24,25 @@ import java.util.stream.Collectors;
 public class UmsMenuServiceImpl implements UmsMenuService {
     @Autowired
     private UmsMenuMapper menuMapper;
+    @Autowired
+    private UmsRoleMenuRelationMapper roleMenuRelationMapper;
+    @Autowired
+    private UmsRoleMapper roleMapper;
 
     @Override
+    @Transactional
     public int create(UmsMenu umsMenu) {
         umsMenu.setCreateTime(new Date());
         updateLevel(umsMenu);
-        return menuMapper.insert(umsMenu);
+        int count = menuMapper.insert(umsMenu);
+
+        // 只为超级管理员角色（ID为5）添加新菜单权限
+        UmsRoleMenuRelation relation = new UmsRoleMenuRelation();
+        relation.setRoleId(5L); // 超级管理员角色ID
+        relation.setMenuId(umsMenu.getId());
+        roleMenuRelationMapper.insert(relation);
+
+        return count;
     }
 
     /**
@@ -34,10 +50,10 @@ public class UmsMenuServiceImpl implements UmsMenuService {
      */
     private void updateLevel(UmsMenu umsMenu) {
         if (umsMenu.getParentId() == 0) {
-            //没有父菜单时为一级菜单
+            // 没有父菜单时为一级菜单
             umsMenu.setLevel(0);
         } else {
-            //有父菜单时选择根据父菜单level设置
+            // 有父菜单时选择根据父菜单level设置
             UmsMenu parentMenu = menuMapper.selectByPrimaryKey(umsMenu.getParentId());
             if (parentMenu != null) {
                 umsMenu.setLevel(parentMenu.getLevel() + 1);
@@ -60,7 +76,14 @@ public class UmsMenuServiceImpl implements UmsMenuService {
     }
 
     @Override
+    @Transactional
     public int delete(Long id) {
+        // 先删除角色-菜单关系
+        UmsRoleMenuRelationExample example = new UmsRoleMenuRelationExample();
+        example.createCriteria().andMenuIdEqualTo(id);
+        roleMenuRelationMapper.deleteByExample(example);
+
+        // 再删除菜单
         return menuMapper.deleteByPrimaryKey(id);
     }
 
