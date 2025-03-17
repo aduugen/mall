@@ -48,6 +48,13 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
     @Override
     public List<PmsSkuStockWithProductNameDTO> getStockAlarmList() {
         List<PmsSkuStockWithProductNameDTO> stockAlarmList = skuStockDao.getStockAlarmList();
+        // 处理图片URL
+        for (PmsSkuStockWithProductNameDTO item : stockAlarmList) {
+            if (item.getPic() == null || item.getPic().trim().isEmpty()) {
+                // 如果图片为空，设置一个默认图片
+                item.setPic("/images/default-product.png");
+            }
+        }
         return stockAlarmList;
     }
 
@@ -55,6 +62,13 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
     public List<PmsSkuStockWithProductNameDTO> getStockAlarmList(Integer pageSize, Integer pageNum) {
         Integer startIndex = (pageNum - 1) * pageSize;
         List<PmsSkuStockWithProductNameDTO> stockAlarmList = skuStockDao.getStockAlarmListByPage(pageSize, startIndex);
+        // 处理图片URL
+        for (PmsSkuStockWithProductNameDTO item : stockAlarmList) {
+            if (item.getPic() == null || item.getPic().trim().isEmpty()) {
+                // 如果图片为空，设置一个默认图片
+                item.setPic("/images/default-product.png");
+            }
+        }
         return stockAlarmList;
     }
 
