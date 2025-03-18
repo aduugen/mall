@@ -5,6 +5,7 @@ import com.macro.mall.common.api.CommonResult;
 import com.macro.mall.dto.MemberConsumptionInfoDTO;
 import com.macro.mall.dto.MemberInfoDTO;
 import com.macro.mall.model.OmsOrder;
+import com.macro.mall.model.UmsMember;
 import com.macro.mall.service.UmsMemberService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -60,6 +61,28 @@ public class UmsMemberController {
     public CommonResult<MemberInfoDTO> detail(@PathVariable Long id) {
         MemberInfoDTO member = memberService.getMemberInfo(id);
         return CommonResult.success(member);
+    }
+
+    @ApiOperation("创建新会员")
+    @RequestMapping(value = "/create", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult create(@RequestBody UmsMember umsMember) {
+        int count = memberService.create(umsMember);
+        if (count > 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
+
+    @ApiOperation("更新会员信息")
+    @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult update(@PathVariable Long id, @RequestBody UmsMember umsMember) {
+        int count = memberService.update(id, umsMember);
+        if (count > 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
     }
 
     @ApiOperation("分页获取会员消费信息列表")

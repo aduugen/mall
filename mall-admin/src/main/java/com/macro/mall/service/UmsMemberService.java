@@ -30,6 +30,16 @@ public interface UmsMemberService {
     MemberInfoDTO getMemberInfo(Long id);
 
     /**
+     * 创建会员
+     */
+    int create(UmsMember umsMember);
+
+    /**
+     * 更新会员信息
+     */
+    int update(Long id, UmsMember umsMember);
+
+    /**
      * 分页获取会员消费信息列表
      */
     List<MemberConsumptionInfoDTO> listConsumptionInfo(String keyword, Integer pageSize, Integer pageNum);
