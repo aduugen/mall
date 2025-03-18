@@ -58,19 +58,36 @@ public class UmsMemberServiceImpl implements UmsMemberService {
     @Override
     public int create(UmsMember umsMember) {
         umsMember.setCreateTime(new Date());
-        // 查询是否已有相同用户名的会员
+
+        // 使用手机号码作为登录名
+        umsMember.setUsername(umsMember.getPhone());
+
+        // 查询是否已有相同手机号的会员
         UmsMemberExample example = new UmsMemberExample();
-        example.createCriteria().andUsernameEqualTo(umsMember.getUsername());
+        example.createCriteria().andPhoneEqualTo(umsMember.getPhone());
         List<UmsMember> umsMembers = memberMapper.selectByExample(example);
         if (umsMembers.size() > 0) {
             return 0;
         }
-        // 密码进行MD5加密
+
+        // 处理密码，如果为空则设置默认密码123456
         if (StrUtil.isEmpty(umsMember.getPassword())) {
-            umsMember.setPassword("123456"); // 默认密码
+            umsMember.setPassword("123456");
         }
-        // TODO: 实际环境中需要对密码进行加密，此处略过
+
+        // 对密码进行加密
+        String encodePassword = passwordEncoder(umsMember.getPassword());
+        umsMember.setPassword(encodePassword);
+
         return memberMapper.insert(umsMember);
+    }
+
+    /**
+     * 密码加密
+     */
+    private String passwordEncoder(String password) {
+        // 简单实现，实际项目中应使用更安全的加密方式，如BCrypt
+        return cn.hutool.crypto.SecureUtil.md5(password);
     }
 
     @Override
@@ -78,12 +95,13 @@ public class UmsMemberServiceImpl implements UmsMemberService {
         umsMember.setId(id);
         // 如果有密码更新，需要进行加密
         if (StrUtil.isNotEmpty(umsMember.getPassword())) {
-            // TODO: 实际环境中需要对密码进行加密，此处略过
-            UmsMember member = memberMapper.selectByPrimaryKey(id);
-            if (member == null) {
-                return 0;
-            }
+            String encodePassword = passwordEncoder(umsMember.getPassword());
+            umsMember.setPassword(encodePassword);
+        } else {
+            // 如果密码为空，则不更新密码字段
+            umsMember.setPassword(null);
         }
+
         return memberMapper.updateByPrimaryKeySelective(umsMember);
     }
 
