@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.dao.UmsMemberDao">
+    <resultMap id="memberInfoMap" type="com.macro.mall.dto.MemberInfoDTO" extends="com.macro.mall.mapper.UmsMemberMapper.BaseResultMap">
+        <result column="level_name" property="levelName" />
+        <collection property="addressList" ofType="com.macro.mall.model.UmsMemberReceiveAddress">
+            <id column="address_id" property="id" />
+            <result column="address_member_id" property="memberId" />
+            <result column="name" property="name" />
+            <result column="phone_number" property="phoneNumber" />
+            <result column="default_status" property="defaultStatus" />
+            <result column="post_code" property="postCode" />
+            <result column="province" property="province" />
+            <result column="city" property="city" />
+            <result column="region" property="region" />
+            <result column="detail_address" property="detailAddress" />
+        </collection>
+    </resultMap>
+    
+    <select id="getTodayNewMemberCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM ums_member
+        WHERE DATE(create_time) = CURDATE()
+    </select>
+    
+    <select id="getMemberList" resultMap="memberInfoMap">
+        SELECT
+            um.*,
+            ul.name as level_name
+        FROM
+            ums_member um
+        LEFT JOIN
+            ums_member_level ul ON um.member_level_id = ul.id
+        <if test="keyword != null and keyword != ''">
+            WHERE um.username LIKE CONCAT('%',#{keyword},'%')
+            OR um.nickname LIKE CONCAT('%',#{keyword},'%')
+            OR um.phone LIKE CONCAT('%',#{keyword},'%')
+        </if>
+        ORDER BY um.id
+    </select>
+    
+    <select id="getMemberInfo" resultMap="memberInfoMap">
+        SELECT
+            um.*,
+            ul.name as level_name,
+            ua.id as address_id,
+            ua.member_id as address_member_id,
+            ua.name,
+            ua.phone_number,
+            ua.default_status,
+            ua.post_code,
+            ua.province,
+            ua.city,
+            ua.region,
+            ua.detail_address
+        FROM
+            ums_member um
+        LEFT JOIN
+            ums_member_level ul ON um.member_level_id = ul.id
+        LEFT JOIN
+            ums_member_receive_address ua ON um.id = ua.member_id
+        WHERE
+            um.id = #{id}
+    </select>
+    
+    <select id="getMemberConsumptionList" resultType="com.macro.mall.dto.MemberConsumptionInfoDTO">
+        SELECT
+            um.id,
+            um.nickname,
+            um.phone,
+            IFNULL(SUM(o.pay_amount), 0) as totalAmount,
+            MAX(o.create_time) as lastOrderTime,
+            COUNT(CASE WHEN o.status = 3 THEN 1 ELSE NULL END) as completedOrderCount,
+            COUNT(CASE WHEN o.status = 4 THEN 1 ELSE NULL END) as returnOrderCount,
+            um.integration
+        FROM
+            ums_member um
+        LEFT JOIN
+            oms_order o ON um.id = o.member_id
+        <if test="keyword != null and keyword != ''">
+            WHERE um.username LIKE CONCAT('%',#{keyword},'%')
+            OR um.nickname LIKE CONCAT('%',#{keyword},'%')
+            OR um.phone LIKE CONCAT('%',#{keyword},'%')
+        </if>
+        GROUP BY
+            um.id, um.nickname, um.phone, um.integration
+    </select>
+    
+    <select id="getMemberConsumptionInfo" resultType="com.macro.mall.dto.MemberConsumptionInfoDTO">
+        SELECT
+            um.id,
+            um.nickname,
+            um.phone,
+            IFNULL(SUM(o.pay_amount), 0) as totalAmount,
+            MAX(o.create_time) as lastOrderTime,
+            COUNT(CASE WHEN o.status = 3 THEN 1 ELSE NULL END) as completedOrderCount,
+            COUNT(CASE WHEN o.status = 4 THEN 1 ELSE NULL END) as returnOrderCount,
+            um.integration
+        FROM
+            ums_member um
+        LEFT JOIN
+            oms_order o ON um.id = o.member_id
+        WHERE
+            um.id = #{id}
+        GROUP BY
+            um.id, um.nickname, um.phone, um.integration
+    </select>
+    
+    <select id="getMemberOrders" resultType="com.macro.mall.model.OmsOrder">
+        SELECT
+            *
+        FROM
+            oms_order
+        WHERE
+            member_id = #{memberId}
+        ORDER BY
+            create_time DESC
+    </select>
+</mapper>
