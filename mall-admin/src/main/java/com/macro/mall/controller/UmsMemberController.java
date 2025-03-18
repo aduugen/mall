@@ -9,6 +9,8 @@ import com.macro.mall.service.UmsMemberService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,8 @@ import java.util.List;
 @Tag(name = "UmsMemberController", description = "会员管理")
 @RequestMapping("/member")
 public class UmsMemberController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UmsMemberController.class);
+
     @Autowired
     private UmsMemberService memberService;
 
@@ -84,8 +88,18 @@ public class UmsMemberController {
             @PathVariable Long id,
             @RequestParam(value = "pageSize", defaultValue = "15") Integer pageSize,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
+        LOGGER.info("获取会员订单列表: memberId={}, pageSize={}, pageNum={}", id, pageSize, pageNum);
         List<OmsOrder> orderList = memberService.getMemberOrders(id, pageSize, pageNum);
         long count = memberService.getMemberOrderCount(id);
+        LOGGER.info("会员订单列表获取结果: count={}, orderListSize={}", count, orderList.size());
+        if (!orderList.isEmpty()) {
+            OmsOrder firstOrder = orderList.get(0);
+            LOGGER.info(
+                    "第一条订单信息: id={}, orderSn={}, totalAmount={}, payAmount={}, payType={}, sourceType={}, status={}",
+                    firstOrder.getId(), firstOrder.getOrderSn(), firstOrder.getTotalAmount(),
+                    firstOrder.getPayAmount(), firstOrder.getPayType(), firstOrder.getSourceType(),
+                    firstOrder.getStatus());
+        }
         return CommonResult.success(CommonPage.restPage(orderList, count, pageNum, pageSize));
     }
 }
