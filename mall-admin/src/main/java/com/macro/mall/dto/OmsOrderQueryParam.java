@@ -23,4 +23,8 @@ public class OmsOrderQueryParam {
     private Integer sourceType;
     @ApiModelProperty(value = "订单提交时间")
     private String createTime;
+    @ApiModelProperty(value = "退货状态：0->正常订单；1->申请中；2->已退货；3->已拒绝")
+    private Integer returnStatus;
+    @ApiModelProperty(value = "支付方式：0->未支付；1->支付宝；2->微信")
+    private Integer payType;
 }

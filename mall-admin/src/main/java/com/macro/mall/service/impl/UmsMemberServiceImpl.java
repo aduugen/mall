@@ -5,6 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.macro.mall.dao.UmsMemberDao;
 import com.macro.mall.dto.MemberConsumptionInfoDTO;
 import com.macro.mall.dto.MemberInfoDTO;
+import com.macro.mall.dto.OmsOrderQueryParam;
 import com.macro.mall.mapper.OmsOrderMapper;
 import com.macro.mall.mapper.UmsMemberMapper;
 import com.macro.mall.model.OmsOrder;
@@ -117,18 +118,59 @@ public class UmsMemberServiceImpl implements UmsMemberService {
     }
 
     @Override
-    public List<OmsOrder> getMemberOrders(Long memberId, Integer pageSize, Integer pageNum) {
+    public List<OmsOrder> getMemberOrders(Long memberId, OmsOrderQueryParam queryParam, Integer pageSize,
+            Integer pageNum) {
         PageHelper.startPage(pageNum, pageSize);
         OmsOrderExample example = new OmsOrderExample();
-        example.createCriteria().andMemberIdEqualTo(memberId);
         example.setOrderByClause("create_time desc");
+        OmsOrderExample.Criteria criteria = example.createCriteria();
+        criteria.andMemberIdEqualTo(memberId);
+        criteria.andDeleteStatusEqualTo(0);
+
+        // 添加筛选条件
+        if (queryParam.getOrderSn() != null && !queryParam.getOrderSn().isEmpty()) {
+            criteria.andOrderSnLike("%" + queryParam.getOrderSn() + "%");
+        }
+        if (queryParam.getPayType() != null) {
+            criteria.andPayTypeEqualTo(queryParam.getPayType());
+        }
+        if (queryParam.getSourceType() != null) {
+            criteria.andSourceTypeEqualTo(queryParam.getSourceType());
+        }
+        if (queryParam.getStatus() != null) {
+            criteria.andStatusEqualTo(queryParam.getStatus());
+        }
+        if (queryParam.getReturnStatus() != null) {
+            criteria.andReturnStatusEqualTo(queryParam.getReturnStatus());
+        }
+
         return orderMapper.selectByExample(example);
     }
 
     @Override
-    public long getMemberOrderCount(Long memberId) {
+    public long getMemberOrderCount(Long memberId, OmsOrderQueryParam queryParam) {
         OmsOrderExample example = new OmsOrderExample();
-        example.createCriteria().andMemberIdEqualTo(memberId);
+        OmsOrderExample.Criteria criteria = example.createCriteria();
+        criteria.andMemberIdEqualTo(memberId);
+        criteria.andDeleteStatusEqualTo(0);
+
+        // 添加筛选条件
+        if (queryParam.getOrderSn() != null && !queryParam.getOrderSn().isEmpty()) {
+            criteria.andOrderSnLike("%" + queryParam.getOrderSn() + "%");
+        }
+        if (queryParam.getPayType() != null) {
+            criteria.andPayTypeEqualTo(queryParam.getPayType());
+        }
+        if (queryParam.getSourceType() != null) {
+            criteria.andSourceTypeEqualTo(queryParam.getSourceType());
+        }
+        if (queryParam.getStatus() != null) {
+            criteria.andStatusEqualTo(queryParam.getStatus());
+        }
+        if (queryParam.getReturnStatus() != null) {
+            criteria.andReturnStatusEqualTo(queryParam.getReturnStatus());
+        }
+
         return orderMapper.countByExample(example);
     }
 }

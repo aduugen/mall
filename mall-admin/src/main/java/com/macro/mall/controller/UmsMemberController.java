@@ -4,6 +4,7 @@ import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
 import com.macro.mall.dto.MemberConsumptionInfoDTO;
 import com.macro.mall.dto.MemberInfoDTO;
+import com.macro.mall.dto.OmsOrderQueryParam;
 import com.macro.mall.model.OmsOrder;
 import com.macro.mall.model.UmsMember;
 import com.macro.mall.service.UmsMemberService;
@@ -110,10 +111,24 @@ public class UmsMemberController {
     public CommonResult<CommonPage<OmsOrder>> listOrders(
             @PathVariable Long id,
             @RequestParam(value = "pageSize", defaultValue = "15") Integer pageSize,
-            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "orderSn", required = false) String orderSn,
+            @RequestParam(value = "payType", required = false) Integer payType,
+            @RequestParam(value = "sourceType", required = false) Integer sourceType,
+            @RequestParam(value = "status", required = false) Integer status,
+            @RequestParam(value = "returnStatus", required = false) Integer returnStatus) {
         LOGGER.info("获取会员订单列表: memberId={}, pageSize={}, pageNum={}", id, pageSize, pageNum);
-        List<OmsOrder> orderList = memberService.getMemberOrders(id, pageSize, pageNum);
-        long count = memberService.getMemberOrderCount(id);
+
+        OmsOrderQueryParam queryParam = new OmsOrderQueryParam();
+        queryParam.setOrderSn(orderSn);
+        queryParam.setPayType(payType);
+        queryParam.setSourceType(sourceType);
+        queryParam.setStatus(status);
+        queryParam.setReturnStatus(returnStatus);
+
+        List<OmsOrder> orderList = memberService.getMemberOrders(id, queryParam, pageSize, pageNum);
+        long count = memberService.getMemberOrderCount(id, queryParam);
+
         LOGGER.info("会员订单列表获取结果: count={}, orderListSize={}", count, orderList.size());
         if (!orderList.isEmpty()) {
             OmsOrder firstOrder = orderList.get(0);

@@ -2,6 +2,7 @@ package com.macro.mall.service;
 
 import com.macro.mall.dto.MemberConsumptionInfoDTO;
 import com.macro.mall.dto.MemberInfoDTO;
+import com.macro.mall.dto.OmsOrderQueryParam;
 import com.macro.mall.model.OmsOrder;
 import com.macro.mall.model.UmsMember;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,10 +53,10 @@ public interface UmsMemberService {
     /**
      * 获取会员的订单列表
      */
-    List<OmsOrder> getMemberOrders(Long memberId, Integer pageSize, Integer pageNum);
+    List<OmsOrder> getMemberOrders(Long memberId, OmsOrderQueryParam queryParam, Integer pageSize, Integer pageNum);
 
     /**
      * 获取会员订单总数
      */
-    long getMemberOrderCount(Long memberId);
+    long getMemberOrderCount(Long memberId, OmsOrderQueryParam queryParam);
 }

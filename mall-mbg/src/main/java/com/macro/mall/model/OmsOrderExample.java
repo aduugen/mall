@@ -2915,6 +2915,66 @@ public class OmsOrderExample {
             addCriterion("modify_time not between", value1, value2, "modifyTime");
             return (Criteria) this;
         }
+
+        public Criteria andReturnStatusIsNull() {
+            addCriterion("return_status is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusIsNotNull() {
+            addCriterion("return_status is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusEqualTo(Integer value) {
+            addCriterion("return_status =", value, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusNotEqualTo(Integer value) {
+            addCriterion("return_status <>", value, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusGreaterThan(Integer value) {
+            addCriterion("return_status >", value, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusGreaterThanOrEqualTo(Integer value) {
+            addCriterion("return_status >=", value, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusLessThan(Integer value) {
+            addCriterion("return_status <", value, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusLessThanOrEqualTo(Integer value) {
+            addCriterion("return_status <=", value, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusIn(List<Integer> values) {
+            addCriterion("return_status in", values, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusNotIn(List<Integer> values) {
+            addCriterion("return_status not in", values, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusBetween(Integer value1, Integer value2) {
+            addCriterion("return_status between", value1, value2, "returnStatus");
+            return (Criteria) this;
+        }
+
+        public Criteria andReturnStatusNotBetween(Integer value1, Integer value2) {
+            addCriterion("return_status not between", value1, value2, "returnStatus");
+            return (Criteria) this;
+        }
     }
 
     public static class Criteria extends GeneratedCriteria {
