@@ -3197,6 +3197,8 @@ INSERT INTO `ums_role_menu_relation` VALUES (92, 5, 22);
 INSERT INTO `ums_role_menu_relation` VALUES (93, 5, 23);
 INSERT INTO `ums_role_menu_relation` VALUES (94, 5, 24);
 INSERT INTO `ums_role_menu_relation` VALUES (95, 5, 25);
+INSERT INTO `ums_role_menu_relation` VALUES (96, 5, 26);
+INSERT INTO `ums_role_menu_relation` VALUES (97, 5, 27);
 INSERT INTO `ums_role_menu_relation` VALUES (121, 1, 1);
 INSERT INTO `ums_role_menu_relation` VALUES (122, 1, 2);
 INSERT INTO `ums_role_menu_relation` VALUES (123, 1, 3);
