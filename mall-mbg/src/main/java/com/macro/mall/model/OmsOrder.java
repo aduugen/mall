@@ -136,6 +136,9 @@ public class OmsOrder implements Serializable {
     @ApiModelProperty(value = "修改时间")
     private Date modifyTime;
 
+    @ApiModelProperty(value = "退货状态：0->正常订单；1->申请中；2->已退货；3->已拒绝")
+    private Integer returnStatus;
+
     private static final long serialVersionUID = 1L;
 
     public Long getId() {
@@ -490,6 +493,14 @@ public class OmsOrder implements Serializable {
         this.modifyTime = modifyTime;
     }
 
+    public Integer getReturnStatus() {
+        return returnStatus;
+    }
+
+    public void setReturnStatus(Integer returnStatus) {
+        this.returnStatus = returnStatus;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -540,6 +551,7 @@ public class OmsOrder implements Serializable {
         sb.append(", receiveTime=").append(receiveTime);
         sb.append(", commentTime=").append(commentTime);
         sb.append(", modifyTime=").append(modifyTime);
+        sb.append(", returnStatus=").append(returnStatus);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();
