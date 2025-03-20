@@ -870,6 +870,24 @@ CREATE TABLE `pms_album`  (
 -- ----------------------------
 
 -- ----------------------------
+-- Table structure for oms_after_sale
+-- ----------------------------
+DROP TABLE IF EXISTS `oms_after_sale`;
+CREATE TABLE `oms_after_sale` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '售后单号',
+  `order_id` bigint(20) NOT NULL COMMENT '订单号',
+  `order_item_ids` varchar(255) NOT NULL COMMENT '订单商品ID列表',
+  `reason` varchar(255) NOT NULL COMMENT '退货原因',
+  `pics` varchar(1000) DEFAULT NULL COMMENT '图片凭证',
+  `status` int(1) NOT NULL DEFAULT '0' COMMENT '状态：0->待处理；1->退货中；2->已完成；3->已拒绝',
+  `handle_note` varchar(500) DEFAULT NULL COMMENT '处理备注',
+  `handle_time` datetime DEFAULT NULL COMMENT '处理时间',
+  `create_time` datetime DEFAULT NULL COMMENT '申请时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后单表';
+
+-- ----------------------------
 -- Table structure for pms_album_pic
 -- ----------------------------
 DROP TABLE IF EXISTS `pms_album_pic`;
