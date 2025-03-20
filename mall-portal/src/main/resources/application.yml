@@ -6,6 +6,10 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
 
 mybatis:
   mapper-locations:
@@ -59,4 +63,8 @@ rabbitmq:
   queue:
     name:
       cancelOrder: cancelOrderQueue
+
+upload:
+  path: /home/upload/images # 文件上传路径，需要确保该目录存在且有写权限
+  base-url: http://localhost:8085/images # 文件访问URL前缀，根据实际部署情况调整
 

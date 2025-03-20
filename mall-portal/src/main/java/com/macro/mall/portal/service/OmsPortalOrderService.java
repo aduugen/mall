@@ -4,6 +4,7 @@ import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.portal.domain.ConfirmOrderResult;
 import com.macro.mall.portal.domain.OmsOrderDetail;
 import com.macro.mall.portal.domain.OrderParam;
+import com.macro.mall.portal.domain.PmsCommentParam;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -73,4 +74,9 @@ public interface OmsPortalOrderService {
      */
     @Transactional
     void paySuccessByOrderSn(String orderSn, Integer payType);
+
+    /**
+     * 添加商品评价
+     */
+    int createProductComment(PmsCommentParam commentParam);
 }
