@@ -15,6 +15,7 @@ import com.macro.mall.model.UmsMemberExample;
 import com.macro.mall.service.UmsMemberService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -34,6 +35,9 @@ public class UmsMemberServiceImpl implements UmsMemberService {
     private UmsMemberDao memberDao;
     @Autowired
     private OmsOrderMapper orderMapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public long geTotalMemberCount() {
@@ -87,8 +91,7 @@ public class UmsMemberServiceImpl implements UmsMemberService {
      * 密码加密
      */
     private String passwordEncoder(String password) {
-        // 简单实现，实际项目中应使用更安全的加密方式，如BCrypt
-        return cn.hutool.crypto.SecureUtil.md5(password);
+        return passwordEncoder.encode(password);
     }
 
     @Override
