@@ -96,6 +96,8 @@ public class UmsMemberServiceImpl implements UmsMemberService {
         umsMember.setPassword(passwordEncoder.encode(password));
         umsMember.setCreateTime(new Date());
         umsMember.setStatus(1);
+        // 设置昵称，如果没有提供昵称，就使用用户名作为昵称
+        umsMember.setNickname(username);
         // 获取默认会员等级并设置
         UmsMemberLevelExample levelExample = new UmsMemberLevelExample();
         levelExample.createCriteria().andDefaultStatusEqualTo(1);
