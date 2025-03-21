@@ -42,6 +42,8 @@ secure:
       - /product/**
       - /brand/**
       - /alipay/**
+      - /upload/**
+      - /member/afterSale/**
 
 # 自定义redis key
 redis:
