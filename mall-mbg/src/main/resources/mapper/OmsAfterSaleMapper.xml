@@ -13,79 +13,44 @@
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
     </resultMap>
-    <sql id="Example_Where_Clause">
-        <where>
-            <foreach collection="oredCriteria" item="criteria" separator="or">
-                <if test="criteria.valid">
-                    <trim prefix="(" prefixOverrides="and" suffix=")">
-                        <foreach collection="criteria.criteria" item="criterion">
-                            <choose>
-                                <when test="criterion.noValue">
-                                    and ${criterion.condition}
-                                </when>
-                                <when test="criterion.singleValue">
-                                    and ${criterion.condition} #{criterion.value}
-                                </when>
-                                <when test="criterion.betweenValue">
-                                    and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
-                                </when>
-                                <when test="criterion.listValue">
-                                    and ${criterion.condition}
-                                    <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
-                                        #{listItem}
-                                    </foreach>
-                                </when>
-                            </choose>
-                        </foreach>
-                    </trim>
-                </if>
-            </foreach>
-        </where>
-    </sql>
     <sql id="Base_Column_List">
         id, order_id, order_item_ids, reason, pics, status, handle_note, handle_time, create_time, update_time
     </sql>
-    <select id="selectByExample" parameterType="com.macro.mall.model.OmsAfterSaleExample" resultMap="BaseResultMap">
-        select
-        <if test="distinct">
-            distinct
-        </if>
-        <include refid="Base_Column_List" />
-        from oms_after_sale
-        <if test="_parameter != null">
-            <include refid="Example_Where_Clause" />
-        </if>
-        <if test="orderByClause != null">
-            order by ${orderByClause}
-        </if>
-    </select>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List" />
         from oms_after_sale
         where id = #{id,jdbcType=BIGINT}
     </select>
+    <select id="selectByStatus" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from oms_after_sale
+        where status = #{status,jdbcType=INTEGER}
+    </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from oms_after_sale
         where id = #{id,jdbcType=BIGINT}
     </delete>
     <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSale">
-        insert into oms_after_sale (id, order_id, order_item_ids,
-        reason, pics, status, handle_note,
-        handle_time, create_time, update_time)
-        values (#{id,jdbcType=BIGINT}, #{orderId,jdbcType=BIGINT},
-        #{orderItemIds,jdbcType=VARCHAR},
-        #{reason,jdbcType=VARCHAR}, #{pics,jdbcType=VARCHAR},
-        #{status,jdbcType=INTEGER}, #{handleNote,jdbcType=VARCHAR},
-        #{handleTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP},
-        #{updateTime,jdbcType=TIMESTAMP})
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into oms_after_sale (order_id, order_item_ids, reason, 
+            pics, status, handle_note, 
+            handle_time, create_time, update_time
+            )
+        values (#{orderId,jdbcType=BIGINT}, #{orderItemIds,jdbcType=VARCHAR}, #{reason,jdbcType=VARCHAR}, 
+            #{pics,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, #{handleNote,jdbcType=VARCHAR}, 
+            #{handleTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+            )
     </insert>
     <insert id="insertSelective" parameterType="com.macro.mall.model.OmsAfterSale">
+        <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
         insert into oms_after_sale
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="id != null">
-                id,
-            </if>
             <if test="orderId != null">
                 order_id,
             </if>
@@ -115,9 +80,6 @@
             </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="id != null">
-                #{id,jdbcType=BIGINT},
-            </if>
             <if test="orderId != null">
                 #{orderId,jdbcType=BIGINT},
             </if>
@@ -147,12 +109,6 @@
             </if>
         </trim>
     </insert>
-    <select id="countByExample" parameterType="com.macro.mall.model.OmsAfterSaleExample" resultType="java.lang.Long">
-        select count(*) from oms_after_sale
-        <if test="_parameter != null">
-            <include refid="Example_Where_Clause" />
-        </if>
-    </select>
     <update id="updateByPrimaryKeySelective" parameterType="com.macro.mall.model.OmsAfterSale">
         update oms_after_sale
         <set>

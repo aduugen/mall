@@ -2,7 +2,6 @@ package com.macro.mall.service.impl;
 
 import com.macro.mall.mapper.OmsAfterSaleMapper;
 import com.macro.mall.model.OmsAfterSale;
-import com.macro.mall.model.OmsAfterSaleExample;
 import com.macro.mall.service.OmsAfterSaleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,15 +29,8 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
 
     @Override
     public List<OmsAfterSale> list(Integer status, Integer pageSize, Integer pageNum) {
-        OmsAfterSaleExample example = new OmsAfterSaleExample();
-        OmsAfterSaleExample.Criteria criteria = example.createCriteria();
-        if (status != null) {
-            criteria.andStatusEqualTo(status);
-        }
-        example.setOrderByClause("create_time desc");
-        example.setLimit(pageSize);
-        example.setOffset((pageNum - 1) * pageSize);
-        return afterSaleMapper.selectByExample(example);
+        // 暂时只支持按状态查询,不支持分页
+        return afterSaleMapper.selectByStatus(status);
     }
 
     @Override
