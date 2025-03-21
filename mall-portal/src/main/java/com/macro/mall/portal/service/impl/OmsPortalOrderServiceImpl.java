@@ -382,7 +382,7 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             Asserts.fail("该订单还未发货！");
         }
         // 修改状态为待评价，而不是直接设为已完成
-        order.setStatus(4);
+        order.setStatus(3);
         order.setConfirmStatus(1);
         order.setReceiveTime(new Date());
         orderMapper.updateByPrimaryKey(order);
@@ -856,7 +856,7 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             }
 
             // 从待评价(4)更新为已完成(3)
-            order.setStatus(3);
+             order.setStatus(3);
             // 设置评价时间
             order.setCommentTime(new Date());
             orderMapper.updateByPrimaryKeySelective(order);
