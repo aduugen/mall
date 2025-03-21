@@ -887,8 +887,8 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             return 0;
         }
 
-        // 检查订单状态，只有已收货状态(4)的订单才能评价
-        if (order.getStatus() != 4) {
+        // 检查订单状态，只有已完成状态(3)的订单才能评价
+        if (order.getStatus() != 3) {
             return 0;
         }
 
@@ -959,8 +959,8 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     public List<OmsOrderItem> getOrderProductsForComment(Long orderId) {
         // 获取订单信息
         OmsOrder order = orderMapper.selectByPrimaryKey(orderId);
-        if (order == null || order.getStatus() != 4) {
-            // 如果订单不存在或状态不是待评价(4)，返回空列表
+        if (order == null || order.getStatus() != 3) {
+            // 如果订单不存在或状态不是已完成(3)，返回空列表
             return new ArrayList<>();
         }
 
