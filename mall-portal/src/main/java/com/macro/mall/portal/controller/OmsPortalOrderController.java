@@ -7,6 +7,7 @@ import com.macro.mall.portal.domain.OmsOrderDetail;
 import com.macro.mall.portal.domain.OrderParam;
 import com.macro.mall.portal.service.OmsPortalOrderService;
 import com.macro.mall.portal.domain.PmsCommentParam;
+import com.macro.mall.portal.domain.PmsBatchCommentParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import com.macro.mall.model.OmsCartItem;
+import com.macro.mall.model.OmsOrderItem;
 
 import java.util.List;
 import java.util.Map;
@@ -125,5 +128,24 @@ public class OmsPortalOrderController {
             return CommonResult.success(count);
         }
         return CommonResult.failed();
+    }
+
+    @ApiOperation("批量添加商品评价")
+    @RequestMapping(value = "/comment/batch/create", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult createBatchProductComment(@RequestBody PmsBatchCommentParam batchCommentParam) {
+        int count = portalOrderService.createBatchProductComment(batchCommentParam);
+        if (count > 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
+
+    @ApiOperation("获取订单中待评价商品列表")
+    @RequestMapping(value = "/comment/products/{orderId}", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<List<OmsOrderItem>> getOrderProductsForComment(@PathVariable Long orderId) {
+        List<OmsOrderItem> orderItemList = portalOrderService.getOrderProductsForComment(orderId);
+        return CommonResult.success(orderItemList);
     }
 }

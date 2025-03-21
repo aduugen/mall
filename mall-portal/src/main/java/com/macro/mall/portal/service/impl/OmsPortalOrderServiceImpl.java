@@ -856,7 +856,7 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             }
 
             // 从待评价(4)更新为已完成(3)
-             order.setStatus(3);
+            order.setStatus(3);
             // 设置评价时间
             order.setCommentTime(new Date());
             orderMapper.updateByPrimaryKeySelective(order);
@@ -872,4 +872,108 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         return commentMapper.insert(comment);
     }
 
+    @Override
+    public int createBatchProductComment(PmsBatchCommentParam batchCommentParam) {
+        if (batchCommentParam.getCommentItems() == null || batchCommentParam.getCommentItems().isEmpty()) {
+            return 0;
+        }
+
+        int count = 0;
+        Long orderId = batchCommentParam.getOrderId();
+
+        // 获取订单信息
+        OmsOrder order = orderMapper.selectByPrimaryKey(orderId);
+        if (order == null) {
+            return 0;
+        }
+
+        // 检查订单状态，只有已收货状态(4)的订单才能评价
+        if (order.getStatus() != 4) {
+            return 0;
+        }
+
+        // 获取当前登录会员
+        UmsMember member = memberService.getCurrentMember();
+
+        // 获取订单中的商品信息
+        OmsOrderItemExample orderItemExample = new OmsOrderItemExample();
+        orderItemExample.createCriteria().andOrderIdEqualTo(orderId);
+        List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(orderItemExample);
+
+        // 创建商品ID到订单项的映射，便于快速查找
+        Map<Long, OmsOrderItem> productItemMap = new HashMap<>();
+        for (OmsOrderItem item : orderItemList) {
+            productItemMap.put(item.getProductId(), item);
+        }
+
+        // 处理每个评价项
+        for (PmsBatchCommentParam.CommentItem commentItem : batchCommentParam.getCommentItems()) {
+            // 创建评价
+            PmsComment comment = new PmsComment();
+            comment.setProductId(commentItem.getProductId());
+            comment.setContent(commentItem.getComment());
+            comment.setStar(commentItem.getRating());
+
+            // 设置评价图片
+            if (commentItem.getPics() != null && !commentItem.getPics().isEmpty()) {
+                // 将图片列表转为逗号分隔的字符串
+                String pics = String.join(",", commentItem.getPics());
+                comment.setPics(pics);
+            }
+
+            // 设置用户信息
+            comment.setMemberNickName(member.getNickname());
+            comment.setMemberIcon(member.getIcon());
+
+            // 获取订单商品信息
+            OmsOrderItem orderItem = productItemMap.get(commentItem.getProductId());
+            if (orderItem != null) {
+                // 设置商品属性和商品名称
+                comment.setProductAttribute(orderItem.getProductAttr());
+                comment.setProductName(orderItem.getProductName());
+            }
+
+            // 其他默认设置
+            comment.setCreateTime(new Date());
+            comment.setShowStatus(1); // 显示
+            comment.setReplayCount(0);
+            comment.setReadCount(0);
+            comment.setCollectCouont(0);
+
+            // 插入评价
+            count += commentMapper.insert(comment);
+        }
+
+        if (count > 0) {
+            // 更新订单状态为已完成(3)
+            order.setStatus(3);
+            // 设置评价时间
+            order.setCommentTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(order);
+        }
+
+        return count;
+    }
+
+    @Override
+    public List<OmsOrderItem> getOrderProductsForComment(Long orderId) {
+        // 获取订单信息
+        OmsOrder order = orderMapper.selectByPrimaryKey(orderId);
+        if (order == null || order.getStatus() != 4) {
+            // 如果订单不存在或状态不是待评价(4)，返回空列表
+            return new ArrayList<>();
+        }
+
+        // 获取当前登录会员
+        UmsMember member = memberService.getCurrentMember();
+        if (!order.getMemberId().equals(member.getId())) {
+            // 如果不是当前会员的订单，返回空列表
+            return new ArrayList<>();
+        }
+
+        // 获取订单中的商品列表
+        OmsOrderItemExample example = new OmsOrderItemExample();
+        example.createCriteria().andOrderIdEqualTo(orderId);
+        return orderItemMapper.selectByExample(example);
+    }
 }

@@ -1,10 +1,14 @@
 package com.macro.mall.portal.service;
 
 import com.macro.mall.common.api.CommonPage;
+import com.macro.mall.model.OmsCartItem;
+import com.macro.mall.model.OmsOrder;
+import com.macro.mall.model.OmsOrderItem;
 import com.macro.mall.portal.domain.ConfirmOrderResult;
 import com.macro.mall.portal.domain.OmsOrderDetail;
 import com.macro.mall.portal.domain.OrderParam;
 import com.macro.mall.portal.domain.PmsCommentParam;
+import com.macro.mall.portal.domain.PmsBatchCommentParam;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -79,4 +83,14 @@ public interface OmsPortalOrderService {
      * 添加商品评价
      */
     int createProductComment(PmsCommentParam commentParam);
+
+    /**
+     * 批量添加商品评价
+     */
+    int createBatchProductComment(PmsBatchCommentParam batchCommentParam);
+
+    /**
+     * 获取指定订单中待评价的商品列表
+     */
+    List<OmsOrderItem> getOrderProductsForComment(Long orderId);
 }
