@@ -338,10 +338,16 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             // 解除订单商品库存锁定
             if (!CollectionUtils.isEmpty(orderItemList)) {
                 for (OmsOrderItem orderItem : orderItemList) {
-                    int count = portalOrderDao.releaseStockBySkuId(orderItem.getProductSkuId(),
-                            orderItem.getProductQuantity());
-                    if (count == 0) {
-                        Asserts.fail("库存不足，无法释放！");
+                    try {
+                        int count = portalOrderDao.releaseStockBySkuId(orderItem.getProductSkuId(),
+                                orderItem.getProductQuantity());
+                        if (count == 0) {
+                            // 日志记录库存释放失败,但不抛出异常
+                            log.warn("释放库存失败,可能库存数据不一致: skuId={}, quantity={}",
+                                    orderItem.getProductSkuId(), orderItem.getProductQuantity());
+                        }
+                    } catch (Exception e) {
+                        log.error("释放库存异常", e);
                     }
                 }
             }

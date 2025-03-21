@@ -106,9 +106,11 @@
     </update>
     <update id="releaseStockBySkuId">
         UPDATE pms_sku_stock
-        SET lock_stock = lock_stock - #{quantity}
+        SET lock_stock = CASE 
+                WHEN lock_stock - #{quantity} >= 0 THEN lock_stock - #{quantity}
+                ELSE 0
+            END
         WHERE
             id = #{productSkuId}
-          AND lock_stock - #{quantity} &gt;= 0
     </update>
 </mapper>
