@@ -1,4 +1,4 @@
-package com.macro.mall.portal.component;
+package com.macro.mall.portal.config;
 
 import com.macro.mall.portal.component.VisitorInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
