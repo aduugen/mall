@@ -29,49 +29,6 @@
         where status = #{status,jdbcType=INTEGER}
         order by create_time desc
     </select>
-    <select id="selectByExample" parameterType="com.macro.mall.model.OmsAfterSaleExample" resultMap="BaseResultMap">
-        select
-        <if test="distinct">
-            distinct
-        </if>
-        <include refid="Base_Column_List" />
-        from oms_after_sale
-        <if test="_parameter != null">
-            <include refid="Example_Where_Clause" />
-        </if>
-        <if test="orderByClause != null">
-            order by ${orderByClause}
-        </if>
-    </select>
-    <sql id="Example_Where_Clause">
-        <where>
-            <foreach collection="oredCriteria" item="criteria" separator="or">
-                <if test="criteria.valid">
-                    <trim prefix="(" prefixOverrides="and" suffix=")">
-                        <foreach collection="criteria.criteria" item="criterion">
-                            <choose>
-                                <when test="criterion.noValue">
-                                    and ${criterion.condition}
-                                </when>
-                                <when test="criterion.singleValue">
-                                    and ${criterion.condition} #{criterion.value}
-                                </when>
-                                <when test="criterion.betweenValue">
-                                    and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
-                                </when>
-                                <when test="criterion.listValue">
-                                    and ${criterion.condition}
-                                    <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
-                                        #{listItem}
-                                    </foreach>
-                                </when>
-                            </choose>
-                        </foreach>
-                    </trim>
-                </if>
-            </foreach>
-        </where>
-    </sql>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from oms_after_sale
         where id = #{id,jdbcType=BIGINT}
@@ -193,10 +150,4 @@
         update_time = #{updateTime,jdbcType=TIMESTAMP}
         where id = #{id,jdbcType=BIGINT}
     </update>
-    <select id="countByExample" parameterType="com.macro.mall.model.OmsAfterSaleExample" resultType="java.lang.Long">
-        select count(*) from oms_after_sale
-        <if test="_parameter != null">
-            <include refid="Example_Where_Clause" />
-        </if>
-    </select>
 </mapper> 

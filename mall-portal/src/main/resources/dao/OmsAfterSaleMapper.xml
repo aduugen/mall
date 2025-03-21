@@ -27,6 +27,7 @@
         <include refid="Base_Column_List" />
         from oms_after_sale
         where status = #{status,jdbcType=INTEGER}
+        order by create_time desc
     </select>
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from oms_after_sale
