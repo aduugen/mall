@@ -37,11 +37,8 @@ public class UploadController {
         try {
             // 记录认证信息
             LOGGER.info("收到上传请求，开始检查认证信息");
-            Enumeration<String> headerNames = request.getHeaderNames();
-            while (headerNames.hasMoreElements()) {
-                String headerName = headerNames.nextElement();
-                LOGGER.info("Header: {} = {}", headerName, request.getHeader(headerName));
-            }
+            String token = request.getHeader("Authorization");
+            LOGGER.info("Authorization token: {}", token);
 
             // 获取web应用根目录
             String webRootPath = request.getServletContext().getRealPath("");

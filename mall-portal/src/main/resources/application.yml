@@ -67,6 +67,6 @@ rabbitmq:
       cancelOrder: cancelOrderQueue
 
 upload:
-  path: /home/upload/images # 文件上传路径，需要确保该目录存在且有写权限
-  base-url: http://localhost:8085/images # 文件访问URL前缀，根据实际部署情况调整
+  path: ./upload/images # 文件上传路径，使用相对路径
+  base-url: http://192.168.1.10:8085/images # 文件访问URL前缀，根据实际部署情况调整
 
