@@ -44,6 +44,9 @@ public class PmsProduct implements Serializable {
     @ApiModelProperty(value = "销量")
     private Integer sale;
 
+    @ApiModelProperty(value = "浏览量")
+    private Integer viewCnt;
+
     private BigDecimal price;
 
     @ApiModelProperty(value = "促销价格")
@@ -240,6 +243,14 @@ public class PmsProduct implements Serializable {
 
     public void setSale(Integer sale) {
         this.sale = sale;
+    }
+
+    public Integer getViewCnt() {
+        return viewCnt;
+    }
+
+    public void setViewCnt(Integer viewCnt) {
+        this.viewCnt = viewCnt;
     }
 
     public BigDecimal getPrice() {

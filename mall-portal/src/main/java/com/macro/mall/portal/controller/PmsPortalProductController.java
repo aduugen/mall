@@ -30,17 +30,17 @@ public class PmsPortalProductController {
     private PmsPortalProductService portalProductService;
 
     @ApiOperation(value = "综合搜索、筛选、排序")
-    @ApiImplicitParam(name = "sort", value = "排序字段:0->按相关度；1->按新品；2->按销量；3->价格从低到高；4->价格从高到低",
-            defaultValue = "0", allowableValues = "0,1,2,3,4", paramType = "query", dataType = "integer")
+    @ApiImplicitParam(name = "sort", value = "排序字段:0->按相关度；1->按新品；2->按销量；3->价格从低到高；4->价格从高到低", defaultValue = "0", allowableValues = "0,1,2,3,4", paramType = "query", dataType = "integer")
     @RequestMapping(value = "/search", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<CommonPage<PmsProduct>> search(@RequestParam(required = false) String keyword,
-                                                       @RequestParam(required = false, defaultValue = "0") Long brandId,
-                                                       @RequestParam(required = false, defaultValue = "0") Long productCategoryId,
-                                                       @RequestParam(required = false, defaultValue = "0") Integer pageNum,
-                                                       @RequestParam(required = false, defaultValue = "5") Integer pageSize,
-                                                       @RequestParam(required = false, defaultValue = "0") Integer sort) {
-        List<PmsProduct> productList = portalProductService.search(keyword, brandId, productCategoryId, pageNum, pageSize, sort);
+            @RequestParam(required = false, defaultValue = "0") Long brandId,
+            @RequestParam(required = false, defaultValue = "0") Long productCategoryId,
+            @RequestParam(required = false, defaultValue = "0") Integer pageNum,
+            @RequestParam(required = false, defaultValue = "5") Integer pageSize,
+            @RequestParam(required = false, defaultValue = "0") Integer sort) {
+        List<PmsProduct> productList = portalProductService.search(keyword, brandId, productCategoryId, pageNum,
+                pageSize, sort);
         return CommonResult.success(CommonPage.restPage(productList));
     }
 
@@ -57,6 +57,7 @@ public class PmsPortalProductController {
     @ResponseBody
     public CommonResult<PmsPortalProductDetail> detail(@PathVariable Long id) {
         PmsPortalProductDetail productDetail = portalProductService.detail(id);
+        portalProductService.updateProductViewCount(id);
         return CommonResult.success(productDetail);
     }
 }
