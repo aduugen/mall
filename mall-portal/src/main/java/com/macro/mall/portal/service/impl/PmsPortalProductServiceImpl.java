@@ -9,6 +9,8 @@ import com.macro.mall.portal.dao.PortalProductDao;
 import com.macro.mall.portal.domain.PmsPortalProductDetail;
 import com.macro.mall.portal.domain.PmsProductCategoryNode;
 import com.macro.mall.portal.service.PmsPortalProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class PmsPortalProductServiceImpl implements PmsPortalProductService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PmsPortalProductServiceImpl.class);
+
     @Autowired
     private PmsProductMapper productMapper;
     @Autowired
@@ -87,7 +91,45 @@ public class PmsPortalProductServiceImpl implements PmsPortalProductService {
         PmsPortalProductDetail result = new PmsPortalProductDetail();
         // 获取商品信息
         PmsProduct product = productMapper.selectByPrimaryKey(id);
+
+        // 获取商品SKU库存信息
+        PmsSkuStockExample skuExample = new PmsSkuStockExample();
+        skuExample.createCriteria().andProductIdEqualTo(product.getId());
+        List<PmsSkuStock> skuStockList = skuStockMapper.selectByExample(skuExample);
+        result.setSkuStockList(skuStockList);
+
+        // 价格逻辑处理: 如果商品的price和promotion_price都为null，从SKU中获取价格
+        if ((product.getPrice() == null || product.getPrice().compareTo(new java.math.BigDecimal("0")) == 0) &&
+                (product.getPromotionPrice() == null
+                        || product.getPromotionPrice().compareTo(new java.math.BigDecimal("0")) == 0)) {
+
+            // 记录日志 - 使用参数化格式
+            LOGGER.info("商品价格为空，尝试从SKU获取价格，商品ID: {}", id);
+
+            // 如果有SKU数据，使用第一个SKU的价格
+            if (skuStockList != null && !skuStockList.isEmpty()) {
+                PmsSkuStock defaultSku = skuStockList.get(0);
+
+                // 设置原价
+                if (defaultSku.getPrice() != null
+                        && defaultSku.getPrice().compareTo(new java.math.BigDecimal("0")) > 0) {
+                    product.setPrice(defaultSku.getPrice());
+                    LOGGER.info("从SKU获取价格: {}, 商品ID: {}", defaultSku.getPrice(), id);
+                }
+
+                // 设置促销价
+                if (defaultSku.getPromotionPrice() != null
+                        && defaultSku.getPromotionPrice().compareTo(new java.math.BigDecimal("0")) > 0) {
+                    product.setPromotionPrice(defaultSku.getPromotionPrice());
+                    LOGGER.info("从SKU获取促销价: {}, 商品ID: {}", defaultSku.getPromotionPrice(), id);
+                }
+            } else {
+                LOGGER.info("商品没有SKU数据，无法获取价格，商品ID: {}", id);
+            }
+        }
+
         result.setProduct(product);
+
         // 获取品牌信息
         PmsBrand brand = brandMapper.selectByPrimaryKey(product.getBrandId());
         result.setBrand(brand);
@@ -107,11 +149,7 @@ public class PmsPortalProductServiceImpl implements PmsPortalProductService {
                     .selectByExample(attributeValueExample);
             result.setProductAttributeValueList(productAttributeValueList);
         }
-        // 获取商品SKU库存信息
-        PmsSkuStockExample skuExample = new PmsSkuStockExample();
-        skuExample.createCriteria().andProductIdEqualTo(product.getId());
-        List<PmsSkuStock> skuStockList = skuStockMapper.selectByExample(skuExample);
-        result.setSkuStockList(skuStockList);
+
         // 商品阶梯价格设置
         if (product.getPromotionType() == 3) {
             PmsProductLadderExample ladderExample = new PmsProductLadderExample();
