@@ -888,6 +888,62 @@ CREATE TABLE `oms_after_sale` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后单表';
 
 -- ----------------------------
+-- Table structure for oms_invoice
+-- ----------------------------
+DROP TABLE IF EXISTS `oms_invoice`;
+CREATE TABLE `oms_invoice` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '发票ID',
+  `order_id` bigint(20) NOT NULL COMMENT '关联订单ID',
+  `order_sn` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '订单编号',
+  `member_id` bigint(20) NOT NULL COMMENT '会员ID',
+  `invoice_type` tinyint(1) NOT NULL DEFAULT 1 COMMENT '发票类型：1->电子发票；2->纸质发票',
+  `title_type` tinyint(1) NOT NULL DEFAULT 1 COMMENT '抬头类型：1->个人；2->企业',
+  `invoice_title` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '发票抬头',
+  `tax_number` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '纳税人识别号',
+  `invoice_content` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '发票内容',
+  `invoice_amount` decimal(10, 2) NOT NULL COMMENT '发票金额',
+  `receiver_email` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '收票人邮箱(电子发票)',
+  `receiver_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '收件人姓名(纸质发票)',
+  `receiver_phone` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '收件人电话(纸质发票)',
+  `receiver_address` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '收件地址(纸质发票)',
+  `apply_time` datetime NOT NULL COMMENT '申请时间',
+  `issue_time` datetime DEFAULT NULL COMMENT '开票时间',
+  `invoice_number` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '发票号码',
+  `invoice_code` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '发票代码',
+  `invoice_url` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '电子发票URL',
+  `status` tinyint(1) NOT NULL DEFAULT 0 COMMENT '发票状态：0->待开票；1->已开票；2->开票失败',
+  `reason` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '失败原因',
+  `delivery_company` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '快递公司(纸质发票)',
+  `delivery_sn` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '快递单号(纸质发票)',
+  `note` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '备注',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_order_id` (`order_id`) USING BTREE,
+  KEY `idx_order_sn` (`order_sn`) USING BTREE,
+  KEY `idx_member_id` (`member_id`) USING BTREE,
+  KEY `idx_status` (`status`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '订单发票表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for oms_invoice_history
+-- ----------------------------
+DROP TABLE IF EXISTS `oms_invoice_history`;
+CREATE TABLE `oms_invoice_history` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `invoice_id` bigint(20) NOT NULL COMMENT '发票ID',
+  `order_id` bigint(20) NOT NULL COMMENT '订单ID',
+  `order_sn` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '订单编号',
+  `operate_man` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '操作人',
+  `status` tinyint(1) NOT NULL COMMENT '操作后的状态：0->待开票；1->已开票；2->开票失败',
+  `note` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '备注',
+  `create_time` datetime NOT NULL COMMENT '操作时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_invoice_id` (`invoice_id`) USING BTREE,
+  KEY `idx_order_id` (`order_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '发票操作历史记录表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
 -- Table structure for pms_album_pic
 -- ----------------------------
 DROP TABLE IF EXISTS `pms_album_pic`;
