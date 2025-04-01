@@ -9,6 +9,8 @@ import com.macro.mall.portal.service.UmsMemberService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,8 @@ import java.util.List;
 @Tag(name = "OmsCartItemController", description = "购物车管理")
 @RequestMapping("/cart")
 public class OmsCartItemController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OmsCartItemController.class);
+
     @Autowired
     private OmsCartItemService cartItemService;
     @Autowired
@@ -52,15 +56,21 @@ public class OmsCartItemController {
     @RequestMapping(value = "/list/promotion", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<CartPromotionItem>> listPromotion(@RequestParam(required = false) List<Long> cartIds) {
-        List<CartPromotionItem> cartPromotionItemList = cartItemService.listPromotion(memberService.getCurrentMember().getId(), cartIds);
-        return CommonResult.success(cartPromotionItemList);
+        try {
+            Long memberId = memberService.getCurrentMember().getId();
+            List<CartPromotionItem> cartPromotionItemList = cartItemService.listPromotion(memberId, cartIds);
+            return CommonResult.success(cartPromotionItemList);
+        } catch (Exception e) {
+            LOGGER.error("获取购物车促销信息异常:", e);
+            return CommonResult.failed(e.getMessage());
+        }
     }
 
     @ApiOperation("修改购物车中指定商品的数量")
     @RequestMapping(value = "/update/quantity", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult updateQuantity(@RequestParam Long id,
-                                       @RequestParam Integer quantity) {
+            @RequestParam Integer quantity) {
         int count = cartItemService.updateQuantity(id, memberService.getCurrentMember().getId(), quantity);
         if (count > 0) {
             return CommonResult.success(count);

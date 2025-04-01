@@ -140,10 +140,19 @@ public class UmsMemberServiceImpl implements UmsMemberService {
 
     @Override
     public UmsMember getCurrentMember() {
-        SecurityContext ctx = SecurityContextHolder.getContext();
-        Authentication auth = ctx.getAuthentication();
-        MemberDetails memberDetails = (MemberDetails) auth.getPrincipal();
-        return memberDetails.getUmsMember();
+        try {
+            SecurityContext ctx = SecurityContextHolder.getContext();
+            Authentication auth = ctx.getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof MemberDetails)) {
+                Asserts.fail("用户未登录或登录状态已过期");
+            }
+            MemberDetails memberDetails = (MemberDetails) auth.getPrincipal();
+            return memberDetails.getUmsMember();
+        } catch (Exception e) {
+            LOGGER.error("获取当前登录用户信息失败：", e);
+            Asserts.fail("登录状态异常，请重新登录");
+            return null;
+        }
     }
 
     @Override
