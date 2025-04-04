@@ -27,10 +27,10 @@ import java.util.UUID;
 public class UploadController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadController.class);
 
-    @Value("${upload.path:./upload/images}")
+    @Value("${upload.path:/tmp/mall/upload/images}")
     private String uploadPath;
 
-    @Value("${upload.base-url:http://localhost:8085/images}")
+    @Value("${upload.base-url:http://192.168.1.10:8085/images}")
     private String baseUrl;
 
     @ApiOperation(value = "上传图片")
@@ -55,28 +55,59 @@ public class UploadController {
                 LOGGER.info("请求头 {}: {}", headerName, request.getHeader(headerName));
             }
 
-            // 生成存储路径
+            // 确保路径是绝对路径
+            File rootUploadDir = new File(uploadPath);
+            if (uploadPath.startsWith("./") || uploadPath.startsWith(".\\")) {
+                // 获取当前应用程序的绝对路径
+                String userDir = System.getProperty("user.dir");
+                LOGGER.info("当前工作目录: {}", userDir);
+                rootUploadDir = new File(userDir, uploadPath.substring(2));
+            }
+
+            LOGGER.info("使用绝对路径上传目录: {}", rootUploadDir.getAbsolutePath());
+
+            // 生成日期目录
             String dateDir = new SimpleDateFormat("yyyyMMdd").format(new Date());
-            // 使用配置的上传路径
-            File uploadDir = new File(uploadPath);
-            if (!uploadDir.exists()) {
-                boolean created = uploadDir.mkdirs();
-                LOGGER.info("创建根目录: {} - {}", uploadPath, created ? "成功" : "失败");
+            File dateDirectory = new File(rootUploadDir, dateDir);
+
+            // 创建完整的目录结构
+            if (!dateDirectory.exists()) {
+                LOGGER.info("尝试创建目录结构: {}", dateDirectory.getAbsolutePath());
+                boolean created = dateDirectory.mkdirs();
+                LOGGER.info("创建目录结构结果: {}", created);
+
                 if (!created) {
-                    LOGGER.error("无法创建上传目录: {}", uploadPath);
-                    return CommonResult.failed("服务器存储目录创建失败");
+                    // 尝试创建父目录
+                    if (!rootUploadDir.exists()) {
+                        boolean rootCreated = rootUploadDir.mkdirs();
+                        LOGGER.info("创建根目录结果: {}", rootCreated);
+                        if (rootCreated) {
+                            // 再次尝试创建日期目录
+                            created = dateDirectory.mkdirs();
+                            LOGGER.info("二次尝试创建日期目录结果: {}", created);
+                        }
+                    }
+
+                    if (!dateDirectory.exists()) {
+                        LOGGER.error("无法创建目录结构，尝试使用系统临时目录");
+                        // 使用系统临时目录作为备选
+                        String tempDir = System.getProperty("java.io.tmpdir");
+                        rootUploadDir = new File(tempDir, "mall-upload");
+                        if (!rootUploadDir.exists()) {
+                            rootUploadDir.mkdirs();
+                        }
+                        dateDirectory = new File(rootUploadDir, dateDir);
+                        if (!dateDirectory.exists()) {
+                            dateDirectory.mkdirs();
+                        }
+                        LOGGER.info("临时目录路径: {}", dateDirectory.getAbsolutePath());
+                    }
                 }
             }
 
-            // 创建日期子目录
-            File dateDirectory = new File(uploadDir, dateDir);
-            if (!dateDirectory.exists()) {
-                boolean created = dateDirectory.mkdirs();
-                LOGGER.info("创建日期目录: {} - {}", dateDirectory.getAbsolutePath(), created ? "成功" : "失败");
-                if (!created) {
-                    LOGGER.error("无法创建日期目录: {}", dateDirectory.getAbsolutePath());
-                    return CommonResult.failed("服务器日期目录创建失败");
-                }
+            if (!dateDirectory.exists() || !dateDirectory.canWrite()) {
+                LOGGER.error("目录不存在或无写入权限: {}", dateDirectory.getAbsolutePath());
+                return CommonResult.failed("服务器存储目录不可用或无写入权限");
             }
 
             // 生成文件名

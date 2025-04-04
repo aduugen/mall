@@ -68,6 +68,6 @@ rabbitmq:
       cancelOrder: cancelOrderQueue
 
 upload:
-  path: ./upload/images # 文件上传路径，使用相对路径
+  path: /tmp/mall/upload/images # 文件上传路径，使用绝对路径
   base-url: http://192.168.1.10:8085/images # 文件访问URL前缀，根据实际部署情况调整
 
