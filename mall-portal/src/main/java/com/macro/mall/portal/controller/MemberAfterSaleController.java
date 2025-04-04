@@ -4,6 +4,7 @@ import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
 import com.macro.mall.model.OmsAfterSale;
 import com.macro.mall.model.UmsMember;
+import com.macro.mall.portal.domain.AfterSaleParam;
 import com.macro.mall.portal.service.MemberAfterSaleService;
 import com.macro.mall.portal.service.UmsMemberService;
 import io.swagger.annotations.Api;
@@ -30,14 +31,14 @@ public class MemberAfterSaleController {
     @ApiOperation("创建售后申请")
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     @ResponseBody
-    public CommonResult create(@RequestBody OmsAfterSale afterSale) {
+    public CommonResult create(@RequestBody AfterSaleParam afterSaleParam) {
         UmsMember currentMember = memberService.getCurrentMember();
-        // 从订单获取会员ID设置到售后信息中
-        // 理论上我们应该根据orderId查询订单，验证该订单是否属于当前会员
-        // 这里简化处理，直接依赖前端传递的orderId
-        afterSale.setCreateTime(new Date());
-        afterSale.setUpdateTime(new Date());
-        int count = afterSaleService.create(afterSale);
+        // 设置会员ID和订单创建时间
+        afterSaleParam.setMemberId(currentMember.getId());
+        afterSaleParam.setCreateTime(new Date());
+        afterSaleParam.setUpdateTime(new Date());
+
+        int count = afterSaleService.create(afterSaleParam);
         if (count > 0) {
             return CommonResult.success(count);
         }

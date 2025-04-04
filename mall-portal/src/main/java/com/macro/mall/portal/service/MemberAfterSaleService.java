@@ -1,6 +1,7 @@
 package com.macro.mall.portal.service;
 
 import com.macro.mall.model.OmsAfterSale;
+import com.macro.mall.portal.domain.AfterSaleParam;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ public interface MemberAfterSaleService {
     /**
      * 创建售后申请
      */
-    int create(OmsAfterSale afterSale);
+    int create(AfterSaleParam afterSaleParam);
 
     /**
      * 获取售后申请详情

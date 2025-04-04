@@ -3,15 +3,13 @@ package com.macro.mall.model;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 public class OmsAfterSale implements Serializable {
     private Long id;
 
     @ApiModelProperty(value = "订单ID")
     private Long orderId;
-
-    @ApiModelProperty(value = "订单项ID列表,多个用逗号分隔")
-    private String orderItemIds;
 
     @ApiModelProperty(value = "退货原因")
     private String reason;
@@ -34,6 +32,12 @@ public class OmsAfterSale implements Serializable {
     @ApiModelProperty(value = "更新时间")
     private Date updateTime;
 
+    @ApiModelProperty(value = "会员ID")
+    private Long memberId;
+
+    @ApiModelProperty(value = "售后商品列表")
+    private List<OmsAfterSaleItem> afterSaleItemList;
+
     private static final long serialVersionUID = 1L;
 
     public Long getId() {
@@ -50,14 +54,6 @@ public class OmsAfterSale implements Serializable {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
-    }
-
-    public String getOrderItemIds() {
-        return orderItemIds;
-    }
-
-    public void setOrderItemIds(String orderItemIds) {
-        this.orderItemIds = orderItemIds;
     }
 
     public String getReason() {
@@ -116,6 +112,22 @@ public class OmsAfterSale implements Serializable {
         this.updateTime = updateTime;
     }
 
+    public Long getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(Long memberId) {
+        this.memberId = memberId;
+    }
+
+    public List<OmsAfterSaleItem> getAfterSaleItemList() {
+        return afterSaleItemList;
+    }
+
+    public void setAfterSaleItemList(List<OmsAfterSaleItem> afterSaleItemList) {
+        this.afterSaleItemList = afterSaleItemList;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -124,7 +136,6 @@ public class OmsAfterSale implements Serializable {
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
         sb.append(", orderId=").append(orderId);
-        sb.append(", orderItemIds=").append(orderItemIds);
         sb.append(", reason=").append(reason);
         sb.append(", pics=").append(pics);
         sb.append(", status=").append(status);
@@ -132,6 +143,7 @@ public class OmsAfterSale implements Serializable {
         sb.append(", handleTime=").append(handleTime);
         sb.append(", createTime=").append(createTime);
         sb.append(", updateTime=").append(updateTime);
+        sb.append(", memberId=").append(memberId);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

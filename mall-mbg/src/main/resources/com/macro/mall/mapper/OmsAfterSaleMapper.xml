@@ -4,7 +4,6 @@
     <resultMap id="BaseResultMap" type="com.macro.mall.model.OmsAfterSale">
         <id column="id" jdbcType="BIGINT" property="id" />
         <result column="order_id" jdbcType="BIGINT" property="orderId" />
-        <result column="order_item_ids" jdbcType="VARCHAR" property="orderItemIds" />
         <result column="reason" jdbcType="VARCHAR" property="reason" />
         <result column="pics" jdbcType="VARCHAR" property="pics" />
         <result column="status" jdbcType="INTEGER" property="status" />
@@ -14,7 +13,7 @@
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
     </resultMap>
     <sql id="Base_Column_List">
-        id, order_id, order_item_ids, reason, pics, status, handle_note, handle_time, create_time, update_time
+        id, order_id, reason, pics, status, handle_note, handle_time, create_time, update_time
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select
@@ -34,11 +33,11 @@
         where id = #{id,jdbcType=BIGINT}
     </delete>
     <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSale" useGeneratedKeys="true" keyProperty="id">
-        insert into oms_after_sale (order_id, order_item_ids,
+        insert into oms_after_sale (order_id,
             reason, pics, status, 
             handle_note, handle_time, create_time, 
             update_time)
-        values (#{orderId,jdbcType=BIGINT}, #{orderItemIds,jdbcType=VARCHAR},
+        values (#{orderId,jdbcType=BIGINT},
             #{reason,jdbcType=VARCHAR}, #{pics,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
             #{handleNote,jdbcType=VARCHAR}, #{handleTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, 
             #{updateTime,jdbcType=TIMESTAMP})
@@ -48,9 +47,6 @@
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="orderId != null">
                 order_id,
-            </if>
-            <if test="orderItemIds != null">
-                order_item_ids,
             </if>
             <if test="reason != null">
                 reason,
@@ -110,9 +106,6 @@
             <if test="orderId != null">
                 order_id = #{orderId,jdbcType=BIGINT},
             </if>
-            <if test="orderItemIds != null">
-                order_item_ids = #{orderItemIds,jdbcType=VARCHAR},
-            </if>
             <if test="reason != null">
                 reason = #{reason,jdbcType=VARCHAR},
             </if>
@@ -140,7 +133,6 @@
     <update id="updateByPrimaryKey" parameterType="com.macro.mall.model.OmsAfterSale">
         update oms_after_sale
         set order_id = #{orderId,jdbcType=BIGINT},
-        order_item_ids = #{orderItemIds,jdbcType=VARCHAR},
         reason = #{reason,jdbcType=VARCHAR},
         pics = #{pics,jdbcType=VARCHAR},
         status = #{status,jdbcType=INTEGER},
