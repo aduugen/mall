@@ -14,7 +14,7 @@
         <result column="member_id" jdbcType="BIGINT" property="memberId" />
     </resultMap>
     <sql id="Base_Column_List">
-        id, order_id, reason, pics, status, handle_note, handle_time, create_time, update_time, member_id
+        id, order_id, member_id, reason, pics, status, handle_note, handle_time, create_time, update_time, member_id
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select
@@ -34,11 +34,11 @@
         where id = #{id,jdbcType=BIGINT}
     </delete>
     <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSale" useGeneratedKeys="true" keyProperty="id">
-        insert into oms_after_sale (order_id,
+        insert into oms_after_sale (order_id, member_id,
             reason, pics, status, 
             handle_note, handle_time, create_time, 
             update_time, member_id)
-        values (#{orderId,jdbcType=BIGINT},
+        values (#{orderId,jdbcType=BIGINT}, #{memberId,jdbcType=BIGINT},
             #{reason,jdbcType=VARCHAR}, #{pics,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
             #{handleNote,jdbcType=VARCHAR}, #{handleTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, 
             #{updateTime,jdbcType=TIMESTAMP}, #{memberId,jdbcType=BIGINT})
