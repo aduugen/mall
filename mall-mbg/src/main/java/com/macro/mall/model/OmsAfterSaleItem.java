@@ -44,6 +44,9 @@ public class OmsAfterSaleItem implements Serializable {
     @ApiModelProperty(value = "退货原因")
     private String reason;
 
+    @ApiModelProperty(value = "退货凭证图片,多个用逗号分隔")
+    private String pics;
+
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
 
@@ -153,6 +156,14 @@ public class OmsAfterSaleItem implements Serializable {
         this.reason = reason;
     }
 
+    public String getPics() {
+        return pics;
+    }
+
+    public void setPics(String pics) {
+        this.pics = pics;
+    }
+
     public Date getCreateTime() {
         return createTime;
     }
@@ -180,6 +191,7 @@ public class OmsAfterSaleItem implements Serializable {
         sb.append(", productPrice=").append(productPrice);
         sb.append(", productQuantity=").append(productQuantity);
         sb.append(", reason=").append(reason);
+        sb.append(", pics=").append(pics);
         sb.append(", createTime=").append(createTime);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
