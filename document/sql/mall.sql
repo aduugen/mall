@@ -876,6 +876,7 @@ DROP TABLE IF EXISTS `oms_after_sale`;
 CREATE TABLE `oms_after_sale` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '售后单号',
   `order_id` bigint(20) NOT NULL COMMENT '订单号',
+  `member_id` bigint(20) NOT NULL COMMENT '会员ID',
   `reason` varchar(255) NOT NULL COMMENT '退货原因',
   `pics` varchar(1000) DEFAULT NULL COMMENT '图片凭证',
   `status` int(1) NOT NULL DEFAULT '0' COMMENT '状态：0->待处理；1->退货中；2->已完成；3->已拒绝',
