@@ -887,6 +887,28 @@ CREATE TABLE `oms_after_sale` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后单表';
 
 -- ----------------------------
+-- Table structure for oms_after_sale_item
+-- ----------------------------
+DROP TABLE IF EXISTS `oms_after_sale_item`;
+CREATE TABLE oms_after_sale_item (
+  id bigint NOT NULL AUTO_INCREMENT,
+  after_sale_id bigint NOT NULL COMMENT '售后ID',
+  order_item_id bigint NOT NULL COMMENT '订单项ID',
+  product_id bigint COMMENT '商品ID',
+  product_name varchar(200) COMMENT '商品名称',
+  product_sku_id bigint COMMENT '商品sku编号',
+  product_sku_code varchar(50) COMMENT '商品sku条码',
+  product_attr varchar(500) COMMENT '商品属性',
+  product_pic varchar(500) COMMENT '商品图片',
+  return_quantity int COMMENT '退货数量',
+  product_price decimal(10,2) COMMENT '商品单价',
+  product_quantity int COMMENT '购买数量',
+  create_time datetime COMMENT '创建时间',
+  PRIMARY KEY (id),
+  KEY idx_after_sale_id (after_sale_id),
+  KEY idx_order_item_id (order_item_id)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后申请商品信息表';
+-- ----------------------------
 -- Table structure for oms_invoice
 -- ----------------------------
 DROP TABLE IF EXISTS `oms_invoice`;
