@@ -30,4 +30,16 @@ public class AfterSaleParam {
 
     @ApiModelProperty(value = "售后状态:0->待处理;1->处理中;2->已完成;3->已拒绝")
     private Integer status = 0;
+
+    @Override
+    public String toString() {
+        return "AfterSaleParam{" +
+                "orderId=" + orderId +
+                ", items=" + (items != null ? items.size() : 0) + " items" +
+                ", memberId=" + memberId +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", status=" + status +
+                '}';
+    }
 }

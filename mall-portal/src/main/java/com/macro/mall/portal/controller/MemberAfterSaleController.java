@@ -32,17 +32,40 @@ public class MemberAfterSaleController {
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     @ResponseBody
     public CommonResult create(@RequestBody AfterSaleParam afterSaleParam) {
-        UmsMember currentMember = memberService.getCurrentMember();
-        // 设置会员ID和订单创建时间
-        afterSaleParam.setMemberId(currentMember.getId());
-        afterSaleParam.setCreateTime(new Date());
-        afterSaleParam.setUpdateTime(new Date());
+        try {
+            System.out.println("===== 接收到售后申请创建请求 =====");
 
-        int count = afterSaleService.create(afterSaleParam);
-        if (count > 0) {
-            return CommonResult.success(count);
+            // 记录请求信息
+            System.out.println("售后参数: " + afterSaleParam);
+
+            UmsMember currentMember = memberService.getCurrentMember();
+            if (currentMember == null) {
+                System.out.println("创建售后申请失败: 未获取到当前登录会员");
+                return CommonResult.unauthorized(null);
+            }
+            System.out.println("当前会员: id=" + currentMember.getId() + ", 用户名=" + currentMember.getUsername());
+
+            // 设置会员ID和订单创建时间
+            afterSaleParam.setMemberId(currentMember.getId());
+            afterSaleParam.setCreateTime(new Date());
+            afterSaleParam.setUpdateTime(new Date());
+
+            int count = afterSaleService.create(afterSaleParam);
+            System.out.println("售后申请创建结果: " + count);
+
+            if (count > 0) {
+                System.out.println("===== 售后申请创建成功 =====");
+                return CommonResult.success(count);
+            }
+            System.out.println("===== 售后申请创建失败: 返回了0 =====");
+            return CommonResult.failed("创建售后申请失败");
+        } catch (Exception e) {
+            System.out.println("===== 售后申请创建异常 =====");
+            System.out.println("异常类型: " + e.getClass().getName());
+            System.out.println("异常信息: " + e.getMessage());
+            e.printStackTrace();
+            return CommonResult.failed(e.getMessage());
         }
-        return CommonResult.failed();
     }
 
     @ApiOperation("获取售后申请详情")
