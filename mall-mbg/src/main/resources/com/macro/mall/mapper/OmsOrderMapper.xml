@@ -47,6 +47,7 @@
     <result column="comment_time" jdbcType="TIMESTAMP" property="commentTime" />
     <result column="modify_time" jdbcType="TIMESTAMP" property="modifyTime" />
     <result column="return_status" jdbcType="INTEGER" property="returnStatus" />
+    <result column="after_sale_status" jdbcType="TINYINT" property="afterSaleStatus" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -114,7 +115,7 @@
     bill_receiver_email, receiver_name, receiver_phone, receiver_post_code, receiver_province, 
     receiver_city, receiver_region, receiver_detail_address, note, confirm_status, delete_status, 
     use_integration, payment_time, delivery_time, receive_time, comment_time, modify_time,
-    return_status
+    return_status, after_sale_status
   </sql>
   <select id="selectByExample" parameterType="com.macro.mall.model.OmsOrderExample" resultMap="BaseResultMap">
     select
@@ -164,7 +165,7 @@
       receiver_detail_address, note, confirm_status, 
       delete_status, use_integration, payment_time, 
       delivery_time, receive_time, comment_time, 
-      modify_time, return_status)
+      modify_time, return_status, after_sale_status)
     values (#{memberId,jdbcType=BIGINT}, #{couponId,jdbcType=BIGINT}, #{orderSn,jdbcType=VARCHAR}, 
       #{createTime,jdbcType=TIMESTAMP}, #{memberUsername,jdbcType=VARCHAR}, #{totalAmount,jdbcType=DECIMAL}, 
       #{payAmount,jdbcType=DECIMAL}, #{freightAmount,jdbcType=DECIMAL}, #{promotionAmount,jdbcType=DECIMAL}, 
@@ -179,7 +180,7 @@
       #{receiverDetailAddress,jdbcType=VARCHAR}, #{note,jdbcType=VARCHAR}, #{confirmStatus,jdbcType=INTEGER}, 
       #{deleteStatus,jdbcType=INTEGER}, #{useIntegration,jdbcType=INTEGER}, #{paymentTime,jdbcType=TIMESTAMP}, 
       #{deliveryTime,jdbcType=TIMESTAMP}, #{receiveTime,jdbcType=TIMESTAMP}, #{commentTime,jdbcType=TIMESTAMP}, 
-      #{modifyTime,jdbcType=TIMESTAMP}, #{returnStatus,jdbcType=INTEGER})
+      #{modifyTime,jdbcType=TIMESTAMP}, #{returnStatus,jdbcType=INTEGER}, #{afterSaleStatus,jdbcType=TINYINT})
   </insert>
   <insert id="insertSelective" parameterType="com.macro.mall.model.OmsOrder">
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
@@ -319,6 +320,9 @@
       <if test="returnStatus != null">
         return_status,
       </if>
+      <if test="afterSaleStatus != null">
+        after_sale_status,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="memberId != null">
@@ -452,6 +456,9 @@
       </if>
       <if test="returnStatus != null">
         #{returnStatus,jdbcType=INTEGER},
+      </if>
+      <if test="afterSaleStatus != null">
+        #{afterSaleStatus,jdbcType=TINYINT},
       </if>
     </trim>
   </insert>
@@ -599,6 +606,9 @@
       <if test="record.returnStatus != null">
         return_status = #{record.returnStatus,jdbcType=INTEGER},
       </if>
+      <if test="record.afterSaleStatus != null">
+        after_sale_status = #{record.afterSaleStatus,jdbcType=TINYINT},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -650,7 +660,8 @@
       receive_time = #{record.receiveTime,jdbcType=TIMESTAMP},
       comment_time = #{record.commentTime,jdbcType=TIMESTAMP},
       modify_time = #{record.modifyTime,jdbcType=TIMESTAMP},
-      return_status = #{record.returnStatus,jdbcType=INTEGER}
+      return_status = #{record.returnStatus,jdbcType=INTEGER},
+      after_sale_status = #{record.afterSaleStatus,jdbcType=TINYINT}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -790,6 +801,9 @@
       <if test="returnStatus != null">
         return_status = #{returnStatus,jdbcType=INTEGER},
       </if>
+      <if test="afterSaleStatus != null">
+        after_sale_status = #{afterSaleStatus,jdbcType=TINYINT},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -838,7 +852,8 @@
       receive_time = #{receiveTime,jdbcType=TIMESTAMP},
       comment_time = #{commentTime,jdbcType=TIMESTAMP},
       modify_time = #{modifyTime,jdbcType=TIMESTAMP},
-      return_status = #{returnStatus,jdbcType=INTEGER}
+      return_status = #{returnStatus,jdbcType=INTEGER},
+      after_sale_status = #{afterSaleStatus,jdbcType=TINYINT}
     where id = #{id,jdbcType=BIGINT}
   </update>
   <select id="getOrderStatistics" resultType="java.util.Map" parameterType="java.util.Date">
