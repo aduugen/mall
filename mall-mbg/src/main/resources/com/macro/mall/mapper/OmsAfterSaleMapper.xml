@@ -4,8 +4,6 @@
     <resultMap id="BaseResultMap" type="com.macro.mall.model.OmsAfterSale">
         <id column="id" jdbcType="BIGINT" property="id" />
         <result column="order_id" jdbcType="BIGINT" property="orderId" />
-        <result column="reason" jdbcType="VARCHAR" property="reason" />
-        <result column="pics" jdbcType="VARCHAR" property="pics" />
         <result column="status" jdbcType="INTEGER" property="status" />
         <result column="handle_note" jdbcType="VARCHAR" property="handleNote" />
         <result column="handle_time" jdbcType="TIMESTAMP" property="handleTime" />
@@ -14,7 +12,7 @@
         <result column="member_id" jdbcType="BIGINT" property="memberId" />
     </resultMap>
     <sql id="Base_Column_List">
-        id, order_id, member_id, reason, pics, status, handle_note, handle_time, create_time, update_time
+        id, order_id, member_id, status, handle_note, handle_time, create_time, update_time
     </sql>
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select
@@ -35,25 +33,17 @@
     </delete>
     <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSale" useGeneratedKeys="true" keyProperty="id">
         insert into oms_after_sale (order_id, member_id,
-            reason, pics, status, 
-            handle_note, handle_time, create_time, 
-            update_time)
+            status, handle_note, handle_time, 
+            create_time, update_time)
         values (#{orderId,jdbcType=BIGINT}, #{memberId,jdbcType=BIGINT},
-            #{reason,jdbcType=VARCHAR}, #{pics,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, 
-            #{handleNote,jdbcType=VARCHAR}, #{handleTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, 
-            #{updateTime,jdbcType=TIMESTAMP})
+            #{status,jdbcType=INTEGER}, #{handleNote,jdbcType=VARCHAR}, #{handleTime,jdbcType=TIMESTAMP}, 
+            #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
     </insert>
     <insert id="insertSelective" parameterType="com.macro.mall.model.OmsAfterSale" useGeneratedKeys="true" keyProperty="id">
         insert into oms_after_sale
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="orderId != null">
                 order_id,
-            </if>
-            <if test="reason != null">
-                reason,
-            </if>
-            <if test="pics != null">
-                pics,
             </if>
             <if test="status != null">
                 status,
@@ -77,15 +67,6 @@
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="orderId != null">
                 #{orderId,jdbcType=BIGINT},
-            </if>
-            <if test="orderItemIds != null">
-                #{orderItemIds,jdbcType=VARCHAR},
-            </if>
-            <if test="reason != null">
-                #{reason,jdbcType=VARCHAR},
-            </if>
-            <if test="pics != null">
-                #{pics,jdbcType=VARCHAR},
             </if>
             <if test="status != null">
                 #{status,jdbcType=INTEGER},
@@ -113,12 +94,6 @@
             <if test="orderId != null">
                 order_id = #{orderId,jdbcType=BIGINT},
             </if>
-            <if test="reason != null">
-                reason = #{reason,jdbcType=VARCHAR},
-            </if>
-            <if test="pics != null">
-                pics = #{pics,jdbcType=VARCHAR},
-            </if>
             <if test="status != null">
                 status = #{status,jdbcType=INTEGER},
             </if>
@@ -143,8 +118,6 @@
     <update id="updateByPrimaryKey" parameterType="com.macro.mall.model.OmsAfterSale">
         update oms_after_sale
         set order_id = #{orderId,jdbcType=BIGINT},
-        reason = #{reason,jdbcType=VARCHAR},
-        pics = #{pics,jdbcType=VARCHAR},
         status = #{status,jdbcType=INTEGER},
         handle_note = #{handleNote,jdbcType=VARCHAR},
         handle_time = #{handleTime,jdbcType=TIMESTAMP},
