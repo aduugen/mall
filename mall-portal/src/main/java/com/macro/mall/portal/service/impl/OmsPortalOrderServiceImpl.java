@@ -428,6 +428,12 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             orderDetail.setOrderItemList(relatedItemList);
             orderDetailList.add(orderDetail);
         }
+        // 在list方法中，处理orderItemList后添加
+        for (OmsOrderItem item : orderItemList) {
+            if (item.getAppliedQuantity() == null) {
+                item.setAppliedQuantity(0);
+            }
+        }
         resultPage.setList(orderDetailList);
         return resultPage;
     }
