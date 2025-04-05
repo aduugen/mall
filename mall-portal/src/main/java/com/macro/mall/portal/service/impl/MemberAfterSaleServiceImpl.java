@@ -37,7 +37,7 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
     private OmsOrderItemMapper orderItemMapper;
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int create(AfterSaleParam afterSaleParam) {
         // 增加日志记录
         System.out.println("===== 开始创建售后申请 =====");
@@ -131,6 +131,10 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
             // 设置售后商品列表，便于返回给前端
             afterSale.setAfterSaleItemList(afterSaleItems);
+
+            // 更新订单的售后状态
+            updateOrderAfterSaleStatus(afterSaleParam.getOrderId());
+
             System.out.println("===== 售后申请创建成功 =====");
 
             return count;
@@ -141,6 +145,55 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    /**
+     * 更新订单的售后状态
+     * 
+     * @param orderId 订单ID
+     */
+    private void updateOrderAfterSaleStatus(Long orderId) {
+        // 获取订单所有订单项
+        OmsOrderItemExample itemExample = new OmsOrderItemExample();
+        itemExample.createCriteria().andOrderIdEqualTo(orderId);
+        List<OmsOrderItem> orderItems = orderItemMapper.selectByExample(itemExample);
+
+        boolean allApplied = true;
+        boolean partialApplied = false;
+
+        for (OmsOrderItem item : orderItems) {
+            // 确保applied_quantity字段不为null
+            Integer appliedQuantity = item.getAppliedQuantity() == null ? 0 : item.getAppliedQuantity();
+            Integer productQuantity = item.getProductQuantity() == null ? 0 : item.getProductQuantity();
+
+            // 判断是否全部申请
+            if (appliedQuantity < productQuantity) {
+                allApplied = false;
+            }
+
+            // 判断是否部分申请
+            if (appliedQuantity > 0) {
+                partialApplied = true;
+            }
+        }
+
+        // 根据判断结果设置售后状态
+        byte afterSaleStatus;
+        if (allApplied) {
+            afterSaleStatus = 2; // 全部申请
+        } else if (partialApplied) {
+            afterSaleStatus = 1; // 部分申请
+        } else {
+            afterSaleStatus = 0; // 未申请
+        }
+
+        // 更新订单售后状态
+        OmsOrder order = new OmsOrder();
+        order.setId(orderId);
+        order.setAfterSaleStatus(afterSaleStatus);
+        orderMapper.updateByPrimaryKeySelective(order);
+
+        System.out.println("更新订单售后状态: 订单ID=" + orderId + ", 新售后状态=" + afterSaleStatus);
     }
 
     @Override
@@ -179,7 +232,7 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int cancel(Long id, Long memberId) {
         OmsAfterSale afterSale = afterSaleMapper.selectByPrimaryKey(id);
         if (afterSale == null) {
@@ -220,6 +273,12 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         // 更新售后申请状态为已取消（或其他状态码）
         afterSale.setStatus(3); // 假设3表示已取消
         afterSale.setUpdateTime(new Date());
+
+        // 更新订单的售后状态
+        if (afterSale.getOrderId() != null) {
+            updateOrderAfterSaleStatus(afterSale.getOrderId());
+        }
+
         return afterSaleMapper.updateByPrimaryKeySelective(afterSale);
     }
 }

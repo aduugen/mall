@@ -394,6 +394,9 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             status = null;
         }
         UmsMember member = memberService.getCurrentMember();
+        log.info("查询用户订单列表: memberId={}, status={}, pageNum={}, pageSize={}", member.getId(), status, pageNum,
+                pageSize);
+
         PageHelper.startPage(pageNum, pageSize);
         OmsOrderExample orderExample = new OmsOrderExample();
         OmsOrderExample.Criteria criteria = orderExample.createCriteria();
@@ -412,18 +415,94 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         resultPage.setTotal(orderPage.getTotal());
         resultPage.setTotalPage(orderPage.getTotalPage());
         if (CollUtil.isEmpty(orderList)) {
+            log.info("未查询到符合条件的订单列表");
             return resultPage;
         }
+        log.info("查询到符合条件的订单数量: {}", orderList.size());
+
         // 设置数据信息
         List<Long> orderIds = orderList.stream().map(OmsOrder::getId).collect(Collectors.toList());
+        log.info("准备查询订单项信息，订单ID列表: {}", orderIds);
+
         OmsOrderItemExample orderItemExample = new OmsOrderItemExample();
         orderItemExample.createCriteria().andOrderIdIn(orderIds);
         List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(orderItemExample);
+        log.info("查询到订单项总数量: {}", orderItemList != null ? orderItemList.size() : 0);
 
         // 处理订单项，确保appliedQuantity不为null
-        for (OmsOrderItem item : orderItemList) {
-            if (item.getAppliedQuantity() == null) {
-                item.setAppliedQuantity(0);
+        if (orderItemList != null && !orderItemList.isEmpty()) {
+            log.info("开始处理订单项的appliedQuantity字段");
+            int nullCount = 0;
+            for (OmsOrderItem item : orderItemList) {
+                if (item.getAppliedQuantity() == null) {
+                    nullCount++;
+                    item.setAppliedQuantity(0);
+                }
+            }
+            log.info("订单项中appliedQuantity为null的记录数: {}", nullCount);
+
+            // 按订单ID分组统计订单项
+            Map<Long, Long> orderItemCountMap = orderItemList.stream()
+                    .collect(Collectors.groupingBy(OmsOrderItem::getOrderId, Collectors.counting()));
+            log.info("各订单包含的订单项数量统计: {}", orderItemCountMap);
+        } else {
+            log.warn("未查询到任何订单项信息!");
+        }
+
+        // 检查并更新订单售后状态
+        for (OmsOrder order : orderList) {
+            // 如果订单没有售后状态或状态为0，但有订单项已申请售后，则更新订单售后状态
+            if (order.getAfterSaleStatus() == null || order.getAfterSaleStatus() == 0) {
+                boolean needUpdate = false;
+                boolean allApplied = true;
+                boolean partialApplied = false;
+
+                // 获取当前订单的所有订单项
+                List<OmsOrderItem> items = orderItemList.stream()
+                        .filter(item -> item.getOrderId().equals(order.getId()))
+                        .collect(Collectors.toList());
+
+                if (!items.isEmpty()) {
+                    for (OmsOrderItem item : items) {
+                        Integer appliedQuantity = item.getAppliedQuantity() == null ? 0 : item.getAppliedQuantity();
+                        Integer productQuantity = item.getProductQuantity() == null ? 0 : item.getProductQuantity();
+
+                        if (appliedQuantity < productQuantity) {
+                            allApplied = false;
+                        }
+
+                        if (appliedQuantity > 0) {
+                            partialApplied = true;
+                            needUpdate = true;
+                        }
+                    }
+
+                    // 如果需要更新订单状态
+                    if (needUpdate) {
+                        byte afterSaleStatus;
+                        if (allApplied) {
+                            afterSaleStatus = 2; // 全部申请
+                        } else if (partialApplied) {
+                            afterSaleStatus = 1; // 部分申请
+                        } else {
+                            afterSaleStatus = 0; // 未申请
+                        }
+
+                        // 只有当状态需要变更时才更新
+                        if (order.getAfterSaleStatus() == null || order.getAfterSaleStatus() != afterSaleStatus) {
+                            log.info("更新订单售后状态: 订单ID={}, 原状态={}, 新状态={}",
+                                    order.getId(), order.getAfterSaleStatus(), afterSaleStatus);
+
+                            OmsOrder updateOrder = new OmsOrder();
+                            updateOrder.setId(order.getId());
+                            updateOrder.setAfterSaleStatus(afterSaleStatus);
+                            orderMapper.updateByPrimaryKeySelective(updateOrder);
+
+                            // 更新当前列表中的状态，确保前端显示正确
+                            order.setAfterSaleStatus(afterSaleStatus);
+                        }
+                    }
+                }
             }
         }
 
@@ -433,6 +512,18 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             BeanUtil.copyProperties(omsOrder, orderDetail);
             List<OmsOrderItem> relatedItemList = orderItemList.stream()
                     .filter(item -> item.getOrderId().equals(orderDetail.getId())).collect(Collectors.toList());
+
+            log.info("订单ID: {}, 关联的订单项数量: {}", orderDetail.getId(), relatedItemList.size());
+            if (relatedItemList.isEmpty()) {
+                log.warn("订单ID: {} 没有关联的订单项!", orderDetail.getId());
+            } else {
+                // 检查第一个订单项的字段值
+                OmsOrderItem firstItem = relatedItemList.get(0);
+                log.info("订单 {} 的第一个订单项: ID={}, 商品名称={}, appliedQuantity={}",
+                        orderDetail.getId(), firstItem.getId(), firstItem.getProductName(),
+                        firstItem.getAppliedQuantity());
+            }
+
             orderDetail.setOrderItemList(relatedItemList);
             orderDetailList.add(orderDetail);
         }
