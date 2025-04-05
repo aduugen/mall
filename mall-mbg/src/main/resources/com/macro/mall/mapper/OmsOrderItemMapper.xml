@@ -346,6 +346,9 @@
       <if test="record.productAttr != null">
         product_attr = #{record.productAttr,jdbcType=VARCHAR},
       </if>
+      <if test="record.appliedQuantity != null">
+        applied_quantity = #{record.appliedQuantity,jdbcType=INTEGER},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -373,7 +376,8 @@
       real_amount = #{record.realAmount,jdbcType=DECIMAL},
       gift_integration = #{record.giftIntegration,jdbcType=INTEGER},
       gift_growth = #{record.giftGrowth,jdbcType=INTEGER},
-      product_attr = #{record.productAttr,jdbcType=VARCHAR}
+      product_attr = #{record.productAttr,jdbcType=VARCHAR},
+      applied_quantity = #{record.appliedQuantity,jdbcType=INTEGER}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -441,6 +445,9 @@
       <if test="productAttr != null">
         product_attr = #{productAttr,jdbcType=VARCHAR},
       </if>
+      <if test="appliedQuantity != null">
+        applied_quantity = #{appliedQuantity,jdbcType=INTEGER},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -465,7 +472,8 @@
       real_amount = #{realAmount,jdbcType=DECIMAL},
       gift_integration = #{giftIntegration,jdbcType=INTEGER},
       gift_growth = #{giftGrowth,jdbcType=INTEGER},
-      product_attr = #{productAttr,jdbcType=VARCHAR}
+      product_attr = #{productAttr,jdbcType=VARCHAR},
+      applied_quantity = #{appliedQuantity,jdbcType=INTEGER}
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

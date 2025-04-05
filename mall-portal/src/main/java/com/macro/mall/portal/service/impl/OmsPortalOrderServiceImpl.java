@@ -419,6 +419,14 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         OmsOrderItemExample orderItemExample = new OmsOrderItemExample();
         orderItemExample.createCriteria().andOrderIdIn(orderIds);
         List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(orderItemExample);
+
+        // 处理订单项，确保appliedQuantity不为null
+        for (OmsOrderItem item : orderItemList) {
+            if (item.getAppliedQuantity() == null) {
+                item.setAppliedQuantity(0);
+            }
+        }
+
         List<OmsOrderDetail> orderDetailList = new ArrayList<>();
         for (OmsOrder omsOrder : orderList) {
             OmsOrderDetail orderDetail = new OmsOrderDetail();
@@ -427,12 +435,6 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
                     .filter(item -> item.getOrderId().equals(orderDetail.getId())).collect(Collectors.toList());
             orderDetail.setOrderItemList(relatedItemList);
             orderDetailList.add(orderDetail);
-        }
-        // 在list方法中，处理orderItemList后添加
-        for (OmsOrderItem item : orderItemList) {
-            if (item.getAppliedQuantity() == null) {
-                item.setAppliedQuantity(0);
-            }
         }
         resultPage.setList(orderDetailList);
         return resultPage;
