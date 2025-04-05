@@ -14,8 +14,8 @@
         <result column="return_quantity" jdbcType="INTEGER" property="returnQuantity" />
         <result column="product_price" jdbcType="DECIMAL" property="productPrice" />
         <result column="product_quantity" jdbcType="INTEGER" property="productQuantity" />
-        <result column="reason" jdbcType="VARCHAR" property="reason" />
-        <result column="pics" jdbcType="VARCHAR" property="pics" />
+        <result column="return_reason" jdbcType="VARCHAR" property="returnReason" />
+        <result column="proof_pics" jdbcType="VARCHAR" property="proofPics" />
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     </resultMap>
     <sql id="Example_Where_Clause">
@@ -78,7 +78,7 @@
     </sql>
     <sql id="Base_Column_List">
         id, after_sale_id, order_item_id, product_id, product_name, product_sku_id, product_sku_code, 
-        product_attr, product_pic, return_quantity, product_price, product_quantity, reason, pics, create_time
+        product_attr, product_pic, return_quantity, product_price, product_quantity, return_reason, proof_pics, create_time
     </sql>
     <select id="selectByExample" parameterType="com.macro.mall.model.OmsAfterSaleItemExample" resultMap="BaseResultMap">
         select
@@ -117,13 +117,13 @@
         insert into oms_after_sale_item (after_sale_id, order_item_id, product_id, 
             product_name, product_sku_id, product_sku_code, 
             product_attr, product_pic, return_quantity, 
-            product_price, product_quantity, reason, 
-            pics, create_time)
+            product_price, product_quantity, return_reason, 
+            proof_pics, create_time)
         values (#{afterSaleId,jdbcType=BIGINT}, #{orderItemId,jdbcType=BIGINT}, #{productId,jdbcType=BIGINT}, 
             #{productName,jdbcType=VARCHAR}, #{productSkuId,jdbcType=BIGINT}, #{productSkuCode,jdbcType=VARCHAR}, 
             #{productAttr,jdbcType=VARCHAR}, #{productPic,jdbcType=VARCHAR}, #{returnQuantity,jdbcType=INTEGER}, 
-            #{productPrice,jdbcType=DECIMAL}, #{productQuantity,jdbcType=INTEGER}, #{reason,jdbcType=VARCHAR}, 
-            #{pics,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP})
+            #{productPrice,jdbcType=DECIMAL}, #{productQuantity,jdbcType=INTEGER}, #{returnReason,jdbcType=VARCHAR}, 
+            #{proofPics,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP})
     </insert>
     <insert id="insertSelective" parameterType="com.macro.mall.model.OmsAfterSaleItem">
         <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
@@ -164,11 +164,11 @@
             <if test="productQuantity != null">
                 product_quantity,
             </if>
-            <if test="reason != null">
-                reason,
+            <if test="returnReason != null">
+                return_reason,
             </if>
-            <if test="pics != null">
-                pics,
+            <if test="proofPics != null">
+                proof_pics,
             </if>
             <if test="createTime != null">
                 create_time,
@@ -208,11 +208,11 @@
             <if test="productQuantity != null">
                 #{productQuantity,jdbcType=INTEGER},
             </if>
-            <if test="reason != null">
-                #{reason,jdbcType=VARCHAR},
+            <if test="returnReason != null">
+                #{returnReason,jdbcType=VARCHAR},
             </if>
-            <if test="pics != null">
-                #{pics,jdbcType=VARCHAR},
+            <if test="proofPics != null">
+                #{proofPics,jdbcType=VARCHAR},
             </if>
             <if test="createTime != null">
                 #{createTime,jdbcType=TIMESTAMP},
@@ -264,11 +264,11 @@
             <if test="record.productQuantity != null">
                 product_quantity = #{record.productQuantity,jdbcType=INTEGER},
             </if>
-            <if test="record.reason != null">
-                reason = #{record.reason,jdbcType=VARCHAR},
+            <if test="record.returnReason != null">
+                return_reason = #{record.returnReason,jdbcType=VARCHAR},
             </if>
-            <if test="record.pics != null">
-                pics = #{record.pics,jdbcType=VARCHAR},
+            <if test="record.proofPics != null">
+                proof_pics = #{record.proofPics,jdbcType=VARCHAR},
             </if>
             <if test="record.createTime != null">
                 create_time = #{record.createTime,jdbcType=TIMESTAMP},
@@ -292,8 +292,8 @@
             return_quantity = #{record.returnQuantity,jdbcType=INTEGER},
             product_price = #{record.productPrice,jdbcType=DECIMAL},
             product_quantity = #{record.productQuantity,jdbcType=INTEGER},
-            reason = #{record.reason,jdbcType=VARCHAR},
-            pics = #{record.pics,jdbcType=VARCHAR},
+            return_reason = #{record.returnReason,jdbcType=VARCHAR},
+            proof_pics = #{record.proofPics,jdbcType=VARCHAR},
             create_time = #{record.createTime,jdbcType=TIMESTAMP}
         <if test="_parameter != null">
             <include refid="Update_By_Example_Where_Clause" />
@@ -335,11 +335,11 @@
             <if test="productQuantity != null">
                 product_quantity = #{productQuantity,jdbcType=INTEGER},
             </if>
-            <if test="reason != null">
-                reason = #{reason,jdbcType=VARCHAR},
+            <if test="returnReason != null">
+                return_reason = #{returnReason,jdbcType=VARCHAR},
             </if>
-            <if test="pics != null">
-                pics = #{pics,jdbcType=VARCHAR},
+            <if test="proofPics != null">
+                proof_pics = #{proofPics,jdbcType=VARCHAR},
             </if>
             <if test="createTime != null">
                 create_time = #{createTime,jdbcType=TIMESTAMP},
@@ -360,8 +360,8 @@
             return_quantity = #{returnQuantity,jdbcType=INTEGER},
             product_price = #{productPrice,jdbcType=DECIMAL},
             product_quantity = #{productQuantity,jdbcType=INTEGER},
-            reason = #{reason,jdbcType=VARCHAR},
-            pics = #{pics,jdbcType=VARCHAR},
+            return_reason = #{returnReason,jdbcType=VARCHAR},
+            proof_pics = #{proofPics,jdbcType=VARCHAR},
             create_time = #{createTime,jdbcType=TIMESTAMP}
         where id = #{id,jdbcType=BIGINT}
     </update>

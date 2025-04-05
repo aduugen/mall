@@ -42,10 +42,10 @@ public class OmsAfterSaleItem implements Serializable {
     private Integer productQuantity;
 
     @ApiModelProperty(value = "退货原因")
-    private String reason;
+    private String returnReason;
 
     @ApiModelProperty(value = "退货凭证图片,多个用逗号分隔")
-    private String pics;
+    private String proofPics;
 
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
@@ -148,20 +148,20 @@ public class OmsAfterSaleItem implements Serializable {
         this.productQuantity = productQuantity;
     }
 
-    public String getReason() {
-        return reason;
+    public String getReturnReason() {
+        return returnReason;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setReturnReason(String returnReason) {
+        this.returnReason = returnReason;
     }
 
-    public String getPics() {
-        return pics;
+    public String getProofPics() {
+        return proofPics;
     }
 
-    public void setPics(String pics) {
-        this.pics = pics;
+    public void setProofPics(String proofPics) {
+        this.proofPics = proofPics;
     }
 
     public Date getCreateTime() {
@@ -190,8 +190,8 @@ public class OmsAfterSaleItem implements Serializable {
         sb.append(", returnQuantity=").append(returnQuantity);
         sb.append(", productPrice=").append(productPrice);
         sb.append(", productQuantity=").append(productQuantity);
-        sb.append(", reason=").append(reason);
-        sb.append(", pics=").append(pics);
+        sb.append(", returnReason=").append(returnReason);
+        sb.append(", proofPics=").append(proofPics);
         sb.append(", createTime=").append(createTime);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");

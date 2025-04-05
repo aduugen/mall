@@ -61,14 +61,8 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
         // 保存售后主信息
         OmsAfterSale afterSale = new OmsAfterSale();
-        BeanUtils.copyProperties(afterSaleParam, afterSale);
-
-        // 确保会员ID已设置
-        if (afterSale.getMemberId() == null) {
-            System.out.println("警告: 会员ID为空");
-        } else {
-            System.out.println("会员ID: " + afterSale.getMemberId());
-        }
+        afterSale.setOrderId(afterSaleParam.getOrderId());
+        afterSale.setMemberId(afterSaleParam.getMemberId());
 
         // 设置初始状态为待处理
         afterSale.setStatus(0);
@@ -109,6 +103,11 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 afterSaleItem.setAfterSaleId(afterSale.getId());
                 afterSaleItem.setCreateTime(new Date());
                 afterSaleItem.setProductQuantity(orderItem.getProductQuantity()); // 设置购买数量，便于后续处理
+
+                // 确保每个商品项的退货原因不为空
+                if (afterSaleItem.getReturnReason() == null || afterSaleItem.getReturnReason().trim().isEmpty()) {
+                    afterSaleItem.setReturnReason("商品退货");
+                }
 
                 System.out.println("插入售后商品项: " + afterSaleItem);
                 afterSaleItemMapper.insert(afterSaleItem);
@@ -173,12 +172,13 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         // 验证是否是当前会员的申请
         // 这里需要查询订单来验证订单所属会员，暂时忽略验证
 
-        // 只有待处理状态的申请才能取消
+        // 只有待处理状态的售后申请才能取消
         if (afterSale.getStatus() != 0) {
-            Asserts.fail("该申请已处理，无法取消");
+            Asserts.fail("当前售后申请状态不允许取消");
         }
 
-        afterSale.setStatus(3); // 设置为已取消
+        // 更新售后申请状态为已取消（或其他状态码）
+        afterSale.setStatus(3); // 假设3表示已取消
         afterSale.setUpdateTime(new Date());
         return afterSaleMapper.updateByPrimaryKeySelective(afterSale);
     }

@@ -877,8 +877,6 @@ CREATE TABLE `oms_after_sale` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '售后单号',
   `order_id` bigint(20) NOT NULL COMMENT '订单号',
   `member_id` bigint(20) NOT NULL COMMENT '会员ID',
-  `reason` varchar(255) NOT NULL COMMENT '退货原因',
-  `pics` varchar(1000) DEFAULT NULL COMMENT '图片凭证',
   `status` int(1) NOT NULL DEFAULT '0' COMMENT '状态：0->待处理；1->退货中；2->已完成；3->已拒绝',
   `handle_note` varchar(500) DEFAULT NULL COMMENT '处理备注',
   `handle_time` datetime DEFAULT NULL COMMENT '处理时间',
@@ -892,22 +890,24 @@ CREATE TABLE `oms_after_sale` (
 -- ----------------------------
 DROP TABLE IF EXISTS `oms_after_sale_item`;
 CREATE TABLE oms_after_sale_item (
-  id bigint NOT NULL AUTO_INCREMENT,
-  after_sale_id bigint NOT NULL COMMENT '售后ID',
-  order_item_id bigint NOT NULL COMMENT '订单项ID',
-  product_id bigint COMMENT '商品ID',
-  product_name varchar(200) COMMENT '商品名称',
-  product_sku_id bigint COMMENT '商品sku编号',
-  product_sku_code varchar(50) COMMENT '商品sku条码',
-  product_attr varchar(500) COMMENT '商品属性',
-  product_pic varchar(500) COMMENT '商品图片',
-  return_quantity int COMMENT '退货数量',
-  product_price decimal(10,2) COMMENT '商品单价',
-  product_quantity int COMMENT '购买数量',
-  create_time datetime COMMENT '创建时间',
-  PRIMARY KEY (id),
-  KEY idx_after_sale_id (after_sale_id),
-  KEY idx_order_item_id (order_item_id)
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `after_sale_id` bigint NOT NULL COMMENT '售后ID',
+  `order_item_id` bigint NOT NULL COMMENT '订单项ID',
+  `product_id` bigint COMMENT '商品ID',
+  `product_name` varchar(200) COMMENT '商品名称',
+  `product_sku_id` bigint COMMENT '商品sku编号',
+  `product_sku_code` varchar(50) COMMENT '商品sku条码',
+  `product_attr` varchar(500) COMMENT '商品属性',
+  `product_pic` varchar(500) COMMENT '商品图片',
+  `return_quantity` int COMMENT '退货数量',
+  `return_reason` varchar(255) NOT NULL COMMENT '退货原因',
+  `proof_pics` varchar(1000) DEFAULT NULL COMMENT '图片凭证',
+  `product_price` decimal(10,2) COMMENT '商品单价',
+  `product_quantity` int COMMENT '购买数量',
+  `create_time` datetime COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_after_sale_id` (`after_sale_id`),
+  KEY `idx_order_item_id` (`order_item_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后申请商品信息表';
 -- ----------------------------
 -- Table structure for oms_invoice

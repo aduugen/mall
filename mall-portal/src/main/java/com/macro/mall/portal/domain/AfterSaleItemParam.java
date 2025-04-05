@@ -40,8 +40,8 @@ public class AfterSaleItemParam {
     private String productSkuCode;
 
     @ApiModelProperty(value = "退货原因")
-    private String reason;
+    private String returnReason;
 
     @ApiModelProperty(value = "退货凭证图片,多个用逗号分隔")
-    private String pics;
+    private String proofPics;
 }

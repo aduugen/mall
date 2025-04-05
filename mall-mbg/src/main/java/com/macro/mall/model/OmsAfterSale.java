@@ -11,12 +11,6 @@ public class OmsAfterSale implements Serializable {
     @ApiModelProperty(value = "订单ID")
     private Long orderId;
 
-    @ApiModelProperty(value = "退货原因")
-    private String reason;
-
-    @ApiModelProperty(value = "退货凭证图片,多个用逗号分隔")
-    private String pics;
-
     @ApiModelProperty(value = "售后状态:0->待处理;1->处理中;2->已完成;3->已拒绝")
     private Integer status;
 
@@ -54,22 +48,6 @@ public class OmsAfterSale implements Serializable {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
-
-    public String getPics() {
-        return pics;
-    }
-
-    public void setPics(String pics) {
-        this.pics = pics;
     }
 
     public Integer getStatus() {
@@ -136,8 +114,6 @@ public class OmsAfterSale implements Serializable {
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
         sb.append(", orderId=").append(orderId);
-        sb.append(", reason=").append(reason);
-        sb.append(", pics=").append(pics);
         sb.append(", status=").append(status);
         sb.append(", handleNote=").append(handleNote);
         sb.append(", handleTime=").append(handleTime);
