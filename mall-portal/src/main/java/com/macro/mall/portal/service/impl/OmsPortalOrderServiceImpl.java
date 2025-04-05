@@ -438,6 +438,15 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         OmsOrderItemExample example = new OmsOrderItemExample();
         example.createCriteria().andOrderIdEqualTo(orderId);
         List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(example);
+
+        // 处理订单项，确保appliedQuantity不为null，并计算可申请数量
+        for (OmsOrderItem item : orderItemList) {
+            // 确保已申请数量不为null
+            if (item.getAppliedQuantity() == null) {
+                item.setAppliedQuantity(0);
+            }
+        }
+
         OmsOrderDetail orderDetail = new OmsOrderDetail();
         BeanUtil.copyProperties(omsOrder, orderDetail);
         orderDetail.setOrderItemList(orderItemList);

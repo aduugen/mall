@@ -91,10 +91,18 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 }
 
                 OmsOrderItem orderItem = orderItems.get(0);
-                if (itemParam.getReturnQuantity() > orderItem.getProductQuantity()) {
+
+                // 检查可申请数量 = 购买数量 - 已申请数量
+                Integer appliedQuantity = orderItem.getAppliedQuantity() == null ? 0 : orderItem.getAppliedQuantity();
+                Integer availableQuantity = orderItem.getProductQuantity() - appliedQuantity;
+
+                if (itemParam.getReturnQuantity() > availableQuantity) {
                     System.out.println(
-                            "退货数量错误: 退货=" + itemParam.getReturnQuantity() + ", 购买=" + orderItem.getProductQuantity());
-                    Asserts.fail("退货数量不能大于购买数量: " + orderItem.getProductName());
+                            "退货数量错误: 退货=" + itemParam.getReturnQuantity() +
+                                    ", 可申请=" + availableQuantity +
+                                    ", 已申请=" + appliedQuantity +
+                                    ", 购买=" + orderItem.getProductQuantity());
+                    Asserts.fail("退货数量不能大于可申请数量: " + orderItem.getProductName());
                 }
 
                 // 创建售后商品项
@@ -112,6 +120,13 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 System.out.println("插入售后商品项: " + afterSaleItem);
                 afterSaleItemMapper.insert(afterSaleItem);
                 afterSaleItems.add(afterSaleItem);
+
+                // 更新订单项的已申请数量
+                appliedQuantity += itemParam.getReturnQuantity();
+                orderItem.setAppliedQuantity(appliedQuantity);
+                orderItemMapper.updateByPrimaryKeySelective(orderItem);
+                System.out.println("更新订单项已申请数量: 订单项ID=" + orderItem.getId() +
+                        ", 新已申请数量=" + appliedQuantity);
             }
 
             // 设置售后商品列表，便于返回给前端
@@ -164,17 +179,42 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
     }
 
     @Override
+    @Transactional
     public int cancel(Long id, Long memberId) {
         OmsAfterSale afterSale = afterSaleMapper.selectByPrimaryKey(id);
         if (afterSale == null) {
             Asserts.fail("售后申请不存在");
         }
         // 验证是否是当前会员的申请
-        // 这里需要查询订单来验证订单所属会员，暂时忽略验证
+        if (!afterSale.getMemberId().equals(memberId)) {
+            Asserts.fail("无权操作该售后申请");
+        }
 
         // 只有待处理状态的售后申请才能取消
         if (afterSale.getStatus() != 0) {
             Asserts.fail("当前售后申请状态不允许取消");
+        }
+
+        // 查询售后商品项
+        OmsAfterSaleItemExample itemExample = new OmsAfterSaleItemExample();
+        itemExample.createCriteria().andAfterSaleIdEqualTo(id);
+        List<OmsAfterSaleItem> afterSaleItems = afterSaleItemMapper.selectByExample(itemExample);
+
+        // 恢复订单项的已申请数量
+        for (OmsAfterSaleItem afterSaleItem : afterSaleItems) {
+            // 获取订单项
+            OmsOrderItem orderItem = orderItemMapper.selectByPrimaryKey(afterSaleItem.getOrderItemId());
+            if (orderItem != null) {
+                // 减少已申请数量
+                Integer appliedQuantity = orderItem.getAppliedQuantity();
+                if (appliedQuantity != null && appliedQuantity > 0) {
+                    appliedQuantity = Math.max(0, appliedQuantity - afterSaleItem.getReturnQuantity());
+                    orderItem.setAppliedQuantity(appliedQuantity);
+                    orderItemMapper.updateByPrimaryKeySelective(orderItem);
+                    System.out.println("恢复订单项已申请数量: 订单项ID=" + orderItem.getId() +
+                            ", 新已申请数量=" + appliedQuantity);
+                }
+            }
         }
 
         // 更新售后申请状态为已取消（或其他状态码）
