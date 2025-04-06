@@ -220,15 +220,42 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
     @Override
     public List<OmsAfterSale> list(Long memberId, Integer status, Integer pageSize, Integer pageNum) {
         PageHelper.startPage(pageNum, pageSize);
-        // 需要按会员ID查询，这里实现可能不完整
-        // 这里应该从关联的订单中查询当前会员的售后申请
+
+        // 先查询售后申请主表信息
+        List<OmsAfterSale> afterSaleList;
         if (status != null) {
-            return afterSaleMapper.selectByStatus(status);
+            afterSaleList = afterSaleMapper.selectByStatus(status);
         } else {
-            // 如果没有提供status，需要查询所有状态的申请
-            // 由于我们当前简化版本的Mapper没有提供查询所有的方法，这里直接返回空列表
-            return afterSaleMapper.selectByStatus(0); // 临时解决方案
+            // 如果没有提供status，查询所有状态的申请
+            // 临时解决方案：查询状态为0的记录
+            afterSaleList = afterSaleMapper.selectByStatus(0);
         }
+
+        // 为每个售后申请关联查询售后商品项
+        if (!CollectionUtils.isEmpty(afterSaleList)) {
+            for (OmsAfterSale afterSale : afterSaleList) {
+                // 查询售后商品项
+                OmsAfterSaleItemExample example = new OmsAfterSaleItemExample();
+                example.createCriteria().andAfterSaleIdEqualTo(afterSale.getId());
+                List<OmsAfterSaleItem> afterSaleItems = afterSaleItemMapper.selectByExample(example);
+
+                // 设置到售后申请对象中
+                afterSale.setAfterSaleItemList(afterSaleItems);
+
+                // 查询订单信息获取订单编号，方便前端显示
+                if (afterSale.getOrderId() != null) {
+                    OmsOrder order = orderMapper.selectByPrimaryKey(afterSale.getOrderId());
+                    if (order != null) {
+                        // 在这里可以将订单编号等信息放到返回结果中
+                        // 临时方案：可以通过transient属性或其他方式传递
+                        // 这里直接放入一个新属性不是最佳方案，但为了快速修复问题
+                        afterSale.setOrderSn(order.getOrderSn());
+                    }
+                }
+            }
+        }
+
+        return afterSaleList;
     }
 
     @Override

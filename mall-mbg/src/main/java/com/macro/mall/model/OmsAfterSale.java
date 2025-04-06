@@ -32,6 +32,9 @@ public class OmsAfterSale implements Serializable {
     @ApiModelProperty(value = "售后商品列表")
     private List<OmsAfterSaleItem> afterSaleItemList;
 
+    @ApiModelProperty(value = "订单编号")
+    private String orderSn;
+
     private static final long serialVersionUID = 1L;
 
     public Long getId() {
@@ -104,6 +107,14 @@ public class OmsAfterSale implements Serializable {
 
     public void setAfterSaleItemList(List<OmsAfterSaleItem> afterSaleItemList) {
         this.afterSaleItemList = afterSaleItemList;
+    }
+
+    public String getOrderSn() {
+        return orderSn;
+    }
+
+    public void setOrderSn(String orderSn) {
+        this.orderSn = orderSn;
     }
 
     @Override
