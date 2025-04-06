@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 /**
  * 发票申请请求参数
@@ -39,6 +40,9 @@ public class OmsInvoiceParam {
     @ApiModelProperty(value = "发票内容", required = true)
     @NotEmpty(message = "发票内容不能为空")
     private String invoiceContent;
+
+    @ApiModelProperty(value = "发票金额")
+    private BigDecimal invoiceAmount;
 
     @ApiModelProperty(value = "收票人邮箱(电子发票)")
     private String receiverEmail;

@@ -55,6 +55,20 @@ public class OmsInvoiceServiceImpl implements OmsInvoiceService {
                 throw new IllegalStateException("获取用户信息失败，请重新登录后再试", e);
             }
 
+            // 获取订单信息，设置发票金额
+            OmsOrder order = orderMapper.selectByPrimaryKey(invoiceParam.getOrderId());
+            if (order == null) {
+                throw new IllegalArgumentException("订单不存在: " + invoiceParam.getOrderId());
+            }
+
+            // 设置发票金额为订单总金额
+            if (order.getTotalAmount() != null) {
+                invoice.setInvoiceAmount(order.getTotalAmount());
+            } else {
+                // 如果订单总金额为空，设置一个默认值，避免数据库错误
+                invoice.setInvoiceAmount(new BigDecimal("0.00"));
+            }
+
             // 设置申请时间
             invoice.setApplyTime(new Date());
             // 设置创建时间
@@ -64,7 +78,8 @@ public class OmsInvoiceServiceImpl implements OmsInvoiceService {
             // 设置初始状态为申请中
             invoice.setStatus(0);
 
-            System.out.println("准备插入发票记录: orderId=" + invoice.getOrderId() + ", memberId=" + invoice.getMemberId());
+            System.out.println("准备插入发票记录: orderId=" + invoice.getOrderId() + ", memberId=" + invoice.getMemberId()
+                    + ", amount=" + invoice.getInvoiceAmount());
 
             // 保存发票申请记录
             int count = invoiceMapper.insert(invoice);
