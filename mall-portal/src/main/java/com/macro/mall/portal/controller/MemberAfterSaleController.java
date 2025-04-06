@@ -192,8 +192,34 @@ public class MemberAfterSaleController {
         result.put("orderId", orderId);
         result.put("afterSaleStatus", afterSaleStatus);
         result.put("canApplyAfterSale", afterSaleStatus != 2); // 全部申请时不能再申请
+        result.put("isApplied", afterSaleStatus > 0); // 是否已申请（部分或全部）
         result.put("items", itemStatusList);
 
         return CommonResult.success(result);
+    }
+
+    /**
+     * 公共API，用于前端检查订单售后状态
+     * 与会员API相同，但放在公共路径下，方便前端集成
+     */
+    @ApiOperation("公共API-检查订单售后状态")
+    @RequestMapping(value = "/afterSale/checkOrderAfterSaleStatus", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<Map<String, Object>> checkOrderAfterSaleStatusPublic(@RequestParam Long orderId) {
+        try {
+            UmsMember currentMember = memberService.getCurrentMember();
+            if (currentMember == null) {
+                Map<String, Object> result = new HashMap<>();
+                result.put("message", "请先登录");
+                return CommonResult.unauthorized(result);
+            }
+
+            // 复用会员API的逻辑
+            return checkOrderAfterSaleStatus(orderId);
+        } catch (Exception e) {
+            System.out.println("检查订单售后状态异常: " + e.getMessage());
+            e.printStackTrace();
+            return CommonResult.failed("检查订单售后状态失败: " + e.getMessage());
+        }
     }
 }
