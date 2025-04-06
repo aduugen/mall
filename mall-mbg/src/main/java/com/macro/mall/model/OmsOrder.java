@@ -142,6 +142,9 @@ public class OmsOrder implements Serializable {
     @ApiModelProperty(value = "售后状态：0->未申请；1->部分申请；2->全部申请")
     private Byte afterSaleStatus;
 
+    @ApiModelProperty(value = "发票状态：0->未申请；1->申请中；2->已开票；3->申请失败")
+    private Integer invoiceStatus;
+
     private static final long serialVersionUID = 1L;
 
     public Long getId() {
@@ -512,6 +515,14 @@ public class OmsOrder implements Serializable {
         this.afterSaleStatus = afterSaleStatus;
     }
 
+    public Integer getInvoiceStatus() {
+        return invoiceStatus;
+    }
+
+    public void setInvoiceStatus(Integer invoiceStatus) {
+        this.invoiceStatus = invoiceStatus;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -564,6 +575,7 @@ public class OmsOrder implements Serializable {
         sb.append(", modifyTime=").append(modifyTime);
         sb.append(", returnStatus=").append(returnStatus);
         sb.append(", afterSaleStatus=").append(afterSaleStatus);
+        sb.append(", invoiceStatus=").append(invoiceStatus);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

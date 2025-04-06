@@ -34,85 +34,101 @@ public class OmsInvoiceServiceImpl implements OmsInvoiceService {
     private UmsMemberService memberService;
 
     @Override
-    public OmsInvoice apply(OmsInvoiceParam invoiceParam) {
-        // 检查订单是否存在
-        OmsOrder order = orderMapper.selectByPrimaryKey(invoiceParam.getOrderId());
-        if (order == null) {
-            Asserts.fail("订单不存在");
-        }
-
-        // 检查订单是否属于当前用户
-        UmsMember currentMember = memberService.getCurrentMember();
-        if (!order.getMemberId().equals(currentMember.getId())) {
-            Asserts.fail("不是您的订单");
-        }
-
-        // 检查订单状态是否已支付
-        if (order.getStatus() < 1) {
-            Asserts.fail("订单尚未支付，无法开票");
-        }
-
-        // 检查是否已经申请过发票
-        OmsInvoiceExample example = new OmsInvoiceExample();
-        example.createCriteria().andOrderIdEqualTo(invoiceParam.getOrderId());
-        List<OmsInvoice> existInvoices = invoiceMapper.selectByExample(example);
-        if (existInvoices != null && !existInvoices.isEmpty()) {
-            Asserts.fail("该订单已申请过发票");
-        }
-
-        // 数据校验
-        if (invoiceParam.getInvoiceType() == 1) {
-            // 电子发票
-            if (StringUtils.isEmpty(invoiceParam.getReceiverEmail())) {
-                Asserts.fail("电子发票必须填写收票邮箱");
-            }
-        } else if (invoiceParam.getInvoiceType() == 2) {
-            // 纸质发票
-            if (StringUtils.isEmpty(invoiceParam.getReceiverName()) ||
-                    StringUtils.isEmpty(invoiceParam.getReceiverPhone()) ||
-                    StringUtils.isEmpty(invoiceParam.getReceiverAddress())) {
-                Asserts.fail("纸质发票必须填写收件人信息");
-            }
-        } else {
-            Asserts.fail("不支持的发票类型");
-        }
-
-        if (invoiceParam.getTitleType() == 2 && StringUtils.isEmpty(invoiceParam.getTaxNumber())) {
-            Asserts.fail("企业发票必须填写税号");
-        }
-
-        // 创建发票记录
+    public int apply(OmsInvoiceParam invoiceParam) {
         OmsInvoice invoice = new OmsInvoice();
         BeanUtils.copyProperties(invoiceParam, invoice);
-
-        // 设置基本信息
-        invoice.setMemberId(currentMember.getId());
-        invoice.setInvoiceAmount(order.getTotalAmount());
+        // 设置申请时间
         invoice.setApplyTime(new Date());
-        invoice.setStatus(0); // 待开票
+        // 设置创建时间
         invoice.setCreateTime(new Date());
+        // 设置更新时间
+        invoice.setUpdateTime(new Date());
+        // 设置初始状态为申请中
+        invoice.setStatus(0);
 
-        // 保存发票记录
-        invoiceMapper.insert(invoice);
+        // 保存发票申请记录
+        int count = invoiceMapper.insert(invoice);
 
-        // 添加发票操作历史记录
-        addInvoiceHistory(invoice, "用户申请发票");
+        // 更新订单的发票状态为"申请中"
+        if (count > 0) {
+            OmsOrder orderUpdate = new OmsOrder();
+            orderUpdate.setId(invoice.getOrderId());
+            orderUpdate.setInvoiceStatus(1); // 1表示申请中
+            orderMapper.updateByPrimaryKeySelective(orderUpdate);
+        }
 
-        return invoice;
+        return count;
+    }
+
+    @Override
+    public List<OmsInvoice> list(Integer status) {
+        OmsInvoiceExample example = new OmsInvoiceExample();
+        OmsInvoiceExample.Criteria criteria = example.createCriteria();
+        if (status != null) {
+            criteria.andStatusEqualTo(status);
+        }
+        example.setOrderByClause("create_time desc");
+        return invoiceMapper.selectByExample(example);
+    }
+
+    @Override
+    public OmsInvoice getItem(Long id) {
+        return invoiceMapper.selectByPrimaryKey(id);
     }
 
     @Override
     public OmsInvoice getByOrderId(Long orderId) {
-        UmsMember currentMember = memberService.getCurrentMember();
         OmsInvoiceExample example = new OmsInvoiceExample();
-        example.createCriteria()
-                .andOrderIdEqualTo(orderId)
-                .andMemberIdEqualTo(currentMember.getId());
-        List<OmsInvoice> invoiceList = invoiceMapper.selectByExample(example);
-        if (invoiceList != null && !invoiceList.isEmpty()) {
-            return invoiceList.get(0);
+        example.createCriteria().andOrderIdEqualTo(orderId);
+        List<OmsInvoice> invoices = invoiceMapper.selectByExample(example);
+        if (invoices != null && !invoices.isEmpty()) {
+            return invoices.get(0);
         }
         return null;
+    }
+
+    @Override
+    public int updateStatus(Long id, Integer status, String handleNote) {
+        OmsInvoice invoice = new OmsInvoice();
+        invoice.setId(id);
+        invoice.setStatus(status);
+        invoice.setNote(handleNote);
+        invoice.setUpdateTime(new Date());
+
+        // 如果状态为已开票，设置开票时间
+        if (status == 1) {
+            invoice.setIssueTime(new Date());
+        }
+
+        // 更新发票记录
+        int count = invoiceMapper.updateByPrimaryKeySelective(invoice);
+
+        // 如果更新成功，同时更新订单的发票状态
+        if (count > 0) {
+            // 获取完整的发票信息
+            OmsInvoice fullInvoice = invoiceMapper.selectByPrimaryKey(id);
+            if (fullInvoice != null && fullInvoice.getOrderId() != null) {
+                OmsOrder orderUpdate = new OmsOrder();
+                orderUpdate.setId(fullInvoice.getOrderId());
+
+                // 根据发票状态设置订单的发票状态
+                switch (status) {
+                    case 1: // 已开票
+                        orderUpdate.setInvoiceStatus(2);
+                        break;
+                    case 2: // 已拒绝
+                        orderUpdate.setInvoiceStatus(3);
+                        break;
+                    default: // 其他状态（申请中）
+                        orderUpdate.setInvoiceStatus(1);
+                        break;
+                }
+
+                orderMapper.updateByPrimaryKeySelective(orderUpdate);
+            }
+        }
+
+        return count;
     }
 
     @Override
