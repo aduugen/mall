@@ -61,11 +61,14 @@ public class OmsInvoiceServiceImpl implements OmsInvoiceService {
                 throw new IllegalArgumentException("订单不存在: " + invoiceParam.getOrderId());
             }
 
-            // 设置发票金额为订单总金额
-            if (order.getTotalAmount() != null) {
+            // 设置发票金额为实际支付金额（payAmount），而不是订单总金额
+            if (order.getPayAmount() != null) {
+                invoice.setInvoiceAmount(order.getPayAmount());
+            } else if (order.getTotalAmount() != null) {
+                // 如果实际支付金额为空，则尝试使用订单总金额作为备选
                 invoice.setInvoiceAmount(order.getTotalAmount());
             } else {
-                // 如果订单总金额为空，设置一个默认值，避免数据库错误
+                // 如果两者都为空，设置一个默认值，避免数据库错误
                 invoice.setInvoiceAmount(new BigDecimal("0.00"));
             }
 
