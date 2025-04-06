@@ -35,32 +35,55 @@ public class OmsInvoiceServiceImpl implements OmsInvoiceService {
 
     @Override
     public int apply(OmsInvoiceParam invoiceParam) {
-        OmsInvoice invoice = new OmsInvoice();
-        BeanUtils.copyProperties(invoiceParam, invoice);
-        // 设置当前用户会员ID
-        UmsMember currentMember = memberService.getCurrentMember();
-        invoice.setMemberId(currentMember.getId());
-        // 设置申请时间
-        invoice.setApplyTime(new Date());
-        // 设置创建时间
-        invoice.setCreateTime(new Date());
-        // 设置更新时间
-        invoice.setUpdateTime(new Date());
-        // 设置初始状态为申请中
-        invoice.setStatus(0);
+        try {
+            OmsInvoice invoice = new OmsInvoice();
+            BeanUtils.copyProperties(invoiceParam, invoice);
 
-        // 保存发票申请记录
-        int count = invoiceMapper.insert(invoice);
+            // 设置当前用户会员ID
+            UmsMember currentMember = null;
+            try {
+                currentMember = memberService.getCurrentMember();
+                if (currentMember == null || currentMember.getId() == null) {
+                    throw new IllegalStateException("无法获取当前登录用户信息");
+                }
+                invoice.setMemberId(currentMember.getId());
+            } catch (Exception e) {
+                // 记录错误日志
+                String errorMsg = "获取当前用户信息失败: " + e.getMessage();
+                System.err.println(errorMsg);
+                e.printStackTrace();
+                throw new IllegalStateException("获取用户信息失败，请重新登录后再试", e);
+            }
 
-        // 更新订单的发票状态为"申请中"
-        if (count > 0) {
-            OmsOrder orderUpdate = new OmsOrder();
-            orderUpdate.setId(invoice.getOrderId());
-            orderUpdate.setInvoiceStatus(1); // 1表示申请中
-            orderMapper.updateByPrimaryKeySelective(orderUpdate);
+            // 设置申请时间
+            invoice.setApplyTime(new Date());
+            // 设置创建时间
+            invoice.setCreateTime(new Date());
+            // 设置更新时间
+            invoice.setUpdateTime(new Date());
+            // 设置初始状态为申请中
+            invoice.setStatus(0);
+
+            System.out.println("准备插入发票记录: orderId=" + invoice.getOrderId() + ", memberId=" + invoice.getMemberId());
+
+            // 保存发票申请记录
+            int count = invoiceMapper.insert(invoice);
+            System.out.println("发票申请记录插入结果: " + count + ", 生成ID: " + invoice.getId());
+
+            // 更新订单的发票状态为"申请中"
+            if (count > 0) {
+                OmsOrder orderUpdate = new OmsOrder();
+                orderUpdate.setId(invoice.getOrderId());
+                orderUpdate.setInvoiceStatus(1); // 1表示申请中
+                orderMapper.updateByPrimaryKeySelective(orderUpdate);
+            }
+
+            return count;
+        } catch (Exception e) {
+            System.err.println("发票申请处理失败: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // 重新抛出异常，让全局异常处理器处理
         }
-
-        return count;
     }
 
     @Override

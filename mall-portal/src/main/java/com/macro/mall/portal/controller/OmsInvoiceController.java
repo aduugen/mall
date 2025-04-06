@@ -29,11 +29,29 @@ public class OmsInvoiceController {
     @RequestMapping(value = "/apply", method = RequestMethod.POST)
     @ResponseBody
     public CommonResult apply(@RequestBody OmsInvoiceParam invoiceParam) {
-        int count = invoiceService.apply(invoiceParam);
-        if (count > 0) {
-            return CommonResult.success(null);
+        try {
+            System.out.println("收到发票申请请求: " + invoiceParam.getOrderId() + ", 发票类型: " + invoiceParam.getInvoiceType());
+
+            if (invoiceParam.getOrderId() == null) {
+                return CommonResult.failed("订单ID不能为空");
+            }
+
+            int count = invoiceService.apply(invoiceParam);
+            if (count > 0) {
+                System.out.println("发票申请成功: orderId=" + invoiceParam.getOrderId());
+                return CommonResult.success(null);
+            }
+            System.out.println("发票申请失败: orderId=" + invoiceParam.getOrderId());
+            return CommonResult.failed("申请发票失败");
+        } catch (IllegalStateException e) {
+            // 用户未登录或认证失败
+            System.err.println("发票申请失败 - 用户认证问题: " + e.getMessage());
+            return CommonResult.failed("登录状态异常，请重新登录后再试");
+        } catch (Exception e) {
+            System.err.println("发票申请异常: " + e.getMessage());
+            e.printStackTrace();
+            return CommonResult.failed("申请发票时发生错误: " + e.getMessage());
         }
-        return CommonResult.failed();
     }
 
     @ApiOperation("获取发票列表")
