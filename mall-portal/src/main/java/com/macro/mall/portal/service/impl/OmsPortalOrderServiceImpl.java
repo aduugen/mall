@@ -203,6 +203,10 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         order.setStatus(0);
         // 订单类型：0->正常订单；1->秒杀订单
         order.setOrderType(0);
+        // 售后状态：0->未申请；1->部分申请；2->全部申请
+        order.setAfterSaleStatus((byte) 0);
+        // 发票状态：0->未申请；1->申请中；2->已开票；3->申请失败
+        order.setInvoiceStatus(0);
         // 收货人信息：姓名、电话、邮编、地址
         UmsMemberReceiveAddress address = memberReceiveAddressService.getItem(orderParam.getMemberReceiveAddressId());
         order.setReceiverName(address.getName());
