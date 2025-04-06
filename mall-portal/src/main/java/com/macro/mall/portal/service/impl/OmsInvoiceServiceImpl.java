@@ -37,6 +37,9 @@ public class OmsInvoiceServiceImpl implements OmsInvoiceService {
     public int apply(OmsInvoiceParam invoiceParam) {
         OmsInvoice invoice = new OmsInvoice();
         BeanUtils.copyProperties(invoiceParam, invoice);
+        // 设置当前用户会员ID
+        UmsMember currentMember = memberService.getCurrentMember();
+        invoice.setMemberId(currentMember.getId());
         // 设置申请时间
         invoice.setApplyTime(new Date());
         // 设置创建时间
