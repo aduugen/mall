@@ -326,4 +326,68 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
         return afterSaleMapper.updateByPrimaryKeySelective(afterSale);
     }
+
+    @Override
+    public List<OmsAfterSale> listByOrderId(Long orderId, Long memberId) {
+        // 查询指定订单和会员的所有售后申请，且未被删除的
+        List<OmsAfterSale> afterSaleList = new ArrayList<>();
+
+        try {
+            // 查询所有状态的记录，然后过滤
+            List<OmsAfterSale> statusList = new ArrayList<>();
+            // 依次查询各个状态的记录
+            for (int i = 0; i <= 3; i++) {
+                List<OmsAfterSale> statusRecords = afterSaleMapper.selectByStatus(i);
+                if (statusRecords != null) {
+                    statusList.addAll(statusRecords);
+                }
+            }
+
+            // 在结果中过滤订单ID和会员ID，以及删除状态
+            if (!CollectionUtils.isEmpty(statusList)) {
+                for (OmsAfterSale afterSale : statusList) {
+                    if (afterSale.getOrderId() != null && afterSale.getOrderId().equals(orderId) &&
+                            afterSale.getMemberId() != null && afterSale.getMemberId().equals(memberId)) {
+                        // 由于OmsAfterSale可能没有deleteStatus字段，使用其他条件进行过滤
+                        afterSaleList.add(afterSale);
+                    }
+                }
+            }
+
+            // 为每个售后申请关联查询售后商品项
+            if (!CollectionUtils.isEmpty(afterSaleList)) {
+                for (OmsAfterSale afterSale : afterSaleList) {
+                    // 查询售后商品项
+                    afterSale.setAfterSaleItemList(getAfterSaleItems(afterSale.getId()));
+                }
+            }
+
+            System.out.println("查询订单的售后列表: orderId=" + orderId + ", memberId=" + memberId +
+                    ", 结果数量=" + afterSaleList.size());
+        } catch (Exception e) {
+            System.out.println("查询订单售后列表异常: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return afterSaleList;
+    }
+
+    @Override
+    public List<OmsAfterSaleItem> getAfterSaleItems(Long afterSaleId) {
+        if (afterSaleId == null) {
+            return new ArrayList<>();
+        }
+
+        // 查询售后商品项
+        OmsAfterSaleItemExample itemExample = new OmsAfterSaleItemExample();
+        itemExample.createCriteria().andAfterSaleIdEqualTo(afterSaleId);
+        try {
+            List<OmsAfterSaleItem> afterSaleItems = afterSaleItemMapper.selectByExample(itemExample);
+            return afterSaleItems != null ? afterSaleItems : new ArrayList<>();
+        } catch (Exception e) {
+            System.out.println("查询售后商品项异常: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 }

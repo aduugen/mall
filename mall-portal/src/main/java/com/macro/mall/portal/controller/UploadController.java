@@ -27,10 +27,10 @@ import java.util.UUID;
 public class UploadController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadController.class);
 
-    @Value("${upload.path:/tmp/mall/upload/images}")
+    @Value("${upload.path:F:\\mall_data\\mallbackend\\pics}")
     private String uploadPath;
 
-    @Value("${upload.base-url:http://192.168.1.6:8085/images}")
+    @Value("${upload.base-url:http://192.168.1.6:8085/pics}")
     private String baseUrl;
 
     @ApiOperation(value = "上传图片")

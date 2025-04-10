@@ -2,16 +2,14 @@ package com.macro.mall.portal.controller;
 
 import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
-import com.macro.mall.model.OmsAfterSale;
-import com.macro.mall.model.OmsOrder;
-import com.macro.mall.model.OmsOrderItem;
-import com.macro.mall.model.OmsOrderItemExample;
-import com.macro.mall.model.UmsMember;
+import com.macro.mall.model.*;
 import com.macro.mall.portal.domain.AfterSaleParam;
 import com.macro.mall.portal.service.MemberAfterSaleService;
 import com.macro.mall.portal.service.UmsMemberService;
 import com.macro.mall.mapper.OmsOrderMapper;
 import com.macro.mall.mapper.OmsOrderItemMapper;
+import com.macro.mall.mapper.OmsAfterSaleMapper;
+import com.macro.mall.mapper.OmsAfterSaleItemMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +23,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 /**
- * 会员售后Controller
+ * 会员售后管理Controller
  */
 @Controller
 @Api(tags = "MemberAfterSaleController", description = "会员售后管理")
@@ -39,6 +37,10 @@ public class MemberAfterSaleController {
     private OmsOrderMapper orderMapper;
     @Autowired
     private OmsOrderItemMapper orderItemMapper;
+    @Autowired
+    private OmsAfterSaleMapper afterSaleMapper;
+    @Autowired
+    private OmsAfterSaleItemMapper afterSaleItemMapper;
 
     @ApiOperation("创建售后申请")
     @RequestMapping(value = "/create", method = RequestMethod.POST)
@@ -143,10 +145,49 @@ public class MemberAfterSaleController {
         boolean partialApplied = false;
         List<Map<String, Object>> itemStatusList = new ArrayList<>();
 
+        // 查询该订单的售后申请记录 - 使用Service方法
+        List<OmsAfterSale> afterSaleList = afterSaleService.listByOrderId(orderId, currentMember.getId());
+
+        // 重置每个订单项的已申请数量
+        Map<Long, Integer> appliedQuantityMap = new HashMap<>();
+        for (OmsAfterSale afterSale : afterSaleList) {
+            // 如果售后申请已被取消或拒绝，不计入已申请数量
+            if (afterSale.getStatus() == 3) {
+                continue;
+            }
+
+            // 查询该售后申请包含的商品项 - 使用Service方法
+            List<OmsAfterSaleItem> afterSaleItems = afterSaleService.getAfterSaleItems(afterSale.getId());
+
+            for (OmsAfterSaleItem item : afterSaleItems) {
+                Long orderItemId = item.getOrderItemId();
+                Integer returnQuantity = item.getReturnQuantity();
+
+                // 累加已申请数量
+                if (orderItemId != null && returnQuantity != null) {
+                    appliedQuantityMap.put(orderItemId,
+                            appliedQuantityMap.getOrDefault(orderItemId, 0) + returnQuantity);
+                }
+            }
+        }
+
+        // 遍历订单项，计算已申请数量和可申请数量
         for (OmsOrderItem item : orderItems) {
-            // 计算已申请数量和可申请数量
-            Integer appliedQuantity = item.getAppliedQuantity() == null ? 0 : item.getAppliedQuantity();
+            // 从计算的映射中获取已申请数量，而不是使用数据库中存储的值
             Integer productQuantity = item.getProductQuantity() == null ? 0 : item.getProductQuantity();
+            Integer appliedQuantity = appliedQuantityMap.getOrDefault(item.getId(), 0);
+
+            // 确保已申请数量不超过总数量
+            appliedQuantity = Math.min(appliedQuantity, productQuantity);
+
+            // 更新订单项的已申请数量（如果不一致）
+            if (!appliedQuantity.equals(item.getAppliedQuantity())) {
+                OmsOrderItem updateItem = new OmsOrderItem();
+                updateItem.setId(item.getId());
+                updateItem.setAppliedQuantity(appliedQuantity);
+                orderItemMapper.updateByPrimaryKeySelective(updateItem);
+            }
+
             Integer availableQuantity = productQuantity - appliedQuantity;
 
             // 检查是否全部申请

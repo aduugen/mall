@@ -35,6 +35,7 @@ secure:
       - /**/*.png
       - /**/*.map
       - /images/**
+      - /pics/**
       - /favicon.ico
       - /druid/**
       - /actuator/**
@@ -69,5 +70,5 @@ rabbitmq:
 
 upload:
   path: F:\mall_data\mallbackend\pics # 文件上传路径，使用绝对路径
-  base-url: http://192.168.1.6:8085/images # 文件访问URL前缀，根据实际部署情况调整
+  base-url: http://192.168.1.6:8085/pics # 文件访问URL前缀，根据实际部署情况调整
 

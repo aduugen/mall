@@ -1,6 +1,7 @@
 package com.macro.mall.portal.service;
 
 import com.macro.mall.model.OmsAfterSale;
+import com.macro.mall.model.OmsAfterSaleItem;
 import com.macro.mall.portal.domain.AfterSaleParam;
 import java.util.List;
 
@@ -27,4 +28,14 @@ public interface MemberAfterSaleService {
      * 取消售后申请
      */
     int cancel(Long id, Long memberId);
+
+    /**
+     * 根据订单ID查询售后申请列表
+     */
+    List<OmsAfterSale> listByOrderId(Long orderId, Long memberId);
+
+    /**
+     * 获取售后申请的商品项列表
+     */
+    List<OmsAfterSaleItem> getAfterSaleItems(Long afterSaleId);
 }
