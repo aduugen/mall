@@ -315,16 +315,25 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
             }
         }
 
-        // 更新售后申请状态为已取消（或其他状态码）
-        afterSale.setStatus(3); // 假设3表示已取消
-        afterSale.setUpdateTime(new Date());
+        // 记录日志
+        System.out.println("用户取消售后申请: afterSaleId=" + id +
+                ", memberId=" + memberId +
+                ", orderSn=" + afterSale.getOrderSn());
 
         // 更新订单的售后状态
         if (afterSale.getOrderId() != null) {
             updateOrderAfterSaleStatus(afterSale.getOrderId());
         }
 
-        return afterSaleMapper.updateByPrimaryKeySelective(afterSale);
+        // 删除售后申请项
+        int itemCount = afterSaleItemMapper.deleteByExample(itemExample);
+        System.out.println("已删除售后申请项: " + itemCount + "条");
+
+        // 删除售后申请
+        int result = afterSaleMapper.deleteByPrimaryKey(id);
+        System.out.println("已删除售后申请: afterSaleId=" + id + ", 结果=" + result);
+
+        return result;
     }
 
     @Override
