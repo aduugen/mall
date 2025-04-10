@@ -30,7 +30,7 @@ public class UploadController {
     @Value("${upload.path:/tmp/mall/upload/images}")
     private String uploadPath;
 
-    @Value("${upload.base-url:http://192.168.1.10:8085/images}")
+    @Value("${upload.base-url:http://192.168.1.6:8085/images}")
     private String baseUrl;
 
     @ApiOperation(value = "上传图片")

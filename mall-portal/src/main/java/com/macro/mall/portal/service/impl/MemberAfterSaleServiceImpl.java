@@ -219,42 +219,60 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
     @Override
     public List<OmsAfterSale> list(Long memberId, Integer status, Integer pageSize, Integer pageNum) {
+        // 启用分页
         PageHelper.startPage(pageNum, pageSize);
 
-        // 先查询售后申请主表信息
-        List<OmsAfterSale> afterSaleList;
+        // 由于OmsAfterSaleExample不存在，我们需要使用现有的方法
+        // 获取所有当前状态的售后记录，然后在内存中过滤会员ID
+        List<OmsAfterSale> allAfterSalesByStatus;
         if (status != null) {
-            afterSaleList = afterSaleMapper.selectByStatus(status);
+            allAfterSalesByStatus = afterSaleMapper.selectByStatus(status);
         } else {
-            // 如果没有提供status，查询所有状态的申请
-            // 临时解决方案：查询状态为0的记录
-            afterSaleList = afterSaleMapper.selectByStatus(0);
+            // 先查询所有状态的记录
+            List<OmsAfterSale> statusList = new ArrayList<>();
+            // 依次查询各个状态的记录
+            for (int i = 0; i <= 3; i++) {
+                List<OmsAfterSale> statusRecords = afterSaleMapper.selectByStatus(i);
+                if (statusRecords != null) {
+                    statusList.addAll(statusRecords);
+                }
+            }
+            allAfterSalesByStatus = statusList;
+        }
+
+        // 在结果中过滤会员ID
+        List<OmsAfterSale> afterSaleList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(allAfterSalesByStatus)) {
+            for (OmsAfterSale afterSale : allAfterSalesByStatus) {
+                if (afterSale.getMemberId() != null && afterSale.getMemberId().equals(memberId)) {
+                    afterSaleList.add(afterSale);
+                }
+            }
         }
 
         // 为每个售后申请关联查询售后商品项
         if (!CollectionUtils.isEmpty(afterSaleList)) {
             for (OmsAfterSale afterSale : afterSaleList) {
                 // 查询售后商品项
-                OmsAfterSaleItemExample example = new OmsAfterSaleItemExample();
-                example.createCriteria().andAfterSaleIdEqualTo(afterSale.getId());
-                List<OmsAfterSaleItem> afterSaleItems = afterSaleItemMapper.selectByExample(example);
+                OmsAfterSaleItemExample itemExample = new OmsAfterSaleItemExample();
+                itemExample.createCriteria().andAfterSaleIdEqualTo(afterSale.getId());
+                List<OmsAfterSaleItem> afterSaleItems = afterSaleItemMapper.selectByExample(itemExample);
 
                 // 设置到售后申请对象中
                 afterSale.setAfterSaleItemList(afterSaleItems);
 
-                // 查询订单信息获取订单编号，方便前端显示
+                // 查询订单信息获取订单编号
                 if (afterSale.getOrderId() != null) {
                     OmsOrder order = orderMapper.selectByPrimaryKey(afterSale.getOrderId());
                     if (order != null) {
-                        // 在这里可以将订单编号等信息放到返回结果中
-                        // 临时方案：可以通过transient属性或其他方式传递
-                        // 这里直接放入一个新属性不是最佳方案，但为了快速修复问题
                         afterSale.setOrderSn(order.getOrderSn());
                     }
                 }
             }
         }
 
+        System.out.println("查询售后列表: memberId=" + memberId + ", status=" + status + ", 结果数量="
+                + (afterSaleList != null ? afterSaleList.size() : 0));
         return afterSaleList;
     }
 
