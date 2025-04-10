@@ -491,7 +491,7 @@ CREATE TABLE `oms_order`  (
   `modify_time` datetime NULL DEFAULT NULL COMMENT '修改时间',
   `return_status` int(1) NULL DEFAULT '0' COMMENT '退货状态：0->正常订单；1->申请中；2->已退货；3->已拒绝',
   `after_sale_status` TINYINT NULL DEFAULT 0 COMMENT '0-未申请，1-部分申请，2-全部申请',
-  `invoice_status` TINYINT NULL DEFAULT 0 COMMENT '发票状态：0->未申请；1->申请中；2->已开票；3->申请失败';
+  `invoice_status` TINYINT NULL DEFAULT 0 COMMENT '发票状态：0->未申请；1->申请中；2->已开票；3->申请失败',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 77 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '订单表' ROW_FORMAT = DYNAMIC;
 
