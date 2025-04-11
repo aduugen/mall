@@ -69,6 +69,15 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         afterSale.setCreateTime(new Date());
         afterSale.setUpdateTime(new Date());
 
+        // 设置订单编号
+        if (order != null && order.getOrderSn() != null && !order.getOrderSn().isEmpty()) {
+            afterSale.setOrderSn(order.getOrderSn());
+            System.out.println("创建售后单时设置订单编号: " + order.getOrderSn());
+        } else {
+            afterSale.setOrderSn("订单" + afterSaleParam.getOrderId());
+            System.out.println("创建售后单时设置默认订单编号: " + afterSale.getOrderSn());
+        }
+
         // 打印debug信息
         System.out.println("准备插入售后申请记录: " + afterSale);
 
@@ -225,19 +234,24 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         // 由于OmsAfterSaleExample不存在，我们需要使用现有的方法
         // 获取所有当前状态的售后记录，然后在内存中过滤会员ID
         List<OmsAfterSale> allAfterSalesByStatus;
-        if (status != null) {
+        if (status != null && status >= 0) {
+            // 只查询指定状态的记录
             allAfterSalesByStatus = afterSaleMapper.selectByStatus(status);
+            System.out.println("查询指定状态的售后申请: status=" + status + ", 结果数量=" +
+                    (allAfterSalesByStatus != null ? allAfterSalesByStatus.size() : 0));
         } else {
-            // 先查询所有状态的记录
+            // 查询所有状态的记录
             List<OmsAfterSale> statusList = new ArrayList<>();
             // 依次查询各个状态的记录
             for (int i = 0; i <= 3; i++) {
                 List<OmsAfterSale> statusRecords = afterSaleMapper.selectByStatus(i);
                 if (statusRecords != null) {
                     statusList.addAll(statusRecords);
+                    System.out.println("查询状态" + i + "的售后申请结果数量: " + statusRecords.size());
                 }
             }
             allAfterSalesByStatus = statusList;
+            System.out.println("查询所有状态的售后申请总数量: " + allAfterSalesByStatus.size());
         }
 
         // 在结果中过滤会员ID
@@ -245,7 +259,10 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         if (!CollectionUtils.isEmpty(allAfterSalesByStatus)) {
             for (OmsAfterSale afterSale : allAfterSalesByStatus) {
                 if (afterSale.getMemberId() != null && afterSale.getMemberId().equals(memberId)) {
-                    afterSaleList.add(afterSale);
+                    // 确保状态匹配（双重检查）
+                    if (status == null || status < 0 || afterSale.getStatus().equals(status)) {
+                        afterSaleList.add(afterSale);
+                    }
                 }
             }
         }
@@ -264,9 +281,19 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 // 查询订单信息获取订单编号
                 if (afterSale.getOrderId() != null) {
                     OmsOrder order = orderMapper.selectByPrimaryKey(afterSale.getOrderId());
-                    if (order != null) {
+                    if (order != null && order.getOrderSn() != null && !order.getOrderSn().isEmpty()) {
                         afterSale.setOrderSn(order.getOrderSn());
+                        System.out.println("设置售后单 " + afterSale.getId() + " 的订单编号: " + order.getOrderSn() + ", 来自订单ID: "
+                                + afterSale.getOrderId());
+                    } else {
+                        // 找不到订单或订单没有编号，设置默认值
+                        afterSale.setOrderSn("订单" + afterSale.getOrderId());
+                        System.out
+                                .println("警告: 售后单 " + afterSale.getId() + " 订单编号未找到，使用默认值: " + afterSale.getOrderSn());
                     }
+                } else {
+                    afterSale.setOrderSn("未关联订单");
+                    System.out.println("警告: 售后单 " + afterSale.getId() + " 无关联订单ID");
                 }
             }
         }
@@ -325,15 +352,34 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
             updateOrderAfterSaleStatus(afterSale.getOrderId());
         }
 
-        // 删除售后申请项
-        int itemCount = afterSaleItemMapper.deleteByExample(itemExample);
-        System.out.println("已删除售后申请项: " + itemCount + "条");
+        try {
+            // 删除售后申请项 - 先删除子表数据
+            int itemCount = afterSaleItemMapper.deleteByExample(itemExample);
+            System.out.println("已删除售后申请项: " + itemCount + "条");
 
-        // 删除售后申请
-        int result = afterSaleMapper.deleteByPrimaryKey(id);
-        System.out.println("已删除售后申请: afterSaleId=" + id + ", 结果=" + result);
+            // 检查是否还有其他售后项关联到该售后申请
+            OmsAfterSaleItemExample checkExample = new OmsAfterSaleItemExample();
+            checkExample.createCriteria().andAfterSaleIdEqualTo(id);
+            long remainingItemCount = afterSaleItemMapper.countByExample(checkExample);
 
-        return result;
+            // 只有当所有关联项都被删除后，才删除主表记录
+            if (remainingItemCount == 0) {
+                // 删除售后申请 - 后删除主表数据
+                int result = afterSaleMapper.deleteByPrimaryKey(id);
+                System.out.println("已删除售后申请: afterSaleId=" + id + ", 结果=" + result);
+                return result;
+            } else {
+                System.out.println("警告：售后申请项未完全删除，仍有" + remainingItemCount + "条记录，不删除售后申请主记录");
+                // 这里可以选择抛出异常回滚事务
+                Asserts.fail("售后申请项删除不完全，无法完成取消操作");
+                return 0;
+            }
+        } catch (Exception e) {
+            // 捕获异常并记录日志，然后重新抛出以触发事务回滚
+            System.err.println("取消售后申请过程中发生异常: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // 重新抛出异常以确保事务回滚
+        }
     }
 
     @Override
@@ -342,6 +388,19 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         List<OmsAfterSale> afterSaleList = new ArrayList<>();
 
         try {
+            // 先查询订单，获取订单编号
+            String orderSn = null;
+            OmsOrder order = null;
+            if (orderId != null) {
+                order = orderMapper.selectByPrimaryKey(orderId);
+                if (order != null) {
+                    orderSn = order.getOrderSn();
+                    System.out.println("查询到订单信息: 订单ID=" + orderId + ", 订单编号=" + orderSn);
+                } else {
+                    System.out.println("警告: 找不到订单ID=" + orderId + "的订单信息");
+                }
+            }
+
             // 查询所有状态的记录，然后过滤
             List<OmsAfterSale> statusList = new ArrayList<>();
             // 依次查询各个状态的记录
@@ -349,6 +408,7 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 List<OmsAfterSale> statusRecords = afterSaleMapper.selectByStatus(i);
                 if (statusRecords != null) {
                     statusList.addAll(statusRecords);
+                    System.out.println("订单ID=" + orderId + "查询状态" + i + "的售后申请结果数量: " + statusRecords.size());
                 }
             }
 
@@ -357,17 +417,37 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 for (OmsAfterSale afterSale : statusList) {
                     if (afterSale.getOrderId() != null && afterSale.getOrderId().equals(orderId) &&
                             afterSale.getMemberId() != null && afterSale.getMemberId().equals(memberId)) {
-                        // 由于OmsAfterSale可能没有deleteStatus字段，使用其他条件进行过滤
+                        // 设置订单编号
+                        if (orderSn != null) {
+                            afterSale.setOrderSn(orderSn);
+                            System.out.println("设置售后单 " + afterSale.getId() + " 的订单编号(来自预查询): " + orderSn);
+                        } else if (afterSale.getOrderId() != null) {
+                            // 如果上面没有获取到订单编号，单独查询
+                            if (order == null) {
+                                order = orderMapper.selectByPrimaryKey(afterSale.getOrderId());
+                            }
+
+                            if (order != null && order.getOrderSn() != null) {
+                                afterSale.setOrderSn(order.getOrderSn());
+                                System.out
+                                        .println("设置售后单 " + afterSale.getId() + " 的订单编号(单独查询): " + order.getOrderSn());
+                            } else {
+                                // 找不到订单或订单没有编号，设置默认值
+                                afterSale.setOrderSn("订单" + afterSale.getOrderId());
+                                System.out.println(
+                                        "警告: 售后单 " + afterSale.getId() + " 订单编号未找到，使用默认值: " + afterSale.getOrderSn());
+                            }
+                        } else {
+                            afterSale.setOrderSn("未关联订单");
+                            System.out.println("警告: 售后单 " + afterSale.getId() + " 无关联订单");
+                        }
+
+                        // 查询售后商品项
+                        afterSale.setAfterSaleItemList(getAfterSaleItems(afterSale.getId()));
+
+                        // 添加到结果列表
                         afterSaleList.add(afterSale);
                     }
-                }
-            }
-
-            // 为每个售后申请关联查询售后商品项
-            if (!CollectionUtils.isEmpty(afterSaleList)) {
-                for (OmsAfterSale afterSale : afterSaleList) {
-                    // 查询售后商品项
-                    afterSale.setAfterSaleItemList(getAfterSaleItems(afterSale.getId()));
                 }
             }
 

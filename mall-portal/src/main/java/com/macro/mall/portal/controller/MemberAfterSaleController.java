@@ -94,11 +94,45 @@ public class MemberAfterSaleController {
     @ApiOperation("查询售后申请列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<CommonPage<OmsAfterSale>> list(@RequestParam(value = "status", required = false) Integer status,
+    public CommonResult<CommonPage<OmsAfterSale>> list(
+            @RequestParam(value = "status", required = false) Integer status,
             @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
-            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "orderId", required = false) Long orderId) {
+
         UmsMember currentMember = memberService.getCurrentMember();
-        List<OmsAfterSale> afterSaleList = afterSaleService.list(currentMember.getId(), status, pageSize, pageNum);
+
+        // 如果status为-1，表示查询全部状态，设置为null传递给Service层
+        if (status != null && status == -1) {
+            status = null;
+        }
+
+        System.out.println("查询售后列表: memberId=" + currentMember.getId() +
+                ", status=" + status + ", orderId=" + orderId);
+
+        List<OmsAfterSale> afterSaleList;
+        if (orderId != null) {
+            // 如果指定了订单ID，通过订单ID查询售后记录
+            afterSaleList = afterSaleService.listByOrderId(orderId, currentMember.getId());
+
+            // 如果status参数存在且大于等于0，进行状态过滤
+            if (status != null && status >= 0) {
+                // 在内存中根据状态过滤结果
+                List<OmsAfterSale> filteredList = new ArrayList<>();
+                for (OmsAfterSale afterSale : afterSaleList) {
+                    if (afterSale.getStatus() != null && afterSale.getStatus().equals(status)) {
+                        filteredList.add(afterSale);
+                    }
+                }
+                afterSaleList = filteredList;
+            }
+        } else {
+            // 没有指定订单ID，按状态查询所有售后记录
+            afterSaleList = afterSaleService.list(currentMember.getId(), status, pageSize, pageNum);
+        }
+
+        System.out.println("查询结果数量: " + (afterSaleList != null ? afterSaleList.size() : 0));
+
         return CommonResult.success(CommonPage.restPage(afterSaleList));
     }
 
