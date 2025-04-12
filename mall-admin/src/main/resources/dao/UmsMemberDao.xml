@@ -152,11 +152,6 @@
             integration,
             growth,
             promotion_info,
-            bill_type,
-            bill_header,
-            bill_content,
-            bill_receiver_phone,
-            bill_receiver_email,
             receiver_name,
             receiver_phone,
             receiver_post_code,
@@ -172,7 +167,10 @@
             delivery_time,
             receive_time,
             comment_time,
-            modify_time
+            modify_time,
+            return_status,
+            after_sale_status,
+            invoice_status
         FROM
             oms_order
         WHERE

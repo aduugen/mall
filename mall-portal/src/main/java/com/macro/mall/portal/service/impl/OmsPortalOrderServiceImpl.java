@@ -233,7 +233,8 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         if (CollUtil.isNotEmpty(orderSettings)) {
             order.setAutoConfirmDay(orderSettings.get(0).getConfirmOvertime());
         }
-        // TODO: 2018/9/3 bill_*,delivery_*
+        // TODO: 2018/9/3 bill_*,delivery_* -> 已确认 bill_* 字段未使用，delivery_*
+        // 字段可能在其他地方使用，暂时保留注释
         // 插入order表和order_item表
         orderMapper.insert(order);
         for (OmsOrderItem orderItem : orderItemList) {

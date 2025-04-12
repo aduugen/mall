@@ -70,23 +70,8 @@ public class OmsOrder implements Serializable {
     @ApiModelProperty(value = "可以活动的成长值")
     private Integer growth;
 
-    @ApiModelProperty(value = "活动信息")
+    @ApiModelProperty(value = "促销活动信息，json格式")
     private String promotionInfo;
-
-    @ApiModelProperty(value = "发票类型：0->不开发票；1->电子发票；2->纸质发票")
-    private Integer billType;
-
-    @ApiModelProperty(value = "发票抬头")
-    private String billHeader;
-
-    @ApiModelProperty(value = "发票内容")
-    private String billContent;
-
-    @ApiModelProperty(value = "收票人电话")
-    private String billReceiverPhone;
-
-    @ApiModelProperty(value = "收票人邮箱")
-    private String billReceiverEmail;
 
     @ApiModelProperty(value = "收货人姓名")
     private String receiverName;
@@ -331,46 +316,6 @@ public class OmsOrder implements Serializable {
         this.promotionInfo = promotionInfo;
     }
 
-    public Integer getBillType() {
-        return billType;
-    }
-
-    public void setBillType(Integer billType) {
-        this.billType = billType;
-    }
-
-    public String getBillHeader() {
-        return billHeader;
-    }
-
-    public void setBillHeader(String billHeader) {
-        this.billHeader = billHeader;
-    }
-
-    public String getBillContent() {
-        return billContent;
-    }
-
-    public void setBillContent(String billContent) {
-        this.billContent = billContent;
-    }
-
-    public String getBillReceiverPhone() {
-        return billReceiverPhone;
-    }
-
-    public void setBillReceiverPhone(String billReceiverPhone) {
-        this.billReceiverPhone = billReceiverPhone;
-    }
-
-    public String getBillReceiverEmail() {
-        return billReceiverEmail;
-    }
-
-    public void setBillReceiverEmail(String billReceiverEmail) {
-        this.billReceiverEmail = billReceiverEmail;
-    }
-
     public String getReceiverName() {
         return receiverName;
     }
@@ -552,11 +497,6 @@ public class OmsOrder implements Serializable {
         sb.append(", integration=").append(integration);
         sb.append(", growth=").append(growth);
         sb.append(", promotionInfo=").append(promotionInfo);
-        sb.append(", billType=").append(billType);
-        sb.append(", billHeader=").append(billHeader);
-        sb.append(", billContent=").append(billContent);
-        sb.append(", billReceiverPhone=").append(billReceiverPhone);
-        sb.append(", billReceiverEmail=").append(billReceiverEmail);
         sb.append(", receiverName=").append(receiverName);
         sb.append(", receiverPhone=").append(receiverPhone);
         sb.append(", receiverPostCode=").append(receiverPostCode);
