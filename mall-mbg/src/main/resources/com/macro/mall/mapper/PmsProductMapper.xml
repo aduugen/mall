@@ -901,4 +901,18 @@
       product_category_name = #{productCategoryName,jdbcType=VARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
+  <!-- 增加商品销量 -->
+  <update id="increaseSale">
+    UPDATE pms_product
+    SET sale = sale + #{quantity,jdbcType=INTEGER}
+    WHERE id = #{id,jdbcType=BIGINT}
+      AND sale IS NOT NULL <!-- 可选：避免更新 sale 为 NULL 的情况 -->
+  </update>
+  <!-- 扣减商品销量 -->
+  <update id="decreaseSale">
+    UPDATE pms_product
+    SET sale = sale - #{quantity,jdbcType=INTEGER}
+    WHERE id = #{id,jdbcType=BIGINT}
+      AND sale >= #{quantity,jdbcType=INTEGER} <!-- 确保销量不会变为负数 -->
+  </update>
 </mapper>

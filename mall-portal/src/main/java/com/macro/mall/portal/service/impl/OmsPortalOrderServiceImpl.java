@@ -70,6 +70,8 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     private CancelOrderSender cancelOrderSender;
     @Autowired
     private PmsCommentMapper commentMapper;
+    @Autowired
+    private PmsProductMapper productMapper;
 
     @Override
     public ConfirmOrderResult generateConfirmOrder(List<Long> cartIds) {
@@ -263,6 +265,7 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     }
 
     @Override
+    @Transactional
     public Integer paySuccess(Long orderId, Integer payType) {
         // 修改订单支付状态
         OmsOrder order = new OmsOrder();
@@ -282,15 +285,39 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         }
         // 恢复所有下单商品的锁定库存，扣减真实库存
         OmsOrderDetail orderDetail = portalOrderDao.getDetail(orderId);
-        int totalCount = 0;
         for (OmsOrderItem orderItem : orderDetail.getOrderItemList()) {
             int count = portalOrderDao.reduceSkuStock(orderItem.getProductSkuId(), orderItem.getProductQuantity());
             if (count == 0) {
+                // 库存扣减失败时，由于方法已标记@Transactional，整个事务会回滚
+                log.error("支付成功后扣减库存失败: orderId={}, skuId={}, quantity={}", orderId, orderItem.getProductSkuId(),
+                        orderItem.getProductQuantity());
                 Asserts.fail("库存不足，无法扣减！");
             }
-            totalCount += count;
         }
-        return totalCount;
+
+        // 增加商品销量
+        for (OmsOrderItem orderItem : orderDetail.getOrderItemList()) {
+            if (orderItem.getProductId() != null && orderItem.getProductQuantity() != null
+                    && orderItem.getProductQuantity() > 0) {
+                // 注意：这里我们直接更新 PmsProduct 的销量
+                // 如果 SKU 和 Product 的销量是分开统计的，则需要调整逻辑
+                // 假设销量是统计在 PmsProduct 上的
+                int saleUpdateCount = productMapper.increaseSale(orderItem.getProductId(),
+                        orderItem.getProductQuantity());
+                if (saleUpdateCount == 0) {
+                    // 销量增加失败，记录日志，但不一定需要抛出异常中断支付流程，取决于业务要求
+                    // 如果销量更新很重要，则应抛出异常回滚事务
+                    log.warn("支付成功后增加商品销量失败: orderId={}, productId={}, quantity={}", orderId, orderItem.getProductId(),
+                            orderItem.getProductQuantity());
+                    // Asserts.fail("增加商品销量失败！"); // 可选：如果必须成功则取消注释
+                } else {
+                    log.info("商品销量增加成功: productId={}, quantity={}", orderItem.getProductId(),
+                            orderItem.getProductQuantity());
+                }
+            }
+        }
+        // 返回更新的订单数量
+        return updateCount;
     }
 
     @Override

@@ -33,4 +33,22 @@ public interface PmsProductMapper {
     int updateByPrimaryKeyWithBLOBs(PmsProduct record);
 
     int updateByPrimaryKey(PmsProduct record);
+
+    /**
+     * 增加商品销量
+     * 
+     * @param id       商品ID
+     * @param quantity 增加的数量
+     * @return 影响的行数
+     */
+    int increaseSale(@Param("id") Long id, @Param("quantity") Integer quantity);
+
+    /**
+     * 扣减商品销量
+     * 
+     * @param id       商品ID
+     * @param quantity 扣减的数量
+     * @return 影响的行数
+     */
+    int decreaseSale(@Param("id") Long id, @Param("quantity") Integer quantity);
 }
