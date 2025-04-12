@@ -24,6 +24,9 @@ public class PmsBatchCommentParam {
         @ApiModelProperty("商品ID")
         private Long productId;
 
+        @ApiModelProperty("订单商品项ID")
+        private Long orderItemId;
+
         @ApiModelProperty("评分(1-5)")
         private Integer rating;
 

@@ -33,4 +33,12 @@ public interface PmsCommentMapper {
     int updateByPrimaryKeyWithBLOBs(PmsComment record);
 
     int updateByPrimaryKey(PmsComment record);
+
+    /**
+     * 根据订单商品ID列表查询评价数量
+     * 
+     * @param orderItemIds 订单商品ID列表
+     * @return 存在的评价数量
+     */
+    long countByOrderItemIds(@Param("orderItemIds") List<Long> orderItemIds);
 }

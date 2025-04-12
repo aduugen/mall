@@ -9,6 +9,12 @@ public class PmsComment implements Serializable {
 
     private Long productId;
 
+    @ApiModelProperty(value = "订单ID")
+    private Long orderId;
+
+    @ApiModelProperty(value = "订单商品项ID")
+    private Long orderItemId;
+
     private String memberNickName;
 
     private String productName;
@@ -36,6 +42,9 @@ public class PmsComment implements Serializable {
     @ApiModelProperty(value = "评论用户头像")
     private String memberIcon;
 
+    @ApiModelProperty(value = "评价用户ID")
+    private Long memberId;
+
     private Integer replayCount;
 
     private String content;
@@ -56,6 +65,22 @@ public class PmsComment implements Serializable {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public Long getOrderItemId() {
+        return orderItemId;
+    }
+
+    public void setOrderItemId(Long orderItemId) {
+        this.orderItemId = orderItemId;
     }
 
     public String getMemberNickName() {
@@ -146,6 +171,14 @@ public class PmsComment implements Serializable {
         this.memberIcon = memberIcon;
     }
 
+    public Long getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(Long memberId) {
+        this.memberId = memberId;
+    }
+
     public Integer getReplayCount() {
         return replayCount;
     }
@@ -170,6 +203,8 @@ public class PmsComment implements Serializable {
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
         sb.append(", productId=").append(productId);
+        sb.append(", orderId=").append(orderId);
+        sb.append(", orderItemId=").append(orderItemId);
         sb.append(", memberNickName=").append(memberNickName);
         sb.append(", productName=").append(productName);
         sb.append(", star=").append(star);
@@ -181,6 +216,7 @@ public class PmsComment implements Serializable {
         sb.append(", readCount=").append(readCount);
         sb.append(", pics=").append(pics);
         sb.append(", memberIcon=").append(memberIcon);
+        sb.append(", memberId=").append(memberId);
         sb.append(", replayCount=").append(replayCount);
         sb.append(", content=").append(content);
         sb.append(", serialVersionUID=").append(serialVersionUID);

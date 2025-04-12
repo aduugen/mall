@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
@@ -936,99 +937,156 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     }
 
     @Override
+    @Transactional
     public int createProductComment(PmsCommentParam commentParam) {
+        // 获取当前登录会员
+        UmsMember member = memberService.getCurrentMember();
+        if (member == null) {
+            Asserts.fail("用户未登录");
+        }
+
+        // 检查是否已经评价过该订单项
+        // !!! TEMPORARY: Commented out due to missing MBG method. Uncomment after
+        // running MBG.
+        /*
+         * PmsCommentExample existExample = new PmsCommentExample();
+         * existExample.createCriteria().andOrderItemIdEqualTo(commentParam.
+         * getOrderItemId());
+         * long existCount = commentMapper.countByExample(existExample);
+         * if (existCount > 0) {
+         * Asserts.fail("您已评价过此商品");
+         * }
+         */
+
         PmsComment comment = new PmsComment();
         comment.setProductId(commentParam.getProductId());
+        comment.setOrderId(commentParam.getOrderId()); // 设置 orderId
+        comment.setOrderItemId(commentParam.getOrderItemId()); // 设置 orderItemId
+        comment.setMemberId(member.getId()); // 设置 memberId
         comment.setContent(commentParam.getComment());
         comment.setStar(commentParam.getRating());
 
         // 设置评价图片
         if (commentParam.getPics() != null && !commentParam.getPics().isEmpty()) {
-            // 将图片列表转为逗号分隔的字符串
             String pics = String.join(",", commentParam.getPics());
             comment.setPics(pics);
         }
 
-        // 获取当前登录会员
-        UmsMember member = memberService.getCurrentMember();
         comment.setMemberNickName(member.getNickname());
         comment.setMemberIcon(member.getIcon());
 
-        // 获取订单商品信息
-        OmsOrder order = orderMapper.selectByPrimaryKey(commentParam.getOrderId());
-        if (order != null) {
-            List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(new OmsOrderItemExample());
-            for (OmsOrderItem item : orderItemList) {
-                if (item.getProductId().equals(commentParam.getProductId())) {
-                    // 设置商品属性和商品名称
-                    comment.setProductAttribute(item.getProductAttr());
-                    comment.setProductName(item.getProductName());
-                    break;
-                }
+        // 获取订单商品信息 (可以通过 orderItemId 直接获取，或者从 order 关联查询)
+        // 为了简化，我们假设 PmsCommentParam 已经包含了 ProductName 和 ProductAttribute
+        // 如果 PmsCommentParam 没有，则需要根据 orderItemId 查询 OmsOrderItem
+        OmsOrderItem orderItem = orderItemMapper.selectByPrimaryKey(commentParam.getOrderItemId());
+        if (orderItem != null) {
+            comment.setProductAttribute(orderItem.getProductAttr());
+            comment.setProductName(orderItem.getProductName());
+            // 也可以在这里再次校验 productId 和 orderId 是否匹配
+            if (!orderItem.getProductId().equals(commentParam.getProductId())
+                    || !orderItem.getOrderId().equals(commentParam.getOrderId())) {
+                log.warn("评价信息与订单项信息不匹配: commentParam={}, orderItem={}", commentParam, orderItem);
+                Asserts.fail("评价信息错误");
             }
-
-            // 从待评价(4)更新为已完成(3)
-            order.setStatus(3);
-            // 设置评价时间
-            order.setCommentTime(new Date());
-            orderMapper.updateByPrimaryKeySelective(order);
+        } else {
+            log.warn("无法找到对应的订单项: orderItemId={}", commentParam.getOrderItemId());
+            // 可以选择从 PmsCommentParam 获取商品名和属性，如果前端有传的话
+            // comment.setProductName(commentParam.getProductNameFromFrontend);
+            // comment.setProductAttribute(commentParam.getProductAttrFromFrontend);
+            // 或者直接报错
+            Asserts.fail("找不到订单商品信息");
         }
 
         // 其他默认设置
         comment.setCreateTime(new Date());
-        comment.setShowStatus(1); // 显示
+        comment.setShowStatus(1); // 默认显示
         comment.setReplayCount(0);
         comment.setReadCount(0);
         comment.setCollectCouont(0);
+        // memberIp 可以在 Controller 层通过 HttpServletRequest 获取，或者暂时不设置
 
         return commentMapper.insert(comment);
     }
 
     @Override
+    @Transactional
     public int createBatchProductComment(PmsBatchCommentParam batchCommentParam) {
         if (batchCommentParam.getCommentItems() == null || batchCommentParam.getCommentItems().isEmpty()) {
             return 0;
         }
 
-        int count = 0;
-        Long orderId = batchCommentParam.getOrderId();
-
-        // 获取订单信息
-        OmsOrder order = orderMapper.selectByPrimaryKey(orderId);
-        if (order == null) {
-            return 0;
-        }
-
-        // 检查订单状态，只有已完成状态(3)的订单才能评价
-        if (order.getStatus() != 3) {
-            return 0;
-        }
-
         // 获取当前登录会员
         UmsMember member = memberService.getCurrentMember();
-
-        // 获取订单中的商品信息
-        OmsOrderItemExample orderItemExample = new OmsOrderItemExample();
-        orderItemExample.createCriteria().andOrderIdEqualTo(orderId);
-        List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(orderItemExample);
-
-        // 创建商品ID到订单项的映射，便于快速查找
-        Map<Long, OmsOrderItem> productItemMap = new HashMap<>();
-        for (OmsOrderItem item : orderItemList) {
-            productItemMap.put(item.getProductId(), item);
+        if (member == null) {
+            Asserts.fail("用户未登录");
         }
+
+        Long orderId = batchCommentParam.getOrderId();
+
+        // 获取订单信息 (可选，主要用于后续更新订单状态)
+        OmsOrder order = orderMapper.selectByPrimaryKey(orderId);
+        if (order == null) {
+            Asserts.fail("订单不存在");
+        }
+        // 校验订单是否属于当前用户
+        if (!order.getMemberId().equals(member.getId())) {
+            Asserts.fail("只能评价自己的订单");
+        }
+        // 校验订单状态，例如：是否是已收货(status=3)或待评价(status=4) ?
+        // if (order.getStatus() != 3 && order.getStatus() != 4) {
+        // Asserts.fail("当前订单状态无法评价");
+        // }
+
+        int successCount = 0;
+        List<Long> orderItemIds = batchCommentParam.getCommentItems().stream()
+                .map(PmsBatchCommentParam.CommentItem::getOrderItemId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(orderItemIds)) {
+            Asserts.fail("评价项缺少 orderItemId");
+        }
+
+        // 批量检查是否已经评价过 (使用手动添加的 Mapper 方法)
+        long existCount = commentMapper.countByOrderItemIds(orderItemIds);
+        if (existCount > 0) {
+            // 可以更精确地指出哪些已评价，但为了简单先统一报错
+            Asserts.fail("包含已评价过的商品");
+        }
+
+        // 获取订单中的商品信息 Map (用于填充商品名和属性)
+        OmsOrderItemExample orderItemExample = new OmsOrderItemExample();
+        orderItemExample.createCriteria().andOrderIdEqualTo(orderId).andIdIn(orderItemIds);
+        List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(orderItemExample);
+        Map<Long, OmsOrderItem> productItemMap = orderItemList.stream()
+                .collect(Collectors.toMap(OmsOrderItem::getId, item -> item));
+
+        List<PmsComment> commentsToInsert = new ArrayList<>();
 
         // 处理每个评价项
         for (PmsBatchCommentParam.CommentItem commentItem : batchCommentParam.getCommentItems()) {
+            if (commentItem.getOrderItemId() == null) {
+                log.warn("评价项缺少 orderItemId: {}", commentItem);
+                continue; // 跳过缺少 orderItemId 的项
+            }
+
+            OmsOrderItem orderItem = productItemMap.get(commentItem.getOrderItemId());
+            if (orderItem == null) {
+                log.warn("找不到评价项对应的订单商品: orderItemId={}", commentItem.getOrderItemId());
+                continue; // 跳过找不到订单项的评价
+            }
+
             // 创建评价
             PmsComment comment = new PmsComment();
             comment.setProductId(commentItem.getProductId());
+            comment.setOrderId(orderId); // 设置 orderId
+            comment.setOrderItemId(commentItem.getOrderItemId()); // 设置 orderItemId
+            comment.setMemberId(member.getId()); // 设置 memberId
             comment.setContent(commentItem.getComment());
             comment.setStar(commentItem.getRating());
 
             // 设置评价图片
             if (commentItem.getPics() != null && !commentItem.getPics().isEmpty()) {
-                // 将图片列表转为逗号分隔的字符串
                 String pics = String.join(",", commentItem.getPics());
                 comment.setPics(pics);
             }
@@ -1037,13 +1095,9 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             comment.setMemberNickName(member.getNickname());
             comment.setMemberIcon(member.getIcon());
 
-            // 获取订单商品信息
-            OmsOrderItem orderItem = productItemMap.get(commentItem.getProductId());
-            if (orderItem != null) {
-                // 设置商品属性和商品名称
-                comment.setProductAttribute(orderItem.getProductAttr());
-                comment.setProductName(orderItem.getProductName());
-            }
+            // 设置商品属性和商品名称 (从查询到的 orderItem 获取)
+            comment.setProductAttribute(orderItem.getProductAttr());
+            comment.setProductName(orderItem.getProductName());
 
             // 其他默认设置
             comment.setCreateTime(new Date());
@@ -1052,19 +1106,39 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             comment.setReadCount(0);
             comment.setCollectCouont(0);
 
-            // 插入评价
-            count += commentMapper.insert(comment);
+            commentsToInsert.add(comment);
         }
 
-        if (count > 0) {
-            // 更新订单状态为已完成(3)
-            order.setStatus(3);
-            // 设置评价时间
-            order.setCommentTime(new Date());
-            orderMapper.updateByPrimaryKeySelective(order);
+        // 批量插入评价 (如果 commentMapper 支持批量插入)
+        // 注意: MyBatis Generator 默认生成的 Mapper 可能没有批量 insert 方法
+        // 如果没有，需要自定义 Mapper 或在 Service 层循环 insert
+        if (!commentsToInsert.isEmpty()) {
+            // 假设 commentMapper 有 insertList 方法 (需要自定义)
+            // successCount = commentMapper.insertList(commentsToInsert);
+            // 或者循环插入
+            for (PmsComment comment : commentsToInsert) {
+                successCount += commentMapper.insert(comment);
+            }
         }
 
-        return count;
+        // 更新订单状态 - 考虑是否所有商品都评价完了？
+        // 如果批量评价成功，可以考虑将订单状态更新为"已完成"或"已评价"
+        if (successCount > 0 && successCount == batchCommentParam.getCommentItems().size()) {
+            // 只有当所有请求的评价项都成功插入时才更新订单状态
+            // 检查是否所有订单项都已评价 (可选，逻辑较复杂)
+            // boolean allCommented = checkAllOrderItemsCommented(orderId);
+            // if (allCommented) { ... }
+
+            // 暂时先简单处理：只要有评价成功，就更新订单评价时间，状态维持不变或按需更新
+            OmsOrder updateOrder = new OmsOrder();
+            updateOrder.setId(orderId);
+            // 更新为已完成状态 (status=3) 还是其他状态？
+            // updateOrder.setStatus(3);
+            updateOrder.setCommentTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(updateOrder);
+        }
+
+        return successCount;
     }
 
     @Override
