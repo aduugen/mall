@@ -196,4 +196,19 @@ public class PmsPortalProductServiceImpl implements PmsPortalProductService {
         node.setChildren(children);
         return node;
     }
+
+    @Override
+    public boolean checkProductAvailability(Long id) {
+        PmsProduct product = productMapper.selectByPrimaryKey(id);
+        if (product == null) {
+            // 商品不存在
+            return false;
+        }
+        // 检查上架状态（publish_status=1）和删除状态（delete_status=0）
+        boolean isAvailable = product.getPublishStatus() != null && product.getPublishStatus() == 1 &&
+                product.getDeleteStatus() != null && product.getDeleteStatus() == 0;
+        LOGGER.info("检查商品可用性: productId={}, publishStatus={}, deleteStatus={}, isAvailable={}",
+                id, product.getPublishStatus(), product.getDeleteStatus(), isAvailable);
+        return isAvailable;
+    }
 }

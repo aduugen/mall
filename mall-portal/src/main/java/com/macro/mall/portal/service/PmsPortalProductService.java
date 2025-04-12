@@ -31,4 +31,9 @@ public interface PmsPortalProductService {
      * 增加商品浏览量
      */
     void updateProductViewCount(Long id);
+
+    /**
+     * 检查商品是否可用（上架且未删除）
+     */
+    boolean checkProductAvailability(Long id);
 }

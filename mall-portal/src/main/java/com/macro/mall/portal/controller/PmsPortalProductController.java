@@ -15,6 +15,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 前台商品管理Controller
@@ -59,5 +61,15 @@ public class PmsPortalProductController {
         PmsPortalProductDetail productDetail = portalProductService.detail(id);
         portalProductService.updateProductViewCount(id);
         return CommonResult.success(productDetail);
+    }
+
+    @ApiOperation("检查商品状态是否可用")
+    @RequestMapping(value = "/checkStatus/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<Map<String, Boolean>> checkStatus(@PathVariable Long id) {
+        boolean isAvailable = portalProductService.checkProductAvailability(id);
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("isAvailable", isAvailable);
+        return CommonResult.success(result);
     }
 }
