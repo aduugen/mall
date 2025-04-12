@@ -4,6 +4,7 @@ import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
 import com.macro.mall.model.PmsComment;
 import com.macro.mall.portal.domain.ProductCommentSummary;
+import com.macro.mall.portal.domain.PmsMemberCommentDto;
 import com.macro.mall.portal.service.PmsCommentService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -41,5 +42,15 @@ public class PmsCommentController {
     public CommonResult<ProductCommentSummary> getSummary(@PathVariable Long productId) {
         ProductCommentSummary summary = commentService.getSummary(productId);
         return CommonResult.success(summary);
+    }
+
+    @ApiOperation("分页获取当前用户的评价列表")
+    @RequestMapping(value = "/myList", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<CommonPage<PmsMemberCommentDto>> getMyList(
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        CommonPage<PmsMemberCommentDto> commentPage = commentService.getMyList(pageNum, pageSize);
+        return CommonResult.success(commentPage);
     }
 }
