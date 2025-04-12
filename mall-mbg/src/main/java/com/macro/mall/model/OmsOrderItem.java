@@ -63,6 +63,9 @@ public class OmsOrderItem implements Serializable {
     @ApiModelProperty(value = "已申请售后数量")
     private Integer appliedQuantity;
 
+    @ApiModelProperty(value = "评价状态：0->未评价；1->已评价")
+    private Integer commentStatus;
+
     private static final long serialVersionUID = 1L;
 
     public Long getId() {
@@ -241,6 +244,14 @@ public class OmsOrderItem implements Serializable {
         this.appliedQuantity = appliedQuantity;
     }
 
+    public Integer getCommentStatus() {
+        return commentStatus;
+    }
+
+    public void setCommentStatus(Integer commentStatus) {
+        this.commentStatus = commentStatus;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -269,6 +280,7 @@ public class OmsOrderItem implements Serializable {
         sb.append(", giftGrowth=").append(giftGrowth);
         sb.append(", productAttr=").append(productAttr);
         sb.append(", appliedQuantity=").append(appliedQuantity);
+        sb.append(", commentStatus=").append(commentStatus);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

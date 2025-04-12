@@ -17,4 +17,7 @@ import java.util.List;
 public class OmsOrderDetail extends OmsOrder {
     @ApiModelProperty("订单商品列表")
     private List<OmsOrderItem> orderItemList;
+
+    @ApiModelProperty("是否可以评价该订单（尚有未评价商品且订单状态允许）")
+    private Boolean canComment;
 }

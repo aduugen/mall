@@ -27,4 +27,9 @@ public interface OmsOrderItemMapper {
     int updateByPrimaryKeySelective(OmsOrderItem record);
 
     int updateByPrimaryKey(OmsOrderItem record);
+
+    /**
+     * 批量更新订单项的评价状态
+     */
+    int updateCommentStatusBatch(@Param("orderItemIds") List<Long> orderItemIds, @Param("status") Integer status);
 }

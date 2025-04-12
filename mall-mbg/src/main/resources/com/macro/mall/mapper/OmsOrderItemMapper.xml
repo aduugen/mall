@@ -24,6 +24,7 @@
     <result column="gift_growth" jdbcType="INTEGER" property="giftGrowth" />
     <result column="product_attr" jdbcType="VARCHAR" property="productAttr" />
     <result column="applied_quantity" jdbcType="INTEGER" property="appliedQuantity" />
+    <result column="comment_status" jdbcType="TINYINT" property="commentStatus" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -87,7 +88,7 @@
     id, order_id, order_sn, product_id, product_pic, product_name, product_brand, product_sn, 
     product_price, product_quantity, product_sku_id, product_sku_code, product_category_id, 
     promotion_name, promotion_amount, coupon_amount, integration_amount, real_amount, 
-    gift_integration, gift_growth, product_attr, applied_quantity
+    gift_integration, gift_growth, product_attr, applied_quantity, comment_status
   </sql>
   <select id="selectByExample" parameterType="com.macro.mall.model.OmsOrderItemExample" resultMap="BaseResultMap">
     select
@@ -476,4 +477,15 @@
       applied_quantity = #{appliedQuantity,jdbcType=INTEGER}
     where id = #{id,jdbcType=BIGINT}
   </update>
+
+  <!-- 手动添加：批量更新订单项的评价状态 -->
+  <update id="updateCommentStatusBatch">
+    UPDATE oms_order_item
+    SET comment_status = #{status,jdbcType=INTEGER}
+    WHERE id IN
+    <foreach collection="orderItemIds" item="itemId" open="(" separator="," close=")">
+      #{itemId}
+    </foreach>
+  </update>
+
 </mapper>

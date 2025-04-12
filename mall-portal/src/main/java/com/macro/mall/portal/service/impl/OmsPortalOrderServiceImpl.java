@@ -532,6 +532,30 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             orderDetail.setOrderItemList(relatedItemList);
             orderDetailList.add(orderDetail);
         }
+
+        // 为每个 OmsOrderDetail 设置 canComment 标志
+        for (OmsOrderDetail detail : orderDetailList) {
+            boolean canCommentOrder = false;
+            // 检查订单状态是否允许评价 (例如：已完成3 或 待评价4)
+            if (detail.getStatus() != null && (detail.getStatus() == 3 || detail.getStatus() == 4)) {
+                boolean hasUncommentedItem = false;
+                if (detail.getOrderItemList() != null) {
+                    for (OmsOrderItem item : detail.getOrderItemList()) {
+                        // 检查订单项的 commentStatus
+                        if (item.getCommentStatus() == null || item.getCommentStatus() == 0) {
+                            hasUncommentedItem = true;
+                            break;
+                        }
+                    }
+                }
+                // 如果有未评价的项，则可以评价
+                if (hasUncommentedItem) {
+                    canCommentOrder = true;
+                }
+            }
+            detail.setCanComment(canCommentOrder);
+        }
+
         resultPage.setList(orderDetailList);
         return resultPage;
     }
@@ -539,21 +563,56 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     @Override
     public OmsOrderDetail detail(Long orderId) {
         OmsOrder omsOrder = orderMapper.selectByPrimaryKey(orderId);
+        if (omsOrder == null) {
+            return null; // 或者抛出异常
+        }
+        UmsMember member = memberService.getCurrentMember();
+        if (!member.getId().equals(omsOrder.getMemberId())) {
+            Asserts.fail("不能查看他人订单详情！");
+        }
+
         OmsOrderItemExample example = new OmsOrderItemExample();
         example.createCriteria().andOrderIdEqualTo(orderId);
         List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(example);
 
-        // 处理订单项，确保appliedQuantity不为null，并计算可申请数量
-        for (OmsOrderItem item : orderItemList) {
-            // 确保已申请数量不为null
-            if (item.getAppliedQuantity() == null) {
-                item.setAppliedQuantity(0);
+        // 处理订单项，确保appliedQuantity不为null
+        if (orderItemList != null) {
+            for (OmsOrderItem item : orderItemList) {
+                if (item.getAppliedQuantity() == null) {
+                    item.setAppliedQuantity(0);
+                }
+                // 确保 commentStatus 不为 null (虽然数据库有默认值，防御性编程)
+                if (item.getCommentStatus() == null) {
+                    item.setCommentStatus(0);
+                }
             }
         }
 
         OmsOrderDetail orderDetail = new OmsOrderDetail();
         BeanUtil.copyProperties(omsOrder, orderDetail);
         orderDetail.setOrderItemList(orderItemList);
+
+        // 计算 canComment
+        boolean canCommentOrder = false;
+        // 检查订单状态是否允许评价 (例如：已完成3 或 待评价4)
+        if (orderDetail.getStatus() != null && (orderDetail.getStatus() == 3 || orderDetail.getStatus() == 4)) {
+            boolean hasUncommentedItem = false;
+            if (orderItemList != null) {
+                for (OmsOrderItem item : orderItemList) {
+                    // 检查订单项的 commentStatus
+                    if (item.getCommentStatus() == 0) { // 0 表示未评价
+                        hasUncommentedItem = true;
+                        break;
+                    }
+                }
+            }
+            // 如果有未评价的项，则可以评价
+            if (hasUncommentedItem) {
+                canCommentOrder = true;
+            }
+        }
+        orderDetail.setCanComment(canCommentOrder);
+
         return orderDetail;
     }
 
@@ -1005,7 +1064,32 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         comment.setCollectCouont(0);
         // memberIp 可以在 Controller 层通过 HttpServletRequest 获取，或者暂时不设置
 
-        return commentMapper.insert(comment);
+        int insertResult = commentMapper.insert(comment);
+        if (insertResult > 0) {
+            // 评价插入成功后，更新对应订单项的评价状态
+            if (comment.getOrderItemId() != null) {
+                try {
+                    OmsOrderItem updateItem = new OmsOrderItem();
+                    updateItem.setId(comment.getOrderItemId());
+                    updateItem.setCommentStatus(1); // 1 表示已评价
+                    orderItemMapper.updateByPrimaryKeySelective(updateItem);
+                    log.info("更新订单项 {} 的评价状态为已评价", comment.getOrderItemId());
+                } catch (Exception e) {
+                    log.error("更新订单项评价状态失败: orderItemId={}, error: {}", comment.getOrderItemId(), e.getMessage());
+                    // 抛出异常以确保事务回滚
+                    throw new RuntimeException("更新订单项评价状态失败", e);
+                }
+            }
+            // 更新订单的评价时间
+            OmsOrder updateOrder = new OmsOrder();
+            updateOrder.setId(comment.getOrderId());
+            updateOrder.setCommentTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(updateOrder);
+
+            return insertResult; // 返回插入成功的结果 (通常是 1)
+        } else {
+            return 0; // 插入失败
+        }
     }
 
     @Override
@@ -1109,20 +1193,38 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
             commentsToInsert.add(comment);
         }
 
-        // 批量插入评价 (如果 commentMapper 支持批量插入)
-        // 注意: MyBatis Generator 默认生成的 Mapper 可能没有批量 insert 方法
-        // 如果没有，需要自定义 Mapper 或在 Service 层循环 insert
+        // 批量插入评价
         if (!commentsToInsert.isEmpty()) {
-            // 假设 commentMapper 有 insertList 方法 (需要自定义)
-            // successCount = commentMapper.insertList(commentsToInsert);
-            // 或者循环插入
+            List<Long> successfullyCommentedItemIds = new ArrayList<>();
             for (PmsComment comment : commentsToInsert) {
-                successCount += commentMapper.insert(comment);
+                int insertResult = commentMapper.insert(comment);
+                if (insertResult > 0) {
+                    successCount++;
+                    // 收集成功评价的 orderItemId
+                    if (comment.getOrderItemId() != null) {
+                        successfullyCommentedItemIds.add(comment.getOrderItemId());
+                    }
+                } else {
+                    // 可选：记录插入失败的评论项
+                    log.error("插入评论失败: orderItemId={}, productId={}", comment.getOrderItemId(), comment.getProductId());
+                }
+            }
+
+            // 如果有成功插入的评论，批量更新对应订单项的状态
+            if (!successfullyCommentedItemIds.isEmpty()) {
+                try {
+                    orderItemMapper.updateCommentStatusBatch(successfullyCommentedItemIds, 1); // 1 表示已评价
+                    log.info("批量更新 {} 个订单项的评价状态为已评价", successfullyCommentedItemIds.size());
+                } catch (Exception e) {
+                    // 记录更新失败的错误，但由于主事务会回滚，通常不需要额外处理
+                    log.error("批量更新订单项评价状态失败: itemIds={}, error: {}", successfullyCommentedItemIds, e.getMessage());
+                    // 这里可以选择抛出异常，确保事务回滚
+                    throw new RuntimeException("批量更新订单项评价状态失败", e);
+                }
             }
         }
 
-        // 更新订单状态 - 考虑是否所有商品都评价完了？
-        // 如果批量评价成功，可以考虑将订单状态更新为"已完成"或"已评价"
+        // 更新订单状态
         if (successCount > 0 && successCount == batchCommentParam.getCommentItems().size()) {
             // 只有当所有请求的评价项都成功插入时才更新订单状态
             // 检查是否所有订单项都已评价 (可选，逻辑较复杂)
@@ -1145,21 +1247,38 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     public List<OmsOrderItem> getOrderProductsForComment(Long orderId) {
         // 获取订单信息
         OmsOrder order = orderMapper.selectByPrimaryKey(orderId);
-        if (order == null || order.getStatus() != 3) {
-            // 如果订单不存在或状态不是已完成(3)，返回空列表
+        // 订单不存在，或者状态不是已完成或待评价，不允许获取待评价商品
+        // 注意：状态 3 通常是"已完成"，4 是"待评价"或"已关闭"，需根据实际业务调整
+        if (order == null || (order.getStatus() != 3 && order.getStatus() != 4)) {
+            log.warn("订单 {} 不存在或状态不允许评价 (status={})", orderId, order != null ? order.getStatus() : "null");
             return new ArrayList<>();
         }
 
         // 获取当前登录会员
         UmsMember member = memberService.getCurrentMember();
-        if (!order.getMemberId().equals(member.getId())) {
-            // 如果不是当前会员的订单，返回空列表
+        if (member == null || !order.getMemberId().equals(member.getId())) {
+            log.warn("非当前用户 {} 的订单 {}，不允许获取待评价商品", member != null ? member.getId() : "null", orderId);
             return new ArrayList<>();
         }
 
-        // 获取订单中的商品列表
+        // 获取订单中的所有商品列表
         OmsOrderItemExample example = new OmsOrderItemExample();
         example.createCriteria().andOrderIdEqualTo(orderId);
-        return orderItemMapper.selectByExample(example);
+        List<OmsOrderItem> allItems = orderItemMapper.selectByExample(example);
+
+        // 在 Java 代码中过滤出未评价的商品 (commentStatus 为 null 或 0)
+        List<OmsOrderItem> uncommentedItems = allItems.stream()
+                .filter(item -> item.getCommentStatus() == null || item.getCommentStatus() == 0)
+                .collect(Collectors.toList());
+
+        log.info("订单 {} 待评价商品数量: {}", orderId, uncommentedItems.size());
+        return uncommentedItems;
+
+        // SQL 优化说明 (如果需要):
+        // 当前实现在 Java 中过滤，如果订单项非常多，可能有效率问题。
+        // 优化方向：在 Mapper XML 中添加自定义 SQL 查询，直接筛选出未评价的商品项。
+        // 例如 PmsCommentMapper.xml 中添加 <select id="selectUncommentedItemsByOrderId" ...>
+        // SQL: SELECT * FROM oms_order_item WHERE order_id = #{orderId} AND
+        // (comment_status = 0 OR comment_status IS NULL)
     }
 }
