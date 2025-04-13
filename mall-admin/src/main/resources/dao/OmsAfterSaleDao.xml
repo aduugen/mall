@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.dao.OmsAfterSaleDao">
+    <!-- 用于 getDetail 的 ResultMap，继承基础 OmsAfterSale 的映射 (假设已在 OmsAfterSaleMapper.xml 定义) -->
+    <!-- 如果 OmsAfterSaleMapper.xml 不可用或未定义 BaseResultMap，需要在此处完整定义 OmsAfterSale 的字段映射 -->
+    <resultMap id="AfterSaleDetailMap" type="com.macro.mall.dto.OmsAfterSaleDetail" extends="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap">
+            <id column="as_id" property="id" jdbcType="BIGINT" /> <!-- 显式覆盖继承的id，避免歧义 -->
+            <!-- 其他 OmsAfterSale 字段已通过 extends 继承 -->
+            <collection property="afterSaleItemList" column="as_id" select="getAfterSaleItems" ofType="com.macro.mall.model.OmsAfterSaleItem"/>
+    </resultMap>
+
+    <!-- 辅助查询：根据售后ID获取售后商品项列表 -->
+    <select id="getAfterSaleItems" resultType="com.macro.mall.model.OmsAfterSaleItem">
+        SELECT
+            <include refid="com.macro.mall.mapper.OmsAfterSaleItemMapper.Base_Column_List" />
+        FROM
+            oms_after_sale_item
+        WHERE
+            after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </select>
+
+    <!-- 用于 getAfterSaleStatistic 的 ResultMap -->
+    <resultMap id="StatisticMap" type="com.macro.mall.dto.OmsAfterSaleStatistic">
+        <result column="pendingCount" property="pendingCount" jdbcType="BIGINT"/>
+        <result column="processingCount" property="processingCount" jdbcType="BIGINT"/>
+        <result column="finishedCount" property="finishedCount" jdbcType="BIGINT"/>
+        <result column="rejectedCount" property="rejectedCount" jdbcType="BIGINT"/>
+        <result column="totalCount" property="totalCount" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <!-- 查询售后列表 -->
+    <select id="getList" resultMap="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap"> <!-- 使用基础 OmsAfterSale ResultMap -->
+        SELECT
+            <include refid="com.macro.mall.mapper.OmsAfterSaleMapper.Base_Column_List" />
+        FROM oms_after_sale
+        <where>
+            <if test="queryParam.id != null">
+                AND id = #{queryParam.id}
+            </if>
+            <if test="queryParam.orderSn != null and queryParam.orderSn != ''">
+                AND order_sn LIKE concat('%',#{queryParam.orderSn},'%')
+            </if>
+            <if test="queryParam.status != null">
+                AND status = #{queryParam.status}
+            </if>
+            <if test="queryParam.createTime != null and queryParam.createTime != ''">
+                AND date(create_time) = #{queryParam.createTime}
+            </if>
+            <if test="queryParam.handleMan != null and queryParam.handleMan != ''">
+                AND handle_man LIKE concat('%',#{queryParam.handleMan},'%')
+            </if>
+                <if test="queryParam.memberKeyword != null and queryParam.memberKeyword != ''">
+                    <!-- 这里假设 memberKeyword 可以是会员ID或用户名，需要数据库支持或调整SQL -->
+                AND (member_id = #{queryParam.memberKeyword} OR member_username LIKE concat('%',#{queryParam.memberKeyword},'%'))
+            </if>
+            <!-- 可以添加其他查询条件 -->
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取售后详情 -->
+    <select id="getDetail" resultMap="AfterSaleDetailMap">
+        SELECT
+            <!-- 使用别名 as_id 避免与 OmsAfterSaleItem 中的 id 冲突 -->
+            a.id as as_id,
+            a.* <!-- 选取 OmsAfterSale 的所有其他列 -->
+        FROM
+            oms_after_sale a
+        WHERE
+            a.id = #{id,jdbcType=BIGINT}
+    </select>
+
+
+    <!-- 获取售后状态统计 -->
+    <select id="getAfterSaleStatistic" resultMap="StatisticMap">
+        SELECT
+            SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS pendingCount,
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS processingCount,
+            SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS finishedCount,
+            SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) AS rejectedCount,
+            COUNT(*) AS totalCount
+        FROM
+            oms_after_sale
+    </select>
+
+</mapper>

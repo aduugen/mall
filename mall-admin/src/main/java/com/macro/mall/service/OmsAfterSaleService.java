@@ -1,31 +1,51 @@
 package com.macro.mall.service;
 
-import com.macro.mall.model.OmsAfterSale;
+import com.macro.mall.dto.OmsAfterSaleDetail;
+import com.macro.mall.dto.OmsAfterSaleQueryParam;
+import com.macro.mall.dto.OmsAfterSaleStatistic;
+import com.macro.mall.dto.OmsUpdateStatusParam;
+import com.macro.mall.model.OmsAfterSale; // 或者使用自定义列表 DTO
+
 import java.util.List;
 
+/**
+ * 售后服务管理Service
+ */
 public interface OmsAfterSaleService {
     /**
-     * 创建售后申请
+     * 分页查询售后申请
+     * @param queryParam 查询参数
+     * @param pageSize 页大小
+     * @param pageNum 页码
+     * @return 售后列表
      */
-    int create(OmsAfterSale afterSale);
+    List<OmsAfterSale> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum);
 
     /**
-     * 获取售后申请详情
+     * 批量删除申请 (根据业务逻辑，可能不允许删除或有状态限制)
+     * @param ids 售后ID列表
+     * @return 删除数量
      */
-    OmsAfterSale getItem(Long id);
+    int delete(List<Long> ids);
 
     /**
-     * 获取售后申请列表
+     * 修改申请状态
+     * @param id 售后ID
+     * @param statusParam 状态参数
+     * @return 更新数量
      */
-    List<OmsAfterSale> list(Integer status, Integer pageSize, Integer pageNum);
+    int updateStatus(Long id, OmsUpdateStatusParam statusParam);
 
     /**
-     * 修改售后申请状态
+     * 获取售后详情
+     * @param id 售后ID
+     * @return 售后详情 DTO
      */
-    int updateStatus(Long id, Integer status, String handleNote);
+    OmsAfterSaleDetail getDetail(Long id);
 
     /**
-     * 取消售后申请
+     * 获取售后状态统计
+     * @return 统计结果 DTO
      */
-    int cancel(Long id);
+    OmsAfterSaleStatistic getAfterSaleStatistic();
 }
