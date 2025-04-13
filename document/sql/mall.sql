@@ -662,6 +662,7 @@ CREATE TABLE oms_after_sale_item (
   `return_reason` varchar(255) NOT NULL COMMENT '退货原因',
   `proof_pics` varchar(1000) DEFAULT NULL COMMENT '图片凭证',
   `product_price` decimal(10,2) COMMENT '商品单价',
+  `product_real_price` decimal(10,2) COMMENT '商品实付单价',
   `product_quantity` int COMMENT '购买数量',
   `create_time` datetime COMMENT '创建时间',
   PRIMARY KEY (`id`),

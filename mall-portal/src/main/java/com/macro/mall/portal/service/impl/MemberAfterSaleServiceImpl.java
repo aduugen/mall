@@ -10,6 +10,7 @@ import com.macro.mall.model.*;
 import com.macro.mall.portal.domain.AfterSaleItemParam;
 import com.macro.mall.portal.domain.AfterSaleParam;
 import com.macro.mall.portal.service.MemberAfterSaleService;
+import com.macro.mall.portal.service.UmsMemberService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
     @Autowired
     private OmsOrderItemMapper orderItemMapper;
+
+    @Autowired
+    private UmsMemberService memberService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -125,6 +129,23 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 if (afterSaleItem.getReturnReason() == null || afterSaleItem.getReturnReason().trim().isEmpty()) {
                     afterSaleItem.setReturnReason("商品退货");
                 }
+
+                // 从订单项获取价格信息 (及其他可能需要冗余的信息)
+                afterSaleItem.setProductPrice(orderItem.getProductPrice()); // 商品原单价
+                afterSaleItem.setProductRealPrice(orderItem.getRealAmount()); // 商品实付单价 (修正：使用 realAmount)
+                // 可以考虑也冗余 product_id, sku_id, sku_code 等，如果 ItemParam 没有传递的话
+                if (afterSaleItem.getProductId() == null)
+                    afterSaleItem.setProductId(orderItem.getProductId());
+                if (afterSaleItem.getProductName() == null)
+                    afterSaleItem.setProductName(orderItem.getProductName());
+                if (afterSaleItem.getProductPic() == null)
+                    afterSaleItem.setProductPic(orderItem.getProductPic());
+                if (afterSaleItem.getProductAttr() == null)
+                    afterSaleItem.setProductAttr(orderItem.getProductAttr());
+                if (afterSaleItem.getProductSkuId() == null)
+                    afterSaleItem.setProductSkuId(orderItem.getProductSkuId());
+                if (afterSaleItem.getProductSkuCode() == null)
+                    afterSaleItem.setProductSkuCode(orderItem.getProductSkuCode());
 
                 System.out.println("插入售后商品项: " + afterSaleItem);
                 afterSaleItemMapper.insert(afterSaleItem);

@@ -38,6 +38,9 @@ public class OmsAfterSaleItem implements Serializable {
     @ApiModelProperty(value = "商品单价")
     private BigDecimal productPrice;
 
+    @ApiModelProperty(value = "商品实付单价")
+    private BigDecimal productRealPrice;
+
     @ApiModelProperty(value = "购买数量")
     private Integer productQuantity;
 
@@ -140,6 +143,14 @@ public class OmsAfterSaleItem implements Serializable {
         this.productPrice = productPrice;
     }
 
+    public BigDecimal getProductRealPrice() {
+        return productRealPrice;
+    }
+
+    public void setProductRealPrice(BigDecimal productRealPrice) {
+        this.productRealPrice = productRealPrice;
+    }
+
     public Integer getProductQuantity() {
         return productQuantity;
     }
@@ -189,6 +200,7 @@ public class OmsAfterSaleItem implements Serializable {
         sb.append(", productPic=").append(productPic);
         sb.append(", returnQuantity=").append(returnQuantity);
         sb.append(", productPrice=").append(productPrice);
+        sb.append(", productRealPrice=").append(productRealPrice);
         sb.append(", productQuantity=").append(productQuantity);
         sb.append(", returnReason=").append(returnReason);
         sb.append(", proofPics=").append(proofPics);

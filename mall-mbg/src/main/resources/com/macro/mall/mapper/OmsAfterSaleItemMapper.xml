@@ -13,6 +13,7 @@
         <result column="product_pic" jdbcType="VARCHAR" property="productPic" />
         <result column="return_quantity" jdbcType="INTEGER" property="returnQuantity" />
         <result column="product_price" jdbcType="DECIMAL" property="productPrice" />
+        <result column="product_real_price" jdbcType="DECIMAL" property="productRealPrice" />
         <result column="product_quantity" jdbcType="INTEGER" property="productQuantity" />
         <result column="return_reason" jdbcType="VARCHAR" property="returnReason" />
         <result column="proof_pics" jdbcType="VARCHAR" property="proofPics" />
@@ -78,7 +79,8 @@
     </sql>
     <sql id="Base_Column_List">
         id, after_sale_id, order_item_id, product_id, product_name, product_sku_id, product_sku_code, 
-        product_attr, product_pic, return_quantity, product_price, product_quantity, return_reason, proof_pics, create_time
+        product_attr, product_pic, return_quantity, product_price, product_real_price,
+        product_quantity, return_reason, proof_pics, create_time
     </sql>
     <select id="selectByExample" parameterType="com.macro.mall.model.OmsAfterSaleItemExample" resultMap="BaseResultMap">
         select
@@ -117,12 +119,14 @@
         insert into oms_after_sale_item (after_sale_id, order_item_id, product_id, 
             product_name, product_sku_id, product_sku_code, 
             product_attr, product_pic, return_quantity, 
-            product_price, product_quantity, return_reason, 
+            product_price, product_real_price,
+            product_quantity, return_reason, 
             proof_pics, create_time)
         values (#{afterSaleId,jdbcType=BIGINT}, #{orderItemId,jdbcType=BIGINT}, #{productId,jdbcType=BIGINT}, 
             #{productName,jdbcType=VARCHAR}, #{productSkuId,jdbcType=BIGINT}, #{productSkuCode,jdbcType=VARCHAR}, 
             #{productAttr,jdbcType=VARCHAR}, #{productPic,jdbcType=VARCHAR}, #{returnQuantity,jdbcType=INTEGER}, 
-            #{productPrice,jdbcType=DECIMAL}, #{productQuantity,jdbcType=INTEGER}, #{returnReason,jdbcType=VARCHAR}, 
+            #{productPrice,jdbcType=DECIMAL}, #{productRealPrice,jdbcType=DECIMAL},
+            #{productQuantity,jdbcType=INTEGER}, #{returnReason,jdbcType=VARCHAR}, 
             #{proofPics,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP})
     </insert>
     <insert id="insertSelective" parameterType="com.macro.mall.model.OmsAfterSaleItem">
@@ -160,6 +164,9 @@
             </if>
             <if test="productPrice != null">
                 product_price,
+            </if>
+            <if test="productRealPrice != null">
+                product_real_price,
             </if>
             <if test="productQuantity != null">
                 product_quantity,
@@ -204,6 +211,9 @@
             </if>
             <if test="productPrice != null">
                 #{productPrice,jdbcType=DECIMAL},
+            </if>
+            <if test="productRealPrice != null">
+                #{productRealPrice,jdbcType=DECIMAL},
             </if>
             <if test="productQuantity != null">
                 #{productQuantity,jdbcType=INTEGER},
@@ -261,6 +271,9 @@
             <if test="record.productPrice != null">
                 product_price = #{record.productPrice,jdbcType=DECIMAL},
             </if>
+            <if test="record.productRealPrice != null">
+                product_real_price = #{record.productRealPrice,jdbcType=DECIMAL},
+            </if>
             <if test="record.productQuantity != null">
                 product_quantity = #{record.productQuantity,jdbcType=INTEGER},
             </if>
@@ -291,6 +304,7 @@
             product_pic = #{record.productPic,jdbcType=VARCHAR},
             return_quantity = #{record.returnQuantity,jdbcType=INTEGER},
             product_price = #{record.productPrice,jdbcType=DECIMAL},
+            product_real_price = #{record.productRealPrice,jdbcType=DECIMAL},
             product_quantity = #{record.productQuantity,jdbcType=INTEGER},
             return_reason = #{record.returnReason,jdbcType=VARCHAR},
             proof_pics = #{record.proofPics,jdbcType=VARCHAR},
@@ -332,6 +346,9 @@
             <if test="productPrice != null">
                 product_price = #{productPrice,jdbcType=DECIMAL},
             </if>
+            <if test="productRealPrice != null">
+                product_real_price = #{productRealPrice,jdbcType=DECIMAL},
+            </if>
             <if test="productQuantity != null">
                 product_quantity = #{productQuantity,jdbcType=INTEGER},
             </if>
@@ -359,6 +376,7 @@
             product_pic = #{productPic,jdbcType=VARCHAR},
             return_quantity = #{returnQuantity,jdbcType=INTEGER},
             product_price = #{productPrice,jdbcType=DECIMAL},
+            product_real_price = #{productRealPrice,jdbcType=DECIMAL},
             product_quantity = #{productQuantity,jdbcType=INTEGER},
             return_reason = #{returnReason,jdbcType=VARCHAR},
             proof_pics = #{proofPics,jdbcType=VARCHAR},

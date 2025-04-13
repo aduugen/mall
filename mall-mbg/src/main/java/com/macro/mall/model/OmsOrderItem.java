@@ -26,6 +26,9 @@ public class OmsOrderItem implements Serializable {
     @ApiModelProperty(value = "销售价格")
     private BigDecimal productPrice;
 
+    @ApiModelProperty(value = "商品实际支付单价")
+    private BigDecimal productRealPrice;
+
     @ApiModelProperty(value = "购买数量")
     private Integer productQuantity;
 
@@ -138,6 +141,14 @@ public class OmsOrderItem implements Serializable {
 
     public void setProductPrice(BigDecimal productPrice) {
         this.productPrice = productPrice;
+    }
+
+    public BigDecimal getProductRealPrice() {
+        return productRealPrice;
+    }
+
+    public void setProductRealPrice(BigDecimal productRealPrice) {
+        this.productRealPrice = productRealPrice;
     }
 
     public Integer getProductQuantity() {
@@ -267,6 +278,7 @@ public class OmsOrderItem implements Serializable {
         sb.append(", productBrand=").append(productBrand);
         sb.append(", productSn=").append(productSn);
         sb.append(", productPrice=").append(productPrice);
+        sb.append(", productRealPrice=").append(productRealPrice);
         sb.append(", productQuantity=").append(productQuantity);
         sb.append(", productSkuId=").append(productSkuId);
         sb.append(", productSkuCode=").append(productSkuCode);

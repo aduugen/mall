@@ -155,6 +155,131 @@ public class OmsAfterSaleItemExample {
             addCriterion("order_item_id =", value, "orderItemId");
             return (Criteria) this;
         }
+
+        public Criteria andProductPriceIsNull() {
+            addCriterion("product_price is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceIsNotNull() {
+            addCriterion("product_price is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceEqualTo(BigDecimal value) {
+            addCriterion("product_price =", value, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceNotEqualTo(BigDecimal value) {
+            addCriterion("product_price <>", value, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceGreaterThan(BigDecimal value) {
+            addCriterion("product_price >", value, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceGreaterThanOrEqualTo(BigDecimal value) {
+            addCriterion("product_price >=", value, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceLessThan(BigDecimal value) {
+            addCriterion("product_price <", value, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceLessThanOrEqualTo(BigDecimal value) {
+            addCriterion("product_price <=", value, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceIn(List<BigDecimal> values) {
+            addCriterion("product_price in", values, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceNotIn(List<BigDecimal> values) {
+            addCriterion("product_price not in", values, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceBetween(BigDecimal value1, BigDecimal value2) {
+            addCriterion("product_price between", value1, value2, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductPriceNotBetween(BigDecimal value1, BigDecimal value2) {
+            addCriterion("product_price not between", value1, value2, "productPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceIsNull() {
+            addCriterion("product_real_price is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceIsNotNull() {
+            addCriterion("product_real_price is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceEqualTo(BigDecimal value) {
+            addCriterion("product_real_price =", value, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceNotEqualTo(BigDecimal value) {
+            addCriterion("product_real_price <>", value, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceGreaterThan(BigDecimal value) {
+            addCriterion("product_real_price >", value, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceGreaterThanOrEqualTo(BigDecimal value) {
+            addCriterion("product_real_price >=", value, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceLessThan(BigDecimal value) {
+            addCriterion("product_real_price <", value, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceLessThanOrEqualTo(BigDecimal value) {
+            addCriterion("product_real_price <=", value, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceIn(List<BigDecimal> values) {
+            addCriterion("product_real_price in", values, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceNotIn(List<BigDecimal> values) {
+            addCriterion("product_real_price not in", values, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceBetween(BigDecimal value1, BigDecimal value2) {
+            addCriterion("product_real_price between", value1, value2, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductRealPriceNotBetween(BigDecimal value1, BigDecimal value2) {
+            addCriterion("product_real_price not between", value1, value2, "productRealPrice");
+            return (Criteria) this;
+        }
+
+        public Criteria andProductQuantityIsNull() {
+            addCriterion("product_quantity is null");
+            return (Criteria) this;
+        }
     }
 
     public static class Criteria extends GeneratedCriteria {
