@@ -4,6 +4,9 @@
   <resultMap id="BaseResultMap" type="com.macro.mall.model.PmsComment">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="product_id" jdbcType="BIGINT" property="productId" />
+    <result column="order_id" jdbcType="BIGINT" property="orderId" />
+    <result column="order_item_id" jdbcType="BIGINT" property="orderItemId" />
+    <result column="member_id" jdbcType="BIGINT" property="memberId" />
     <result column="member_nick_name" jdbcType="VARCHAR" property="memberNickName" />
     <result column="product_name" jdbcType="VARCHAR" property="productName" />
     <result column="star" jdbcType="INTEGER" property="star" />
@@ -79,7 +82,8 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, product_id, member_nick_name, product_name, star, member_ip, create_time, show_status, 
+    id, product_id, order_id, order_item_id, member_id,
+    member_nick_name, product_name, star, member_ip, create_time, show_status, 
     product_attribute, collect_couont, read_count, pics, member_icon, replay_count
   </sql>
   <sql id="Blob_Column_List">
@@ -157,6 +161,15 @@
       <if test="productId != null">
         product_id,
       </if>
+      <if test="orderId != null">
+        order_id,
+      </if>
+      <if test="orderItemId != null">
+        order_item_id,
+      </if>
+      <if test="memberId != null">
+        member_id,
+      </if>
       <if test="memberNickName != null">
         member_nick_name,
       </if>
@@ -200,6 +213,15 @@
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="productId != null">
         #{productId,jdbcType=BIGINT},
+      </if>
+      <if test="orderId != null">
+        #{orderId,jdbcType=BIGINT},
+      </if>
+      <if test="orderItemId != null">
+        #{orderItemId,jdbcType=BIGINT},
+      </if>
+      <if test="memberId != null">
+        #{memberId,jdbcType=BIGINT},
       </if>
       <if test="memberNickName != null">
         #{memberNickName,jdbcType=VARCHAR},
@@ -257,6 +279,15 @@
       <if test="record.productId != null">
         product_id = #{record.productId,jdbcType=BIGINT},
       </if>
+      <if test="record.orderId != null">
+        order_id = #{record.orderId,jdbcType=BIGINT},
+      </if>
+      <if test="record.orderItemId != null">
+        order_item_id = #{record.orderItemId,jdbcType=BIGINT},
+      </if>
+      <if test="record.memberId != null">
+        member_id = #{record.memberId,jdbcType=BIGINT},
+      </if>
       <if test="record.memberNickName != null">
         member_nick_name = #{record.memberNickName,jdbcType=VARCHAR},
       </if>
@@ -305,6 +336,9 @@
     update pms_comment
     set id = #{record.id,jdbcType=BIGINT},
       product_id = #{record.productId,jdbcType=BIGINT},
+      order_id = #{record.orderId,jdbcType=BIGINT},
+      order_item_id = #{record.orderItemId,jdbcType=BIGINT},
+      member_id = #{record.memberId,jdbcType=BIGINT},
       member_nick_name = #{record.memberNickName,jdbcType=VARCHAR},
       product_name = #{record.productName,jdbcType=VARCHAR},
       star = #{record.star,jdbcType=INTEGER},
@@ -326,6 +360,9 @@
     update pms_comment
     set id = #{record.id,jdbcType=BIGINT},
       product_id = #{record.productId,jdbcType=BIGINT},
+      order_id = #{record.orderId,jdbcType=BIGINT},
+      order_item_id = #{record.orderItemId,jdbcType=BIGINT},
+      member_id = #{record.memberId,jdbcType=BIGINT},
       member_nick_name = #{record.memberNickName,jdbcType=VARCHAR},
       product_name = #{record.productName,jdbcType=VARCHAR},
       star = #{record.star,jdbcType=INTEGER},
@@ -347,6 +384,15 @@
     <set>
       <if test="productId != null">
         product_id = #{productId,jdbcType=BIGINT},
+      </if>
+      <if test="orderId != null">
+        order_id = #{orderId,jdbcType=BIGINT},
+      </if>
+      <if test="orderItemId != null">
+        order_item_id = #{orderItemId,jdbcType=BIGINT},
+      </if>
+      <if test="memberId != null">
+        member_id = #{memberId,jdbcType=BIGINT},
       </if>
       <if test="memberNickName != null">
         member_nick_name = #{memberNickName,jdbcType=VARCHAR},
@@ -393,6 +439,9 @@
   <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.macro.mall.model.PmsComment">
     update pms_comment
     set product_id = #{productId,jdbcType=BIGINT},
+      order_id = #{orderId,jdbcType=BIGINT},
+      order_item_id = #{orderItemId,jdbcType=BIGINT},
+      member_id = #{memberId,jdbcType=BIGINT},
       member_nick_name = #{memberNickName,jdbcType=VARCHAR},
       product_name = #{productName,jdbcType=VARCHAR},
       star = #{star,jdbcType=INTEGER},
@@ -411,6 +460,9 @@
   <update id="updateByPrimaryKey" parameterType="com.macro.mall.model.PmsComment">
     update pms_comment
     set product_id = #{productId,jdbcType=BIGINT},
+      order_id = #{orderId,jdbcType=BIGINT},
+      order_item_id = #{orderItemId,jdbcType=BIGINT},
+      member_id = #{memberId,jdbcType=BIGINT},
       member_nick_name = #{memberNickName,jdbcType=VARCHAR},
       product_name = #{productName,jdbcType=VARCHAR},
       star = #{star,jdbcType=INTEGER},
@@ -427,11 +479,12 @@
   </update>
 
   <!-- 手动添加：根据订单商品ID列表查询评价数量 -->
-  <select id="countByOrderItemIds" resultType="java.lang.Long">
-    select count(*) from pms_comment
-    where order_item_id in
-    <foreach collection="orderItemIds" item="itemId" open="(" separator="," close=")">
-      #{itemId}
+  <select id="countByOrderItemIds" parameterType="java.util.List" resultType="java.lang.Long">
+    SELECT count(*)
+    FROM pms_comment
+    WHERE order_item_id IN
+    <foreach item="item" collection="orderItemIds" open="(" separator="," close=")">
+      #{item}
     </foreach>
   </select>
 

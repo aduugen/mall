@@ -5,15 +5,20 @@ import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.exception.Asserts;
 import com.macro.mall.mapper.PmsCommentMapper;
 import com.macro.mall.mapper.PmsProductMapper;
+import com.macro.mall.mapper.OmsOrderItemMapper;
 import com.macro.mall.model.PmsComment;
 import com.macro.mall.model.PmsCommentExample;
 import com.macro.mall.model.PmsProduct;
 import com.macro.mall.model.PmsProductExample;
 import com.macro.mall.model.UmsMember;
+import com.macro.mall.model.OmsOrderItem;
+import com.macro.mall.model.OmsOrderItemExample;
 import com.macro.mall.portal.domain.ProductCommentSummary;
 import com.macro.mall.portal.domain.PmsMemberCommentDto;
 import com.macro.mall.portal.service.PmsCommentService;
 import com.macro.mall.portal.service.UmsMemberService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.HashMap;
 
 /**
  * 商品评价管理Service实现类
@@ -33,12 +40,16 @@ import java.util.stream.Collectors;
 @Service
 public class PmsCommentServiceImpl implements PmsCommentService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(PmsCommentServiceImpl.class);
+
     @Autowired
     private PmsCommentMapper commentMapper;
     @Autowired
     private UmsMemberService memberService;
     @Autowired
     private PmsProductMapper productMapper;
+    @Autowired
+    private OmsOrderItemMapper orderItemMapper;
 
     // 定义好评的最低星级
     private static final int POSITIVE_RATING_THRESHOLD = 4;
@@ -90,10 +101,8 @@ public class PmsCommentServiceImpl implements PmsCommentService {
 
     @Override
     public CommonPage<PmsMemberCommentDto> getMyList(Integer pageNum, Integer pageSize) {
-        // 获取当前登录用户
         UmsMember member = memberService.getCurrentMember();
         if (member == null) {
-            // 可以返回空数据或抛出异常，这里返回空数据
             return CommonPage.restPage(new ArrayList<>());
         }
 
@@ -103,37 +112,91 @@ public class PmsCommentServiceImpl implements PmsCommentService {
         example.setOrderByClause("create_time desc");
         List<PmsComment> commentList = commentMapper.selectByExampleWithBLOBs(example);
 
-        // 将 PmsComment 转换为 PmsMemberCommentDto 并填充商品图片
         List<PmsMemberCommentDto> dtoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(commentList)) {
-            // 提取所有 productId
             List<Long> productIds = commentList.stream()
-                    .map(PmsComment::getProductId)
-                    .distinct()
-                    .collect(Collectors.toList());
+                    .map(PmsComment::getProductId).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+            List<Long> orderItemIds = commentList.stream()
+                    .map(PmsComment::getOrderItemId).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            // 批量查询商品信息 (只需要 id 和 pic)
-            PmsProductExample productExample = new PmsProductExample();
-            productExample.createCriteria().andIdIn(productIds);
-            List<PmsProduct> productList = productMapper.selectByExample(productExample);
-            Map<Long, String> productPicMap = productList.stream()
-                    .collect(Collectors.toMap(PmsProduct::getId, PmsProduct::getPic));
+            Map<Long, String> productPicMap = getProductPicMap(productIds);
+            Map<Long, BigDecimal> productPriceMap = getProductPriceMap(orderItemIds);
 
-            // 组装 DTO
             for (PmsComment comment : commentList) {
                 PmsMemberCommentDto dto = new PmsMemberCommentDto();
                 BeanUtils.copyProperties(comment, dto);
-                dto.setProductPic(productPicMap.get(comment.getProductId()));
+
+                Long currentOrderItemId = comment.getOrderItemId();
+
+                if (comment.getProductId() != null) {
+                    dto.setProductPic(productPicMap.get(comment.getProductId()));
+                }
+                if (currentOrderItemId != null) {
+                    BigDecimal price = productPriceMap.get(currentOrderItemId);
+                    dto.setProductPrice(price);
+                }
+                dto.setStatusText(mapStatusToText(comment.getShowStatus()));
                 dtoList.add(dto);
             }
         }
 
-        // 封装分页信息
         CommonPage<PmsComment> originalPage = CommonPage.restPage(commentList);
         CommonPage<PmsMemberCommentDto> resultPage = new CommonPage<>();
-        BeanUtils.copyProperties(originalPage, resultPage, "list"); // 复制分页属性，除了 list
+        BeanUtils.copyProperties(originalPage, resultPage, "list");
         resultPage.setList(dtoList);
 
+        if (!dtoList.isEmpty()) {
+            LOGGER.info("getMyList DTO result (sample): {}", dtoList.get(0).toString());
+        }
+
         return resultPage;
+    }
+
+    // 辅助方法：批量获取商品图片
+    private Map<Long, String> getProductPicMap(List<Long> productIds) {
+        Map<Long, String> map = new HashMap<>();
+        if (!CollectionUtils.isEmpty(productIds)) {
+            PmsProductExample productExample = new PmsProductExample();
+            productExample.createCriteria().andIdIn(productIds);
+            // 使用 selectByExample 查询所有字段
+            List<PmsProduct> productList = productMapper.selectByExample(productExample);
+            map = productList.stream()
+                    .filter(p -> p.getPic() != null) // 确保 pic 不为 null
+                    .collect(Collectors.toMap(PmsProduct::getId, PmsProduct::getPic, (k1, k2) -> k1));
+        }
+        return map;
+    }
+
+    // 辅助方法：批量获取订单项价格
+    private Map<Long, BigDecimal> getProductPriceMap(List<Long> orderItemIds) {
+        Map<Long, BigDecimal> map = new HashMap<>();
+        if (!CollectionUtils.isEmpty(orderItemIds)) {
+            OmsOrderItemExample itemExample = new OmsOrderItemExample();
+            itemExample.createCriteria().andIdIn(orderItemIds);
+            // 使用 selectByExample 查询所有字段
+            List<OmsOrderItem> itemList = orderItemMapper.selectByExample(itemExample);
+            map = itemList.stream()
+                    .filter(i -> i.getProductPrice() != null) // 确保 productPrice 不为 null
+                    .collect(Collectors.toMap(OmsOrderItem::getId, OmsOrderItem::getProductPrice, (k1, k2) -> k1));
+        }
+        return map;
+    }
+
+    // 辅助方法：映射评价状态码到文本
+    private String mapStatusToText(Integer status) {
+        if (status == null) {
+            return "未知"; // 或者 "审核中"，取决于业务定义
+        }
+        switch (status) {
+            case 0:
+                return "审核中"; // 假设 0 是待审核/审核中
+            case 1:
+                return "已显示"; // 假设 1 是审核通过并显示
+            case 2:
+                return "已隐藏"; // 假设 2 是审核通过但隐藏 (或审核不通过)
+            // case 3: return "审核不通过"; // 根据实际状态定义添加
+            default:
+                return "未知状态 (" + status + ")";
+        }
     }
 }
