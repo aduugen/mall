@@ -120,7 +120,7 @@ public class PmsCommentServiceImpl implements PmsCommentService {
                     .map(PmsComment::getOrderItemId).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
             Map<Long, String> productPicMap = getProductPicMap(productIds);
-            Map<Long, BigDecimal> productPriceMap = getProductPriceMap(orderItemIds);
+            Map<Long, BigDecimal> productPriceMap = getRealAmountMap(orderItemIds);
 
             for (PmsComment comment : commentList) {
                 PmsMemberCommentDto dto = new PmsMemberCommentDto();
@@ -168,7 +168,7 @@ public class PmsCommentServiceImpl implements PmsCommentService {
     }
 
     // 辅助方法：批量获取订单项价格
-    private Map<Long, BigDecimal> getProductPriceMap(List<Long> orderItemIds) {
+    private Map<Long, BigDecimal> getRealAmountMap(List<Long> orderItemIds) {
         Map<Long, BigDecimal> map = new HashMap<>();
         if (!CollectionUtils.isEmpty(orderItemIds)) {
             OmsOrderItemExample itemExample = new OmsOrderItemExample();
@@ -176,8 +176,8 @@ public class PmsCommentServiceImpl implements PmsCommentService {
             // 使用 selectByExample 查询所有字段
             List<OmsOrderItem> itemList = orderItemMapper.selectByExample(itemExample);
             map = itemList.stream()
-                    .filter(i -> i.getProductPrice() != null) // 确保 productPrice 不为 null
-                    .collect(Collectors.toMap(OmsOrderItem::getId, OmsOrderItem::getProductPrice, (k1, k2) -> k1));
+                    .filter(i -> i.getRealAmount() != null) // 确保 getRealAmount 不为 null
+                    .collect(Collectors.toMap(OmsOrderItem::getId, OmsOrderItem::getRealAmount, (k1, k2) -> k1));
         }
         return map;
     }
