@@ -637,6 +637,7 @@ CREATE TABLE `oms_after_sale` (
   `order_id` bigint(20) NOT NULL COMMENT '订单号',
   `member_id` bigint(20) NOT NULL COMMENT '会员ID',
   `status` int(1) NOT NULL DEFAULT '0' COMMENT '状态：0->待处理；1->退货中；2->已完成；3->已拒绝',
+  `handle_man` varchar(100) DEFAULT NULL COMMENT '处理人',
   `handle_note` varchar(500) DEFAULT NULL COMMENT '处理备注',
   `handle_time` datetime DEFAULT NULL COMMENT '处理时间',
   `create_time` datetime DEFAULT NULL COMMENT '申请时间',
