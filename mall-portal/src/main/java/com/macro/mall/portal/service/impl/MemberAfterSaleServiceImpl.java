@@ -9,6 +9,7 @@ import com.macro.mall.mapper.OmsOrderMapper;
 import com.macro.mall.model.*;
 import com.macro.mall.portal.domain.AfterSaleItemParam;
 import com.macro.mall.portal.domain.AfterSaleParam;
+import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
 import com.macro.mall.portal.service.MemberAfterSaleService;
 import com.macro.mall.portal.service.UmsMemberService;
 import org.springframework.beans.BeanUtils;
@@ -378,9 +379,9 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
     }
 
     @Override
-    public List<OmsAfterSale> listByOrderId(Long orderId, Long memberId) {
+    public List<PortalOmsAfterSaleDetail> listByOrderId(Long orderId, Long memberId) {
         // 查询指定订单和会员的所有售后申请，且未被删除的
-        List<OmsAfterSale> afterSaleList = new ArrayList<>(); // 初始化为空列表
+        List<PortalOmsAfterSaleDetail> resultList = new ArrayList<>();
 
         try {
             // 先查询订单，获取订单编号 (如果需要在日志或逻辑中使用)
@@ -403,21 +404,38 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
             criteria.andMemberIdEqualTo(memberId); // 按会员 ID 查询
             // example.setOrderByClause("create_time DESC"); // 可选：排序
 
-            afterSaleList = afterSaleMapper.selectByExample(example); // 将查询结果赋值给 afterSaleList
+            List<OmsAfterSale> afterSaleList = afterSaleMapper.selectByExample(example); // 查询原始售后列表
 
             System.out.println("订单ID=" + orderId + " 查询售后申请结果数量: " + afterSaleList.size());
 
             // 在结果中过滤订单ID和会员ID，以及删除状态 (selectByExample 已完成过滤)
             // ... (移除整个过滤和设置 orderSn/itemList 的循环) ...
+            // --- 新增逻辑：转换并填充 DTO ---
+            if (!CollectionUtils.isEmpty(afterSaleList)) {
+                for (OmsAfterSale afterSale : afterSaleList) {
+                    PortalOmsAfterSaleDetail detail = new PortalOmsAfterSaleDetail();
+                    BeanUtils.copyProperties(afterSale, detail); // 复制基础属性
+
+                    // 查询关联的售后商品项
+                    List<OmsAfterSaleItem> afterSaleItems = getAfterSaleItems(afterSale.getId());
+                    detail.setAfterSaleItemList(afterSaleItems); // 设置商品项列表
+
+                    // 可以在这里设置其他需要的信息，比如从 OmsOrder 获取的 orderSn 等
+                    // detail.setOrderSn(orderSn); // 可选：如果 PortalOmsAfterSaleDetail 需要 orderSn
+
+                    resultList.add(detail); // 添加到结果列表
+                }
+            }
+            // --- 新增逻辑结束 ---
 
             System.out.println("查询订单的售后列表: orderId=" + orderId + ", memberId=" + memberId +
-                    ", 结果数量=" + afterSaleList.size()); // 使用 afterSaleList
+                    ", 结果数量=" + resultList.size());
         } catch (Exception e) {
             System.out.println("查询订单售后列表异常: " + e.getMessage());
             e.printStackTrace();
         }
 
-        return afterSaleList; // 返回 afterSaleList
+        return resultList;
     }
 
     @Override

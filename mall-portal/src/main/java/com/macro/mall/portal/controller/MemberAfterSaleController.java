@@ -4,6 +4,7 @@ import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
 import com.macro.mall.model.*;
 import com.macro.mall.portal.domain.AfterSaleParam;
+import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
 import com.macro.mall.portal.service.MemberAfterSaleService;
 import com.macro.mall.portal.service.UmsMemberService;
 import com.macro.mall.mapper.OmsOrderMapper;
@@ -110,30 +111,38 @@ public class MemberAfterSaleController {
         System.out.println("查询售后列表: memberId=" + currentMember.getId() +
                 ", status=" + status + ", orderId=" + orderId);
 
-        List<OmsAfterSale> afterSaleList;
+        List<PortalOmsAfterSaleDetail> afterSaleDetailList;
+        List<OmsAfterSale> afterSaleListForPage;
+
         if (orderId != null) {
             // 如果指定了订单ID，通过订单ID查询售后记录
-            afterSaleList = afterSaleService.listByOrderId(orderId, currentMember.getId());
+            afterSaleDetailList = afterSaleService.listByOrderId(orderId, currentMember.getId());
+            afterSaleListForPage = new ArrayList<>();
+            if (afterSaleDetailList != null) {
+                for (PortalOmsAfterSaleDetail detail : afterSaleDetailList) {
+                    afterSaleListForPage.add(detail);
+                }
+            }
 
             // 如果status参数存在且大于等于0，进行状态过滤
             if (status != null && status >= 0) {
                 // 在内存中根据状态过滤结果
                 List<OmsAfterSale> filteredList = new ArrayList<>();
-                for (OmsAfterSale afterSale : afterSaleList) {
+                for (OmsAfterSale afterSale : afterSaleListForPage) {
                     if (afterSale.getStatus() != null && afterSale.getStatus().equals(status)) {
                         filteredList.add(afterSale);
                     }
                 }
-                afterSaleList = filteredList;
+                afterSaleListForPage = filteredList;
             }
         } else {
             // 没有指定订单ID，按状态查询所有售后记录
-            afterSaleList = afterSaleService.list(currentMember.getId(), status, pageSize, pageNum);
+            afterSaleListForPage = afterSaleService.list(currentMember.getId(), status, pageSize, pageNum);
         }
 
-        System.out.println("查询结果数量: " + (afterSaleList != null ? afterSaleList.size() : 0));
+        System.out.println("查询结果数量: " + (afterSaleListForPage != null ? afterSaleListForPage.size() : 0));
 
-        return CommonResult.success(CommonPage.restPage(afterSaleList));
+        return CommonResult.success(CommonPage.restPage(afterSaleListForPage));
     }
 
     @ApiOperation("取消售后申请")
@@ -180,18 +189,24 @@ public class MemberAfterSaleController {
         List<Map<String, Object>> itemStatusList = new ArrayList<>();
 
         // 查询该订单的售后申请记录 - 使用Service方法
-        List<OmsAfterSale> afterSaleList = afterSaleService.listByOrderId(orderId, currentMember.getId());
+        List<PortalOmsAfterSaleDetail> afterSaleDetailList = afterSaleService.listByOrderId(orderId,
+                currentMember.getId());
 
         // 重置每个订单项的已申请数量
         Map<Long, Integer> appliedQuantityMap = new HashMap<>();
-        for (OmsAfterSale afterSale : afterSaleList) {
+        for (PortalOmsAfterSaleDetail afterSale : afterSaleDetailList) {
             // 如果售后申请已被取消或拒绝，不计入已申请数量
             if (afterSale.getStatus() == 3) {
                 continue;
             }
 
-            // 查询该售后申请包含的商品项 - 使用Service方法
-            List<OmsAfterSaleItem> afterSaleItems = afterSaleService.getAfterSaleItems(afterSale.getId());
+            // 查询该售后申请包含的商品项 - 直接从 DTO 获取，不再调用 Service
+            List<OmsAfterSaleItem> afterSaleItems = afterSale.getAfterSaleItemList();
+
+            // 确保 afterSaleItems 不为 null
+            if (afterSaleItems == null) {
+                afterSaleItems = new ArrayList<>();
+            }
 
             for (OmsAfterSaleItem item : afterSaleItems) {
                 Long orderItemId = item.getOrderItemId();

@@ -3,6 +3,7 @@ package com.macro.mall.portal.service;
 import com.macro.mall.model.OmsAfterSale;
 import com.macro.mall.model.OmsAfterSaleItem;
 import com.macro.mall.portal.domain.AfterSaleParam;
+import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ public interface MemberAfterSaleService {
     /**
      * 根据订单ID查询售后申请列表
      */
-    List<OmsAfterSale> listByOrderId(Long orderId, Long memberId);
+    List<PortalOmsAfterSaleDetail> listByOrderId(Long orderId, Long memberId);
 
     /**
      * 获取售后申请的商品项列表

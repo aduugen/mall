@@ -6,7 +6,7 @@
     <resultMap id="AfterSaleDetailMap" type="com.macro.mall.dto.OmsAfterSaleDetail" extends="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap">
             <id column="as_id" property="id" jdbcType="BIGINT" /> <!-- 显式覆盖继承的id，避免歧义 -->
             <!-- 其他 OmsAfterSale 字段已通过 extends 继承 -->
-            <collection property="afterSaleItemList" column="as_id" select="getAfterSaleItems" ofType="com.macro.mall.model.OmsAfterSaleItem"/>
+            <collection property="afterSaleItemList" column="{afterSaleId=as_id}" select="getAfterSaleItems" ofType="com.macro.mall.model.OmsAfterSaleItem"/>
     </resultMap>
 
     <!-- 辅助查询：根据售后ID获取售后商品项列表 -->
@@ -29,33 +29,35 @@
     </resultMap>
 
     <!-- 查询售后列表 -->
-    <select id="getList" resultMap="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap"> <!-- 使用基础 OmsAfterSale ResultMap -->
+    <select id="getList" resultMap="AfterSaleDetailMap">
         SELECT
-            <include refid="com.macro.mall.mapper.OmsAfterSaleMapper.Base_Column_List" />
-        FROM oms_after_sale
+            <!-- 使用别名 as_id 避免与 OmsAfterSaleItem 中的 id 冲突 (ResultMap 需要)-->
+            a.id as as_id,
+            a.* <!-- 选取 OmsAfterSale 的所有其他列 -->
+        FROM oms_after_sale a <!-- 给主表加个别名 a -->
         <where>
             <if test="queryParam.id != null">
-                AND id = #{queryParam.id}
+                AND a.id = #{queryParam.id} <!-- 查询条件也使用别名 -->
             </if>
             <if test="queryParam.orderSn != null and queryParam.orderSn != ''">
-                AND order_sn LIKE concat('%',#{queryParam.orderSn},'%')
+                AND a.order_sn LIKE concat('%',#{queryParam.orderSn},'%')
             </if>
             <if test="queryParam.status != null">
-                AND status = #{queryParam.status}
+                AND a.status = #{queryParam.status}
             </if>
             <if test="queryParam.createTime != null and queryParam.createTime != ''">
-                AND date(create_time) = #{queryParam.createTime}
+                AND date(a.create_time) = #{queryParam.createTime}
             </if>
             <if test="queryParam.handleMan != null and queryParam.handleMan != ''">
-                AND handle_man LIKE concat('%',#{queryParam.handleMan},'%')
+                AND a.handle_man LIKE concat('%',#{queryParam.handleMan},'%')
             </if>
-                <if test="queryParam.memberKeyword != null and queryParam.memberKeyword != ''">
-                    <!-- 这里假设 memberKeyword 可以是会员ID或用户名，需要数据库支持或调整SQL -->
-                AND (member_id = #{queryParam.memberKeyword} OR member_username LIKE concat('%',#{queryParam.memberKeyword},'%'))
+             <if test="queryParam.memberKeyword != null and queryParam.memberKeyword != ''">
+                 <!-- 这里假设 memberKeyword 可以是会员ID或用户名，需要数据库支持或调整SQL -->
+                AND (a.member_id = #{queryParam.memberKeyword} OR a.member_username LIKE concat('%',#{queryParam.memberKeyword},'%'))
             </if>
             <!-- 可以添加其他查询条件 -->
         </where>
-        ORDER BY create_time DESC
+        ORDER BY a.create_time DESC
     </select>
 
     <!-- 获取售后详情 -->

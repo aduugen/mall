@@ -33,11 +33,13 @@ public class OmsAfterSaleController { // 类名建议修改
     @ApiOperation("分页查询售后申请") // 更新描述
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<CommonPage<OmsAfterSale>> list(OmsAfterSaleQueryParam queryParam, // 使用新的 QueryParam DTO
-                                                       @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
-                                                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
-        List<OmsAfterSale> afterSaleList = afterSaleService.list(queryParam, pageSize, pageNum); // 调用新的 Service 方法
-        return CommonResult.success(CommonPage.restPage(afterSaleList));
+    public CommonResult<CommonPage<OmsAfterSaleDetail>> list(OmsAfterSaleQueryParam queryParam, // 修改方法签名中的泛型
+            @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
+        List<OmsAfterSaleDetail> afterSaleList = afterSaleService.list(queryParam, pageSize, pageNum); // 接收
+                                                                                                       // OmsAfterSaleDetail
+                                                                                                       // 列表
+        return CommonResult.success(CommonPage.restPage(afterSaleList)); // 传入 OmsAfterSaleDetail 列表
     }
 
     @ApiOperation("批量删除售后申请") // 更新描述
@@ -62,7 +64,11 @@ public class OmsAfterSaleController { // 类名建议修改
     @ApiOperation("修改售后申请状态") // 更新描述
     @RequestMapping(value = "/update/status/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public CommonResult updateStatus(@PathVariable Long id, @RequestBody OmsUpdateStatusParam statusParam) { // statusParam DTO 保持不变，但 Service 层处理逻辑已变
+    public CommonResult updateStatus(@PathVariable Long id, @RequestBody OmsUpdateStatusParam statusParam) { // statusParam
+                                                                                                             // DTO
+                                                                                                             // 保持不变，但
+                                                                                                             // Service
+                                                                                                             // 层处理逻辑已变
         int count = afterSaleService.updateStatus(id, statusParam); // 调用新的 Service 方法
         if (count > 0) {
             return CommonResult.success(count);

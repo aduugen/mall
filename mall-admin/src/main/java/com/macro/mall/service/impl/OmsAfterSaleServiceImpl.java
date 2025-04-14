@@ -42,9 +42,9 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     // private PmsProductMapper productMapper;
 
     @Override
-    public List<OmsAfterSale> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum) {
+    public List<OmsAfterSaleDetail> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum) {
         PageHelper.startPage(pageNum, pageSize);
-        // 调用自定义 DAO 的 getList 方法
+        // 调用自定义 DAO 的 getList 方法，它现在返回 OmsAfterSaleDetail
         return afterSaleDao.getList(queryParam);
     }
 
