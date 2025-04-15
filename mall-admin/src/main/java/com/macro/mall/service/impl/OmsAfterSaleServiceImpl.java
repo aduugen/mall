@@ -24,6 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// 引入必要的 Mapper 和 Model
+import com.macro.mall.mapper.UmsMemberMapper;
+import com.macro.mall.mapper.OmsOrderMapper;
+import com.macro.mall.model.UmsMember;
+import com.macro.mall.model.OmsOrder;
+import com.macro.mall.model.OmsAfterSaleItem;
+
 /**
  * 售后服务管理Service实现类
  */
@@ -38,6 +45,13 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     private OmsAfterSaleMapper afterSaleMapper;
     @Autowired
     private OmsAfterSaleItemMapper afterSaleItemMapper;
+
+    // 注入 Member 和 Order Mapper
+    @Autowired
+    private UmsMemberMapper memberMapper;
+    @Autowired
+    private OmsOrderMapper orderMapper;
+
     // @Autowired // 如果需要扣减销量等操作，可能需要引入 ProductMapper
     // private PmsProductMapper productMapper;
 
@@ -45,7 +59,13 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     public List<OmsAfterSaleDetail> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum) {
         PageHelper.startPage(pageNum, pageSize);
         // 调用自定义 DAO 的 getList 方法，它现在返回 OmsAfterSaleDetail
-        return afterSaleDao.getList(queryParam);
+        List<OmsAfterSaleDetail> list = afterSaleDao.getList(queryParam); // 获取基础列表
+
+        // 可以在这里补充额外信息，如果DAO查询不方便处理的话
+        // 例如，遍历列表，为每个 OmsAfterSaleDetail 设置用户信息等
+        // 但更好的做法是尽量在 DAO/XML 中完成关联查询
+
+        return list;
     }
 
     @Override
@@ -121,48 +141,29 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
             updateApply.setHandleTime(new Date());
             updateApply.setHandleMan(statusParam.getHandleMan());
             updateApply.setHandleNote(statusParam.getHandleNote());
-            // 可能需要设置退货地址ID (companyAddressId)
-            // updateApply.setReturnAddressId(statusParam.getCompanyAddressId()); //
-            // 假设表中有此字段
+            // 设置退款金额 (可能是管理员手动确认的)
+            updateApply.setReturnAmount(statusParam.getReturnAmount());
+            // 设置退货地址ID
+            updateApply.setCompanyAddressId(statusParam.getCompanyAddressId());
         } else if (status == 2) { // 已完成 (例如：收到退货，完成退款)
             // 记录收货信息
-            // updateApply.setReceiveTime(new Date());
-            // updateApply.setReceiveMan(statusParam.getReceiveMan());
-            // updateApply.setReceiveNote(statusParam.getReceiveNote());
+            updateApply.setReceiveTime(new Date());
+            updateApply.setReceiveMan(statusParam.getReceiveMan());
+            updateApply.setReceiveNote(statusParam.getReceiveNote());
 
-            // TODO: 此处可能需要触发实际的退款操作，调用支付渠道接口等
+            // 最终确认的退款金额
+            updateApply.setReturnAmount(statusParam.getReturnAmount());
 
-            // TODO: 是否需要恢复/扣减库存或销量？
-            // 原代码在完成退货时扣减销量，逻辑需要根据新需求确认
-            // 如果需要，则取消下面 productMapper 的注释并实现逻辑
-            /*
-             * OmsAfterSaleItemExample itemExample = new OmsAfterSaleItemExample();
-             * itemExample.createCriteria().andAfterSaleIdEqualTo(id);
-             * List<OmsAfterSaleItem> items =
-             * afterSaleItemMapper.selectByExample(itemExample);
-             * for(OmsAfterSaleItem item : items) {
-             * if (item.getProductId() != null && item.getReturnQuantity() != null &&
-             * item.getReturnQuantity() > 0) {
-             * try {
-             * // 之前是扣减销量，这里可能需要反向操作？或者根据业务定义
-             * // int saleUpdateCount = productMapper.decreaseSale(item.getProductId(),
-             * item.getReturnQuantity());
-             * // log.info("售后完成，处理商品销量: productId={}, quantity={}", item.getProductId(),
-             * item.getReturnQuantity());
-             * } catch (Exception e) {
-             * log.error("售后完成后处理商品销量异常: afterSaleId={}, productId={}", id,
-             * item.getProductId(), e);
-             * }
-             * }
-             * }
-             */
+            // TODO: 此处可能需要触发实际的退款操作
+
+            // TODO: 库存/销量处理逻辑...
 
         } else if (status == 3) { // 已拒绝
             updateApply.setHandleTime(new Date());
             updateApply.setHandleMan(statusParam.getHandleMan());
             updateApply.setHandleNote(statusParam.getHandleNote());
-            // 拒绝时，可能需要恢复之前更新的订单项的 applied_quantity
-            // (需要读取 OmsAfterSaleItem 列表，再更新 OmsOrderItem)
+            // 拒绝时，退款金额通常为0或保持不变
+            // updateApply.setReturnAmount(BigDecimal.ZERO);
         }
 
         // 4. 执行更新
@@ -178,8 +179,64 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
 
     @Override
     public OmsAfterSaleDetail getDetail(Long id) {
-        // 调用自定义 DAO 的 getDetail 方法
-        return afterSaleDao.getDetail(id);
+        // 1. 使用 DAO 获取基础售后信息及商品列表
+        OmsAfterSaleDetail detail = afterSaleDao.getDetail(id);
+        if (detail == null) {
+            log.warn("获取售后详情失败，售后申请不存在: id={}", id);
+            return null;
+        }
+
+        // 2. 获取并设置关联用户信息
+        if (detail.getMemberId() != null) {
+            UmsMember member = memberMapper.selectByPrimaryKey(detail.getMemberId());
+            if (member != null) {
+                detail.setMemberNickname(member.getNickname());
+                detail.setMemberPhone(member.getPhone());
+                // detail.setMember(member); // 如果需要完整 member 对象
+            } else {
+                log.warn("无法找到售后申请 {} 关联的会员信息，MemberId: {}", id, detail.getMemberId());
+            }
+        }
+
+        // 3. 获取并设置关联订单信息 (主要是订单总金额)
+        if (detail.getOrderId() != null) {
+            OmsOrder order = orderMapper.selectByPrimaryKey(detail.getOrderId());
+            if (order != null) {
+                detail.setOrderTotalAmount(order.getTotalAmount());
+                // 确保 orderSn 一致性
+                if (detail.getOrderSn() == null || detail.getOrderSn().isEmpty()) {
+                    detail.setOrderSn(order.getOrderSn());
+                }
+                // detail.setOrder(order); // 如果需要完整 order 对象
+            } else {
+                log.warn("无法找到售后申请 {} 关联的订单信息，OrderId: {}", id, detail.getOrderId());
+            }
+        } else if (detail.getOrderSn() != null && !detail.getOrderSn().isEmpty()) {
+            // 如果只有OrderSn，可以尝试通过OrderSn查询订单，但这可能效率较低且需要额外方法
+            log.warn("售后申请 {} 缺少 OrderId，仅通过 OrderSn 查询订单信息可能不准确或无法获取", id);
+        }
+
+        // 4. 计算退货商品的总金额 (虽然DTO有字段，但建议由Service计算确保准确性)
+        // 如果 afterSaleItemList 在 afterSaleDao.getDetail 中已正确填充
+        if (!CollectionUtils.isEmpty(detail.getAfterSaleItemList())) {
+            BigDecimal calculatedReturnAmount = detail.getAfterSaleItemList().stream()
+                    .map(item -> {
+                        BigDecimal price = item.getProductRealPrice() != null ? item.getProductRealPrice()
+                                : BigDecimal.ZERO;
+                        Integer quantity = item.getReturnQuantity() != null ? item.getReturnQuantity() : 0;
+                        return price.multiply(new BigDecimal(quantity));
+                    })
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // 注意：这里计算出的金额可能与 OmsAfterSale 表中存储的 returnAmount 不同
+            // （例如管理员手动修改过退款金额）。前端显示时需要决定使用哪个。
+            // 可以在 DTO 中再加一个字段存储这个计算值，或者让前端根据需要计算。
+            log.debug("售后申请 {} 计算出的商品退款总额: {}", id, calculatedReturnAmount);
+            // detail.setCalculatedReturnAmount(calculatedReturnAmount); // 假设DTO有此字段
+        } else {
+            log.warn("售后申请 {} 未找到关联的商品项，无法计算商品退款总额", id);
+        }
+
+        return detail;
     }
 
     @Override

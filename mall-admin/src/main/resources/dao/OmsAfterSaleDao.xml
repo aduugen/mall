@@ -10,7 +10,7 @@
     </resultMap>
 
     <!-- 辅助查询：根据售后ID获取售后商品项列表 -->
-    <select id="getAfterSaleItems" resultType="com.macro.mall.model.OmsAfterSaleItem">
+    <select id="getAfterSaleItems" resultMap="com.macro.mall.mapper.OmsAfterSaleItemMapper.BaseResultMap">
         SELECT
             <include refid="com.macro.mall.mapper.OmsAfterSaleItemMapper.Base_Column_List" />
         FROM
