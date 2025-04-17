@@ -643,7 +643,7 @@ CREATE TABLE `oms_after_sale` (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `del_flag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标记：0->未删除；1->已删除',
   `version` int NOT NULL DEFAULT 0 COMMENT '版本号',
-  PRIMARY KEY (id)，
+  PRIMARY KEY (`id`),
   KEY `idx_order_id` (`order_id`),
   KEY `idx_member_id` (`member_id`),
   KEY `idx_status` (`status`),
@@ -663,12 +663,12 @@ CREATE TABLE `oms_after_sale_process` (
   `process_type` tinyint(1) NOT NULL COMMENT '处理类型：1->审核；2->发货；3->收货；4->质检；5->退款',
   `process_result` tinyint(1) DEFAULT NULL COMMENT '处理结果：0->不通过；1->通过',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'，
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `version` int NOT NULL DEFAULT 0 COMMENT '版本号',
   PRIMARY KEY (id),
   KEY `idx_after_sale_id` (after_sale_id),
   KEY `idx_process_type` (process_type),
-  KEY `idx_process_result` (process_result)
+  KEY `idx_process_result` (process_result),
   KEY `idx_after_sale_process` (`after_sale_id`, `process_type`),
   CONSTRAINT `fk_process_after_sale` FOREIGN KEY (after_sale_id) REFERENCES oms_after_sale(id) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后处理记录表';
@@ -767,7 +767,7 @@ CREATE TABLE oms_after_sale_item (
   PRIMARY KEY (id),
   KEY `idx_after_sale_id` (after_sale_id),
   KEY `idx_product_id` (product_id),
-  KEY `idx_order_item_id` (`order_item_id`)，
+  KEY `idx_order_item_id` (`order_item_id`),
   CONSTRAINT fk_after_sale_item_after_sale FOREIGN KEY (after_sale_id) REFERENCES oms_after_sale (id) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后单商品表'; 
 
@@ -781,7 +781,7 @@ CREATE TABLE oms_after_sale_log (
   `operator_id` bigint(20) NOT NULL COMMENT '操作人',
   `operator_type` tinyint(1) NOT NULL COMMENT '操作人类型：0->用户；1->管理员',
   `operate_type` tinyint(1) NOT NULL COMMENT '操作类型：1->提交申请；2->审核；3->发货等',
-  `after_sale_status` tinyint(1) NOT NULL COMMENT '操作后售后单状态'，
+  `after_sale_status` tinyint(1) NOT NULL COMMENT '操作后售后单状态',
   `note` varchar(500) DEFAULT NULL COMMENT '操作备注',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (id),
@@ -797,7 +797,7 @@ DROP TABLE IF EXISTS `oms_after_sale_proof`;
 CREATE TABLE oms_after_sale_proof (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `after_sale_id` bigint(20) NOT NULL COMMENT '售后单ID',
-  `item_id` bigint(20) DEFAULT NULL COMMENT '售后单商品ID，可为空表示整单凭证'，
+  `item_id` bigint(20) DEFAULT NULL COMMENT '售后单商品ID，可为空表示整单凭证',
   `pic_url` varchar(500) NOT NULL COMMENT '图片URL',
   `pic_type` tinyint(1) NOT NULL COMMENT '图片类型：0->商品图片；1->凭证图片',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -818,7 +818,7 @@ CREATE TABLE IF NOT EXISTS `oms_after_sale_refund` (
   `after_sale_id` bigint(20) NOT NULL COMMENT '售后单ID',
   `version` int NOT NULL DEFAULT 0 COMMENT '版本号',
   `payment_account` varchar(100) DEFAULT NULL COMMENT '支付账户信息',
-  `operator_id` bigint(20) DEFAULT NULL COMMENT '退款操作人ID'，
+  `operator_id` bigint(20) DEFAULT NULL COMMENT '退款操作人ID',
   `refund_no` varchar(64) NOT NULL COMMENT '退款单号',
   `refund_amount` decimal(10,2) NOT NULL COMMENT '退款金额',
   `refund_type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '退款方式：1->原路退回；2->其他方式',
