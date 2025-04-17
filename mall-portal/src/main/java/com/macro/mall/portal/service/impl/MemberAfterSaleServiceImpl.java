@@ -69,6 +69,15 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         afterSale.setOrderId(afterSaleParam.getOrderId());
         afterSale.setMemberId(afterSaleParam.getMemberId());
 
+        // 设置订单编号
+        afterSale.setOrderSn(order.getOrderSn());
+
+        // 设置会员用户名
+        afterSale.setMemberUsername(order.getMemberUsername());
+
+        // 设置订单总金额
+        afterSale.setOrderTotalAmount(order.getTotalAmount());
+
         // 设置初始状态为待处理
         afterSale.setStatus(0);
         afterSale.setCreateTime(new Date());

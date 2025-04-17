@@ -120,6 +120,23 @@
         id = #{productSkuId}
         AND lock_stock + #{quantity} &lt;= stock
     </update>
+    
+    <update id="batchLockStock">
+        UPDATE pms_sku_stock
+        SET lock_stock = 
+            CASE 
+                <foreach collection="stockOperationList" item="item">
+                    WHEN id = #{item.productSkuId} AND lock_stock + #{item.quantity} &lt;= stock 
+                    THEN lock_stock + #{item.quantity}
+                </foreach>
+                ELSE lock_stock
+            END
+        WHERE id IN
+        <foreach collection="stockOperationList" item="item" separator="," open="(" close=")">
+            #{item.productSkuId}
+        </foreach>
+    </update>
+    
     <update id="reduceSkuStock">
         UPDATE pms_sku_stock
         SET lock_stock = lock_stock - #{quantity},
@@ -129,6 +146,32 @@
           AND stock - #{quantity} &gt;= 0
           AND lock_stock - #{quantity} &gt;= 0
     </update>
+    
+    <update id="batchReduceStock">
+        UPDATE pms_sku_stock
+        SET 
+            lock_stock = 
+                CASE 
+                    <foreach collection="stockOperationList" item="item">
+                        WHEN id = #{item.productSkuId} AND lock_stock - #{item.quantity} &gt;= 0 
+                        THEN lock_stock - #{item.quantity}
+                    </foreach>
+                    ELSE lock_stock
+                END,
+            stock = 
+                CASE 
+                    <foreach collection="stockOperationList" item="item">
+                        WHEN id = #{item.productSkuId} AND stock - #{item.quantity} &gt;= 0 
+                        THEN stock - #{item.quantity}
+                    </foreach>
+                    ELSE stock
+                END
+        WHERE id IN
+        <foreach collection="stockOperationList" item="item" separator="," open="(" close=")">
+            #{item.productSkuId}
+        </foreach>
+    </update>
+    
     <update id="releaseStockBySkuId">
         UPDATE pms_sku_stock
         SET lock_stock = CASE 
@@ -138,4 +181,37 @@
         WHERE
             id = #{productSkuId}
     </update>
+    
+    <update id="batchReleaseStock">
+        UPDATE pms_sku_stock
+        SET lock_stock = 
+            CASE id
+                <foreach collection="stockOperationList" item="item">
+                    WHEN #{item.productSkuId} THEN 
+                        CASE 
+                            WHEN lock_stock - #{item.quantity} >= 0 THEN lock_stock - #{item.quantity}
+                            ELSE 0
+                        END
+                </foreach>
+                ELSE lock_stock
+            END
+        WHERE id IN
+        <foreach collection="stockOperationList" item="item" separator="," open="(" close=")">
+            #{item.productSkuId}
+        </foreach>
+    </update>
+    
+    <select id="checkStockBySkuIds" resultType="java.lang.Long">
+        SELECT id
+        FROM pms_sku_stock
+        WHERE id IN
+        <foreach collection="stockOperationList" item="item" separator="," open="(" close=")">
+            #{item.productSkuId}
+        </foreach>
+        AND (
+            <foreach collection="stockOperationList" item="item" separator=" OR ">
+                (id = #{item.productSkuId} AND stock &lt; #{item.quantity})
+            </foreach>
+        )
+    </select>
 </mapper>

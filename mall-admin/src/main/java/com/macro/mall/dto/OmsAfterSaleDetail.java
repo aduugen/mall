@@ -1,45 +1,77 @@
 package com.macro.mall.dto;
 
-import com.macro.mall.model.OmsAfterSale;
-import com.macro.mall.model.OmsAfterSaleItem;
-import com.macro.mall.model.OmsOrder;
-import com.macro.mall.model.UmsMember;
+import com.macro.mall.model.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 /**
- * 售后详情信息 DTO
- * 继承 OmsAfterSale 以包含其所有基础字段
+ * 售后单详情DTO（包含相关信息）
  */
 @Getter
 @Setter
-public class OmsAfterSaleDetail extends OmsAfterSale {
+public class OmsAfterSaleDetail {
+    @ApiModelProperty("售后单ID")
+    private Long id;
 
-    // OmsAfterSale 中的字段已通过继承获得，包括 id, orderId, orderSn, memberId, memberUsername 等
-    // 这里只定义 OmsAfterSale 中没有的额外字段
+    @ApiModelProperty("订单ID")
+    private Long orderId;
 
-    @ApiModelProperty("售后包含的商品列表")
-    private List<OmsAfterSaleItem> afterSaleItemList;
+    @ApiModelProperty("会员ID")
+    private Long memberId;
 
-    @ApiModelProperty("关联的用户信息完整对象(可选，用于展示更多信息)")
-    private UmsMember member;
+    @ApiModelProperty("会员用户名")
+    private String memberUsername;
 
-    @ApiModelProperty("关联的订单信息完整对象(可选)")
-    private OmsOrder order;
-
-    // --- 为了方便前端直接使用而冗余的字段 ---
-    // 这些字段的值通常在 Service 层从关联对象(member, order)中获取并设置
-
-    @ApiModelProperty("用户昵称")
+    @ApiModelProperty("会员昵称")
     private String memberNickname;
 
-    @ApiModelProperty("用户注册手机号")
+    @ApiModelProperty("会员手机号")
     private String memberPhone;
+
+    @ApiModelProperty("退款金额")
+    private BigDecimal returnAmount;
 
     @ApiModelProperty("订单总金额")
     private BigDecimal orderTotalAmount;
+
+    @ApiModelProperty("申请状态")
+    private Integer status;
+
+    @ApiModelProperty("描述")
+    private String description;
+
+    @ApiModelProperty("创建时间")
+    private Date createTime;
+
+    @ApiModelProperty("更新时间")
+    private Date updateTime;
+
+    @ApiModelProperty("售后商品列表")
+    private List<OmsAfterSaleItem> itemList;
+
+    @ApiModelProperty("售后处理记录列表")
+    private List<OmsAfterSaleProcess> processList;
+
+    @ApiModelProperty("物流信息")
+    private OmsAfterSaleLogistics logistics;
+
+    @ApiModelProperty("质检信息")
+    private OmsAfterSaleCheck check;
+
+    @ApiModelProperty("退款信息")
+    private OmsAfterSaleRefund refund;
+
+    @ApiModelProperty("售后凭证列表")
+    private List<OmsAfterSaleProof> proofList;
+
+    @ApiModelProperty("操作日志列表")
+    private List<OmsAfterSaleLog> logList;
+
+    @ApiModelProperty("可用操作类型列表")
+    private List<String> allowableOperations;
 }

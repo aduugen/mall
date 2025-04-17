@@ -3,6 +3,7 @@ package com.macro.mall.common.service;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Redis操作Service
@@ -19,6 +20,17 @@ public interface RedisService {
      * 保存属性
      */
     void set(String key, Object value);
+
+    /**
+     * 当key不存在时设置值，存在则不设置
+     * 
+     * @param key     键
+     * @param value   值
+     * @param timeout 超时时间
+     * @param unit    时间单位
+     * @return 设置成功返回true，否则返回false
+     */
+    Boolean setIfAbsent(String key, String value, long timeout, TimeUnit unit);
 
     /**
      * 获取属性

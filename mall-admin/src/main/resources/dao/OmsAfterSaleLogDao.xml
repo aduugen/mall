@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.dao.OmsAfterSaleLogDao">
+    <resultMap id="BaseResultMap" type="com.macro.mall.model.OmsAfterSaleLog">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="after_sale_id" jdbcType="BIGINT" property="afterSaleId" />
+        <result column="operator_id" jdbcType="BIGINT" property="operatorId" />
+        <result column="operator_type" jdbcType="INTEGER" property="operatorType" />
+        <result column="operate_type" jdbcType="INTEGER" property="operateType" />
+        <result column="after_sale_status" jdbcType="INTEGER" property="status" />
+        <result column="note" jdbcType="VARCHAR" property="note" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, after_sale_id, operator_id, operator_type, operate_type, after_sale_status, note, create_time
+    </sql>
+
+    <select id="getLogList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM
+        oms_after_sale_log
+        WHERE
+        1=1
+        <if test="afterSaleId != null">
+            AND after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+        </if>
+        <if test="operateMan != null and operateMan != ''">
+            AND operator_id IN (SELECT id FROM ums_admin WHERE username LIKE CONCAT('%', #{operateMan,jdbcType=VARCHAR}, '%'))
+        </if>
+        <if test="operateType != null">
+            AND operate_type = #{operateType,jdbcType=INTEGER}
+        </if>
+        <if test="afterSaleStatus != null">
+            AND after_sale_status = #{afterSaleStatus,jdbcType=INTEGER}
+        </if>
+        <if test="startTime != null">
+            AND create_time &gt;= #{startTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="endTime != null">
+            AND create_time &lt;= #{endTime,jdbcType=TIMESTAMP}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <insert id="insertLog" parameterType="com.macro.mall.model.OmsAfterSaleLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO oms_after_sale_log
+        (after_sale_id, operator_id, operator_type, operate_type, after_sale_status, note, create_time)
+        VALUES
+        (#{afterSaleId,jdbcType=BIGINT}, #{operatorId,jdbcType=BIGINT}, #{operatorType,jdbcType=INTEGER},
+        #{operateType,jdbcType=INTEGER}, #{status,jdbcType=INTEGER}, #{note,jdbcType=VARCHAR}, now())
+    </insert>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO oms_after_sale_log
+        (after_sale_id, operator_id, operator_type, operate_type, after_sale_status, note, create_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.afterSaleId,jdbcType=BIGINT}, #{item.operatorId,jdbcType=BIGINT}, #{item.operatorType,jdbcType=INTEGER},
+            #{item.operateType,jdbcType=INTEGER}, #{item.status,jdbcType=INTEGER}, #{item.note,jdbcType=VARCHAR}, now())
+        </foreach>
+    </insert>
+
+    <select id="getOperationStatistics" resultType="java.util.Map">
+        SELECT 
+            operate_type AS 'operateType',
+            COUNT(*) AS 'count'
+        FROM
+            oms_after_sale_log
+        WHERE
+            1=1
+        <if test="startTime != null">
+            AND create_time &gt;= #{startTime,jdbcType=TIMESTAMP}
+        </if>
+        <if test="endTime != null">
+            AND create_time &lt;= #{endTime,jdbcType=TIMESTAMP}
+        </if>
+        GROUP BY operate_type
+    </select>
+
+    <select id="getLastLog" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List" />
+        FROM
+            oms_after_sale_log
+        WHERE
+            after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+        ORDER BY 
+            create_time DESC
+        LIMIT 1
+    </select>
+</mapper> 

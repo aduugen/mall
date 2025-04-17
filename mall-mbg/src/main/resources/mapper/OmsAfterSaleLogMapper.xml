@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.mapper.OmsAfterSaleLogMapper">
+    <resultMap id="BaseResultMap" type="com.macro.mall.model.OmsAfterSaleLog">
+        <id column="id" property="id"/>
+        <result column="after_sale_id" property="afterSaleId"/>
+        <result column="operate_man" property="operateMan"/>
+        <result column="create_time" property="createTime"/>
+        <result column="after_sale_status" property="afterSaleStatus"/>
+        <result column="note" property="note"/>
+        <result column="operate_type" property="operateType"/>
+        <result column="delivery_company" property="deliveryCompany"/>
+        <result column="delivery_sn" property="deliverySn"/>
+        <result column="check_result" property="checkResult"/>
+        <result column="return_amount" property="returnAmount"/>
+        <result column="refund_type" property="refundType"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, after_sale_id, operate_man, create_time, after_sale_status, note, operate_type,
+        delivery_company, delivery_sn, check_result, return_amount, refund_type
+    </sql>
+
+    <!-- 插入记录 -->
+    <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSaleLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO oms_after_sale_log (
+            after_sale_id, operate_man, create_time, after_sale_status, note, operate_type,
+            delivery_company, delivery_sn, check_result, return_amount, refund_type
+        )
+        VALUES (
+            #{afterSaleId}, #{operateMan}, NOW(), #{afterSaleStatus}, #{note}, #{operateType},
+            #{deliveryCompany}, #{deliverySn}, #{checkResult}, #{returnAmount}, #{refundType}
+        )
+    </insert>
+
+    <!-- 批量插入记录 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO oms_after_sale_log (
+            after_sale_id, operate_man, create_time, after_sale_status, note, operate_type,
+            delivery_company, delivery_sn, check_result, return_amount, refund_type
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.afterSaleId}, #{item.operateMan}, NOW(), #{item.afterSaleStatus}, 
+                #{item.note}, #{item.operateType}, #{item.deliveryCompany}, #{item.deliverySn}, 
+                #{item.checkResult}, #{item.returnAmount}, #{item.refundType}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据主键查询 -->
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_log
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据售后单ID查询 -->
+    <select id="selectByAfterSaleId" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_log
+        WHERE after_sale_id = #{afterSaleId}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据操作人查询 -->
+    <select id="selectByOperator" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_log
+        WHERE operate_man = #{operateMan}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据创建时间范围查询 -->
+    <select id="selectByCreateTime" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_log
+        WHERE create_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据售后单ID和操作人查询 -->
+    <select id="selectByAfterSaleIdAndOperator" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_log
+        WHERE after_sale_id = #{afterSaleId}
+        AND operate_man = #{operateMan}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 统计售后单操作记录数量 -->
+    <select id="countByAfterSaleId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM oms_after_sale_log
+        WHERE after_sale_id = #{afterSaleId}
+    </select>
+    
+    <!-- 删除售后单的所有日志 -->
+    <delete id="deleteByAfterSaleId">
+        DELETE FROM oms_after_sale_log
+        WHERE after_sale_id = #{afterSaleId}
+    </delete>
+    
+    <!-- 根据主键删除日志 -->
+    <delete id="deleteByPrimaryKey">
+        DELETE FROM oms_after_sale_log
+        WHERE id = #{id}
+    </delete>
+</mapper> 

@@ -6,6 +6,18 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public class OmsOrderReturnApply implements Serializable {
+    // 状态常量定义
+    public static final int STATUS_PENDING = 0; // 待处理
+    public static final int STATUS_APPROVED = 1; // 已同意
+    public static final int STATUS_REJECTED = 2; // 已拒绝
+    public static final int STATUS_SHIPPED = 3; // 已发货
+    public static final int STATUS_RECEIVED = 4; // 已收货
+    public static final int STATUS_CHECKING = 5; // 质检中
+    public static final int STATUS_CHECK_PASS = 6; // 质检通过
+    public static final int STATUS_CHECK_FAIL = 7; // 质检不通过
+    public static final int STATUS_REFUNDING = 8; // 退款中
+    public static final int STATUS_COMPLETED = 9; // 已完成
+
     private Long id;
 
     @ApiModelProperty(value = "订单id")
@@ -85,6 +97,39 @@ public class OmsOrderReturnApply implements Serializable {
 
     @ApiModelProperty(value = "收货备注")
     private String receiveNote;
+
+    @ApiModelProperty(value = "物流公司")
+    private String logisticsCompany;
+
+    @ApiModelProperty(value = "物流单号")
+    private String logisticsNumber;
+
+    @ApiModelProperty(value = "发货时间")
+    private Date shippingTime;
+
+    @ApiModelProperty(value = "质检人员")
+    private String checkMan;
+
+    @ApiModelProperty(value = "质检时间")
+    private Date checkTime;
+
+    @ApiModelProperty(value = "质检结果：0-不通过，1-通过")
+    private Integer checkResult;
+
+    @ApiModelProperty(value = "质检备注")
+    private String checkNote;
+
+    @ApiModelProperty(value = "退款方式：1-原路退回，2-其他方式")
+    private Integer refundType;
+
+    @ApiModelProperty(value = "退款时间")
+    private Date refundTime;
+
+    @ApiModelProperty(value = "退款状态：0-处理中，1-成功，2-失败")
+    private Integer refundStatus;
+
+    @ApiModelProperty(value = "退款备注")
+    private String refundNote;
 
     private static final long serialVersionUID = 1L;
 
@@ -304,6 +349,94 @@ public class OmsOrderReturnApply implements Serializable {
         this.receiveNote = receiveNote;
     }
 
+    public String getLogisticsCompany() {
+        return logisticsCompany;
+    }
+
+    public void setLogisticsCompany(String logisticsCompany) {
+        this.logisticsCompany = logisticsCompany;
+    }
+
+    public String getLogisticsNumber() {
+        return logisticsNumber;
+    }
+
+    public void setLogisticsNumber(String logisticsNumber) {
+        this.logisticsNumber = logisticsNumber;
+    }
+
+    public Date getShippingTime() {
+        return shippingTime;
+    }
+
+    public void setShippingTime(Date shippingTime) {
+        this.shippingTime = shippingTime;
+    }
+
+    public String getCheckMan() {
+        return checkMan;
+    }
+
+    public void setCheckMan(String checkMan) {
+        this.checkMan = checkMan;
+    }
+
+    public Date getCheckTime() {
+        return checkTime;
+    }
+
+    public void setCheckTime(Date checkTime) {
+        this.checkTime = checkTime;
+    }
+
+    public Integer getCheckResult() {
+        return checkResult;
+    }
+
+    public void setCheckResult(Integer checkResult) {
+        this.checkResult = checkResult;
+    }
+
+    public String getCheckNote() {
+        return checkNote;
+    }
+
+    public void setCheckNote(String checkNote) {
+        this.checkNote = checkNote;
+    }
+
+    public Integer getRefundType() {
+        return refundType;
+    }
+
+    public void setRefundType(Integer refundType) {
+        this.refundType = refundType;
+    }
+
+    public Date getRefundTime() {
+        return refundTime;
+    }
+
+    public void setRefundTime(Date refundTime) {
+        this.refundTime = refundTime;
+    }
+
+    public Integer getRefundStatus() {
+        return refundStatus;
+    }
+
+    public void setRefundStatus(Integer refundStatus) {
+        this.refundStatus = refundStatus;
+    }
+
+    public String getRefundNote() {
+        return refundNote;
+    }
+
+    public void setRefundNote(String refundNote) {
+        this.refundNote = refundNote;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -337,6 +470,17 @@ public class OmsOrderReturnApply implements Serializable {
         sb.append(", receiveMan=").append(receiveMan);
         sb.append(", receiveTime=").append(receiveTime);
         sb.append(", receiveNote=").append(receiveNote);
+        sb.append(", logisticsCompany=").append(logisticsCompany);
+        sb.append(", logisticsNumber=").append(logisticsNumber);
+        sb.append(", shippingTime=").append(shippingTime);
+        sb.append(", checkMan=").append(checkMan);
+        sb.append(", checkTime=").append(checkTime);
+        sb.append(", checkResult=").append(checkResult);
+        sb.append(", checkNote=").append(checkNote);
+        sb.append(", refundType=").append(refundType);
+        sb.append(", refundTime=").append(refundTime);
+        sb.append(", refundStatus=").append(refundStatus);
+        sb.append(", refundNote=").append(refundNote);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();
