@@ -18,7 +18,7 @@ public interface MemberAfterSaleService {
     /**
      * 获取售后申请详情
      */
-    OmsAfterSale getDetail(Long id, Long memberId);
+    PortalOmsAfterSaleDetail getDetail(Long id, Long memberId);
 
     /**
      * 查询会员的售后申请列表

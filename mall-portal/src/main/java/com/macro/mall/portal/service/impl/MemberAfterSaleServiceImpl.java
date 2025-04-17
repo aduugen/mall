@@ -250,7 +250,7 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
     }
 
     @Override
-    public OmsAfterSale getDetail(Long id, Long memberId) {
+    public PortalOmsAfterSaleDetail getDetail(Long id, Long memberId) {
         OmsAfterSale afterSale = afterSaleMapper.selectByPrimaryKey(id);
         if (afterSale == null) {
             Asserts.fail("售后申请不存在");
@@ -266,8 +266,16 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         example.createCriteria().andAfterSaleIdEqualTo(id);
         List<OmsAfterSaleItem> afterSaleItems = afterSaleItemMapper.selectByExample(example);
 
-        // TODO: 如果需要返回 Item 列表，修改返回类型为 DTO 并组装
-        return afterSale;
+        // 使用DTO返回更多信息
+        PortalOmsAfterSaleDetail detail = new PortalOmsAfterSaleDetail();
+        BeanUtils.copyProperties(afterSale, detail);
+        detail.setAfterSaleItemList(afterSaleItems);
+
+        // 查询凭证图片
+        List<OmsAfterSaleProof> proofList = proofMapper.selectByAfterSaleId(id);
+        detail.setProofList(proofList);
+
+        return detail;
     }
 
     @Override
@@ -442,8 +450,6 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
             System.out.println("订单ID=" + orderId + " 查询售后申请结果数量: " + afterSaleList.size());
 
-            // 在结果中过滤订单ID和会员ID，以及删除状态 (selectByExample 已完成过滤)
-            // ... (移除整个过滤和设置 orderSn/itemList 的循环) ...
             // --- 新增逻辑：转换并填充 DTO ---
             if (!CollectionUtils.isEmpty(afterSaleList)) {
                 for (OmsAfterSale afterSale : afterSaleList) {
@@ -454,8 +460,9 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                     List<OmsAfterSaleItem> afterSaleItems = getAfterSaleItems(afterSale.getId());
                     detail.setAfterSaleItemList(afterSaleItems); // 设置商品项列表
 
-                    // 可以在这里设置其他需要的信息，比如从 OmsOrder 获取的 orderSn 等
-                    // detail.setOrderSn(orderSn); // 可选：如果 PortalOmsAfterSaleDetail 需要 orderSn
+                    // 查询凭证图片
+                    List<OmsAfterSaleProof> proofList = proofMapper.selectByAfterSaleId(afterSale.getId());
+                    detail.setProofList(proofList);
 
                     resultList.add(detail); // 添加到结果列表
                 }
