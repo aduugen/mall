@@ -3,24 +3,26 @@ package com.macro.mall.portal.domain;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Date;
 import java.util.List;
 
 /**
- * 申请售后参数
+ * 会员售后申请参数
  */
 @Getter
 @Setter
+@ToString
 public class AfterSaleParam {
-    @ApiModelProperty(value = "订单ID")
+    @ApiModelProperty("订单ID")
     private Long orderId;
 
-    @ApiModelProperty(value = "售后商品详情列表")
-    private List<AfterSaleItemParam> items;
-
-    @ApiModelProperty(value = "会员ID")
+    @ApiModelProperty("会员ID")
     private Long memberId;
+
+    @ApiModelProperty("售后商品项列表")
+    private List<AfterSaleItemParam> items;
 
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
@@ -30,16 +32,4 @@ public class AfterSaleParam {
 
     @ApiModelProperty(value = "售后状态:0->待处理;1->处理中;2->已完成;3->已拒绝")
     private Integer status = 0;
-
-    @Override
-    public String toString() {
-        return "AfterSaleParam{" +
-                "orderId=" + orderId +
-                ", items=" + (items != null ? items.size() : 0) + " items" +
-                ", memberId=" + memberId +
-                ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
-                ", status=" + status +
-                '}';
-    }
 }

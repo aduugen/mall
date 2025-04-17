@@ -7,19 +7,22 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 /**
- * 售后商品项参数
+ * 会员售后申请商品项参数
  */
 @Getter
 @Setter
 public class AfterSaleItemParam {
-    @ApiModelProperty(value = "订单项ID")
+    @ApiModelProperty("订单商品ID")
     private Long orderItemId;
+
+    @ApiModelProperty("商品ID")
+    private Long productId;
+
+    @ApiModelProperty("商品数量")
+    private Integer quantity;
 
     @ApiModelProperty(value = "退货数量")
     private Integer returnQuantity;
-
-    @ApiModelProperty(value = "商品ID")
-    private Long productId;
 
     @ApiModelProperty(value = "商品sku编号")
     private Long productSkuId;

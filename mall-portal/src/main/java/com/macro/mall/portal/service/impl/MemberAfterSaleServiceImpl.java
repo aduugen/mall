@@ -69,19 +69,12 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         afterSale.setOrderId(afterSaleParam.getOrderId());
         afterSale.setMemberId(afterSaleParam.getMemberId());
 
-        // 设置订单编号
-        afterSale.setOrderSn(order.getOrderSn());
-
-        // 设置会员用户名
-        afterSale.setMemberUsername(order.getMemberUsername());
-
-        // 设置订单总金额
-        afterSale.setOrderTotalAmount(order.getTotalAmount());
-
         // 设置初始状态为待处理
         afterSale.setStatus(0);
         afterSale.setCreateTime(new Date());
         afterSale.setUpdateTime(new Date());
+        afterSale.setDelFlag(0);
+        afterSale.setVersion(0);
 
         // 打印debug信息
         System.out.println("准备插入售后申请记录: " + afterSale);
@@ -124,6 +117,9 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 BeanUtils.copyProperties(itemParam, afterSaleItem);
                 afterSaleItem.setAfterSaleId(afterSale.getId());
                 afterSaleItem.setCreateTime(new Date());
+                afterSaleItem.setUpdateTime(new Date()); // 设置更新时间，默认与创建时间相同
+                afterSaleItem.setDelFlag(0); // 设置删除标记为0（未删除）
+                afterSaleItem.setVersion(0); // 设置版本号为0
                 afterSaleItem.setProductQuantity(orderItem.getProductQuantity()); // 设置购买数量，便于后续处理
 
                 // 确保每个商品项的退货原因不为空
@@ -141,6 +137,8 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                     afterSaleItem.setProductName(orderItem.getProductName());
                 if (afterSaleItem.getProductPic() == null)
                     afterSaleItem.setProductPic(orderItem.getProductPic());
+                if (afterSaleItem.getProductBrand() == null)
+                    afterSaleItem.setProductBrand(orderItem.getProductBrand());
                 if (afterSaleItem.getProductAttr() == null)
                     afterSaleItem.setProductAttr(orderItem.getProductAttr());
                 if (afterSaleItem.getProductSkuId() == null)

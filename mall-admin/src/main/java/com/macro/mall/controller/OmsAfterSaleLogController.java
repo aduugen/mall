@@ -30,7 +30,7 @@ public class OmsAfterSaleLogController {
     private OmsAfterSaleLogService afterSaleLogService;
 
     @ApiOperation("分页查询售后日志")
-    @RequestMapping(value = "/query", method = RequestMethod.GET)
+    @RequestMapping(value = "/records", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<CommonPage<OmsAfterSaleLog>> getList(
             @RequestParam(value = "afterSaleId", required = false) Long afterSaleId,

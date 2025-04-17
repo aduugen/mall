@@ -21,8 +21,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.github.pagehelper.PageHelper;
-import com.macro.mall.aspect.AuditLogAspect.AuditLog;
-import com.macro.mall.aspect.IdempotentAspect.Idempotent;
 
 import java.util.List;
 import java.util.Date;
@@ -103,8 +101,6 @@ public class OmsAfterSaleController {
     @PreAuthorize("hasRole('ADMIN') or @permissionService.hasPermission('afterSale:update')")
     @ApiOperation("修改售后申请状态")
     @PostMapping("/update/status/{id}")
-    @AuditLog(value = "修改售后申请状态", businessType = "售后管理")
-    @Idempotent(timeout = 60, message = "请勿重复提交售后状态更新请求")
     public CommonResult updateStatus(@PathVariable Long id, @Validated @RequestBody OmsUpdateStatusParam statusParam) { // statusParam
         // DTO
         // 保持不变，但
@@ -177,7 +173,7 @@ public class OmsAfterSaleController {
 
     @ApiOperation("获取售后操作日志列表")
     @PreAuthorize("hasAuthority('oms:afterSale:read')")
-    @RequestMapping(value = "/log/list2", method = RequestMethod.GET)
+    @RequestMapping(value = "/log/list", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<OmsAfterSaleLog>> getOperationLogs(
             @RequestParam(value = "afterSaleId", required = false) Long afterSaleId,
