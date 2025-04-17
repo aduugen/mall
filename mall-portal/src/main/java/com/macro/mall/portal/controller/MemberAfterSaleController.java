@@ -5,6 +5,7 @@ import com.macro.mall.common.api.CommonResult;
 import com.macro.mall.model.*;
 import com.macro.mall.portal.domain.AfterSaleParam;
 import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
+import com.macro.mall.portal.domain.PortalOmsAfterSaleDTO;
 import com.macro.mall.portal.service.MemberAfterSaleService;
 import com.macro.mall.portal.service.UmsMemberService;
 import com.macro.mall.mapper.OmsOrderMapper;
@@ -13,6 +14,7 @@ import com.macro.mall.mapper.OmsAfterSaleMapper;
 import com.macro.mall.mapper.OmsAfterSaleItemMapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -86,16 +88,16 @@ public class MemberAfterSaleController {
     @ApiOperation("获取售后申请详情")
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<OmsAfterSale> getItem(@RequestParam Long id) {
+    public CommonResult<PortalOmsAfterSaleDetail> getItem(@RequestParam Long id) {
         UmsMember currentMember = memberService.getCurrentMember();
-        OmsAfterSale afterSale = afterSaleService.getDetail(id, currentMember.getId());
-        return CommonResult.success(afterSale);
+        PortalOmsAfterSaleDetail afterSaleDetail = afterSaleService.getDetail(id, currentMember.getId());
+        return CommonResult.success(afterSaleDetail);
     }
 
     @ApiOperation("查询售后申请列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<CommonPage<OmsAfterSale>> list(
+    public CommonResult<CommonPage<PortalOmsAfterSaleDTO>> list(
             @RequestParam(value = "status", required = false) Integer status,
             @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -112,37 +114,47 @@ public class MemberAfterSaleController {
                 ", status=" + status + ", orderId=" + orderId);
 
         List<PortalOmsAfterSaleDetail> afterSaleDetailList;
-        List<OmsAfterSale> afterSaleListForPage;
+        List<PortalOmsAfterSaleDTO> resultList;
 
         if (orderId != null) {
             // 如果指定了订单ID，通过订单ID查询售后记录
             afterSaleDetailList = afterSaleService.listByOrderId(orderId, currentMember.getId());
-            afterSaleListForPage = new ArrayList<>();
+            resultList = new ArrayList<>();
+
+            // 转换PortalOmsAfterSaleDetail为PortalOmsAfterSaleDTO
             if (afterSaleDetailList != null) {
                 for (PortalOmsAfterSaleDetail detail : afterSaleDetailList) {
-                    afterSaleListForPage.add(detail);
+                    PortalOmsAfterSaleDTO dto = new PortalOmsAfterSaleDTO();
+                    BeanUtils.copyProperties(detail, dto);
+                    dto.setAfterSaleItemList(detail.getAfterSaleItemList());
+                    dto.setProofList(detail.getProofList());
+
+                    // 初始化计算字段
+                    dto.initializeCalculatedFields();
+
+                    resultList.add(dto);
                 }
             }
 
             // 如果status参数存在且大于等于0，进行状态过滤
             if (status != null && status >= 0) {
                 // 在内存中根据状态过滤结果
-                List<OmsAfterSale> filteredList = new ArrayList<>();
-                for (OmsAfterSale afterSale : afterSaleListForPage) {
+                List<PortalOmsAfterSaleDTO> filteredList = new ArrayList<>();
+                for (PortalOmsAfterSaleDTO afterSale : resultList) {
                     if (afterSale.getStatus() != null && afterSale.getStatus().equals(status)) {
                         filteredList.add(afterSale);
                     }
                 }
-                afterSaleListForPage = filteredList;
+                resultList = filteredList;
             }
         } else {
             // 没有指定订单ID，按状态查询所有售后记录
-            afterSaleListForPage = afterSaleService.list(currentMember.getId(), status, pageSize, pageNum);
+            resultList = afterSaleService.list(currentMember.getId(), status, pageSize, pageNum);
         }
 
-        System.out.println("查询结果数量: " + (afterSaleListForPage != null ? afterSaleListForPage.size() : 0));
+        System.out.println("查询结果数量: " + (resultList != null ? resultList.size() : 0));
 
-        return CommonResult.success(CommonPage.restPage(afterSaleListForPage));
+        return CommonResult.success(CommonPage.restPage(resultList));
     }
 
     @ApiOperation("取消售后申请")

@@ -11,6 +11,7 @@ import com.macro.mall.model.*;
 import com.macro.mall.portal.domain.AfterSaleItemParam;
 import com.macro.mall.portal.domain.AfterSaleParam;
 import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
+import com.macro.mall.portal.domain.PortalOmsAfterSaleDTO;
 import com.macro.mall.portal.service.MemberAfterSaleService;
 import com.macro.mall.portal.service.UmsMemberService;
 import org.springframework.beans.BeanUtils;
@@ -279,7 +280,7 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
     }
 
     @Override
-    public List<OmsAfterSale> list(Long memberId, Integer status, Integer pageSize, Integer pageNum) {
+    public List<PortalOmsAfterSaleDTO> list(Long memberId, Integer status, Integer pageSize, Integer pageNum) {
         // 启用分页
         PageHelper.startPage(pageNum, pageSize);
 
@@ -299,46 +300,50 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         example.setOrderByClause("create_time DESC"); // 按创建时间排序
 
         List<OmsAfterSale> afterSaleList = afterSaleMapper.selectByExample(example); // 使用 selectByExample
+        List<PortalOmsAfterSaleDTO> resultList = new ArrayList<>();
 
-        // 为每个售后申请关联查询售后商品项和订单号 (移除，这些信息不应直接设置在 OmsAfterSale 对象上)
+        // 转换成DTO并为每个售后申请关联查询售后商品项和订单
         if (!CollectionUtils.isEmpty(afterSaleList)) {
-            System.out.println("开始处理售后列表的附加信息（移除关联商品和订单号设置）...");
-            // for (OmsAfterSale afterSale : afterSaleList) {
-            // 查询售后商品项
-            // OmsAfterSaleItemExample itemExample = new OmsAfterSaleItemExample();
-            // itemExample.createCriteria().andAfterSaleIdEqualTo(afterSale.getId());
-            // List<OmsAfterSaleItem> afterSaleItems =
-            // afterSaleItemMapper.selectByExample(itemExample);
+            System.out.println("开始处理售后列表的附加信息，将转换为DTO...");
+            for (OmsAfterSale afterSale : afterSaleList) {
+                PortalOmsAfterSaleDTO dto = new PortalOmsAfterSaleDTO();
+                BeanUtils.copyProperties(afterSale, dto);
 
-            // 设置到售后申请对象中 (移除)
-            // afterSale.setAfterSaleItemList(afterSaleItems);
+                // 查询售后商品项
+                OmsAfterSaleItemExample itemExample = new OmsAfterSaleItemExample();
+                itemExample.createCriteria().andAfterSaleIdEqualTo(afterSale.getId());
+                List<OmsAfterSaleItem> afterSaleItems = afterSaleItemMapper.selectByExample(itemExample);
+                dto.setAfterSaleItemList(afterSaleItems);
 
-            // 查询订单信息获取订单编号 (移除)
-            // if (afterSale.getOrderId() != null) {
-            // OmsOrder order = orderMapper.selectByPrimaryKey(afterSale.getOrderId());
-            // if (order != null && order.getOrderSn() != null &&
-            // !order.getOrderSn().isEmpty()) {
-            // // afterSale.setOrderSn(order.getOrderSn()); // 移除
-            // System.out.println("设置售后单 " + afterSale.getId() + " 的订单编号(来自订单查询): " +
-            // order.getOrderSn() + ", 来自订单ID: "
-            // + afterSale.getOrderId());
-            // } else {
-            // // 找不到订单或订单没有编号，设置默认值 (移除)
-            // // afterSale.setOrderSn("订单" + afterSale.getOrderId()); // 移除
-            // System.out
-            // .println("警告: 售后单 " + afterSale.getId() + " 订单编号未找到，使用默认值: 订单ID " +
-            // afterSale.getOrderId()); // 日志修改
-            // }
-            // } else {
-            // // afterSale.setOrderSn("未关联订单"); // 移除
-            // System.out.println("警告: 售后单 " + afterSale.getId() + " 无关联订单ID");
-            // }
-            // }
+                // 查询售后凭证
+                List<OmsAfterSaleProof> proofList = proofMapper.selectByAfterSaleId(afterSale.getId());
+                dto.setProofList(proofList);
+
+                // 查询订单信息获取订单编号
+                if (afterSale.getOrderId() != null) {
+                    OmsOrder order = orderMapper.selectByPrimaryKey(afterSale.getOrderId());
+                    if (order != null && order.getOrderSn() != null && !order.getOrderSn().isEmpty()) {
+                        dto.setOrderSn(order.getOrderSn());
+                        System.out.println("设置售后单 " + afterSale.getId() + " 的订单编号: " + order.getOrderSn());
+                    } else {
+                        dto.setOrderSn("订单" + afterSale.getOrderId());
+                        System.out.println("售后单 " + afterSale.getId() + " 订单编号未找到，使用默认值");
+                    }
+                } else {
+                    dto.setOrderSn("未关联订单");
+                    System.out.println("警告: 售后单 " + afterSale.getId() + " 无关联订单ID");
+                }
+
+                // 初始化计算字段（总退款金额、主要退货原因等）
+                dto.initializeCalculatedFields();
+
+                resultList.add(dto);
+            }
         }
 
         System.out.println("查询售后列表: memberId=" + memberId + ", status=" + status + ", 结果数量="
-                + (afterSaleList != null ? afterSaleList.size() : 0));
-        return afterSaleList; // 返回原始列表
+                + (resultList != null ? resultList.size() : 0));
+        return resultList;
     }
 
     @Override

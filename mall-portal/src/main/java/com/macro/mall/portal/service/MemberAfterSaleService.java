@@ -4,6 +4,7 @@ import com.macro.mall.model.OmsAfterSale;
 import com.macro.mall.model.OmsAfterSaleItem;
 import com.macro.mall.portal.domain.AfterSaleParam;
 import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
+import com.macro.mall.portal.domain.PortalOmsAfterSaleDTO;
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public interface MemberAfterSaleService {
     /**
      * 查询会员的售后申请列表
      */
-    List<OmsAfterSale> list(Long memberId, Integer status, Integer pageSize, Integer pageNum);
+    List<PortalOmsAfterSaleDTO> list(Long memberId, Integer status, Integer pageSize, Integer pageNum);
 
     /**
      * 取消售后申请
