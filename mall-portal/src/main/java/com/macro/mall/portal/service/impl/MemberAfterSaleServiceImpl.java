@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.macro.mall.common.exception.Asserts;
 import com.macro.mall.mapper.OmsAfterSaleItemMapper;
 import com.macro.mall.mapper.OmsAfterSaleMapper;
+import com.macro.mall.mapper.OmsAfterSaleProofMapper;
 import com.macro.mall.mapper.OmsOrderItemMapper;
 import com.macro.mall.mapper.OmsOrderMapper;
 import com.macro.mall.model.*;
@@ -40,6 +41,9 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
     @Autowired
     private UmsMemberService memberService;
+
+    @Autowired
+    private OmsAfterSaleProofMapper proofMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -149,6 +153,29 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
                 System.out.println("插入售后商品项: " + afterSaleItem);
                 afterSaleItemMapper.insert(afterSaleItem);
                 afterSaleItems.add(afterSaleItem);
+
+                // 处理凭证图片
+                if (StringUtils.hasText(itemParam.getProofPics())) {
+                    List<OmsAfterSaleProof> proofList = new ArrayList<>();
+                    String[] picUrls = itemParam.getProofPics().split(",");
+                    for (String picUrl : picUrls) {
+                        if (StringUtils.hasText(picUrl)) {
+                            OmsAfterSaleProof proof = new OmsAfterSaleProof();
+                            proof.setAfterSaleId(afterSale.getId());
+                            proof.setItemId(afterSaleItem.getId());
+                            proof.setPicUrl(picUrl.trim());
+                            proof.setPicType(OmsAfterSaleProof.PIC_TYPE_PROOF);
+                            proof.setCreateTime(new Date());
+                            proof.setUpdateTime(new Date());
+                            proofList.add(proof);
+                        }
+                    }
+                    if (!proofList.isEmpty()) {
+                        proofMapper.batchInsert(proofList);
+                        System.out.println("插入售后商品项凭证图片: 商品项ID=" + afterSaleItem.getId() +
+                                ", 凭证数量=" + proofList.size());
+                    }
+                }
 
                 // 更新订单项的已申请数量
                 appliedQuantity += itemParam.getReturnQuantity();
