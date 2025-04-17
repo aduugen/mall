@@ -29,9 +29,8 @@ public class OmsAfterSaleLogController {
     @Autowired
     private OmsAfterSaleLogService afterSaleLogService;
 
-    @ApiOperation("获取售后操作日志列表")
-    @PreAuthorize("hasAuthority('oms:afterSale:read')")
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
+    @ApiOperation("分页查询售后日志")
+    @RequestMapping(value = "/query", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<CommonPage<OmsAfterSaleLog>> getList(
             @RequestParam(value = "afterSaleId", required = false) Long afterSaleId,
@@ -40,15 +39,12 @@ public class OmsAfterSaleLogController {
             @RequestParam(value = "afterSaleStatus", required = false) Integer afterSaleStatus,
             @RequestParam(value = "startTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startTime,
             @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endTime,
-            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
-
         PageHelper.startPage(pageNum, pageSize);
-        List<OmsAfterSaleLog> list = afterSaleLogService.getLogList(
+        List<OmsAfterSaleLog> logList = afterSaleLogService.getLogList(
                 afterSaleId, operateMan, operateType, afterSaleStatus, startTime, endTime);
-        PageInfo<OmsAfterSaleLog> pageInfo = new PageInfo<>(list);
-
-        return CommonResult.success(CommonPage.restPage(list));
+        return CommonResult.success(CommonPage.restPage(logList));
     }
 
     @ApiOperation("获取售后操作类型统计数据")

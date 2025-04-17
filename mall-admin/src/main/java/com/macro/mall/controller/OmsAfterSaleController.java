@@ -177,7 +177,7 @@ public class OmsAfterSaleController {
 
     @ApiOperation("获取售后操作日志列表")
     @PreAuthorize("hasAuthority('oms:afterSale:read')")
-    @RequestMapping(value = "/log/list", method = RequestMethod.GET)
+    @RequestMapping(value = "/log/list2", method = RequestMethod.GET)
     @ResponseBody
     public CommonResult<List<OmsAfterSaleLog>> getOperationLogs(
             @RequestParam(value = "afterSaleId", required = false) Long afterSaleId,

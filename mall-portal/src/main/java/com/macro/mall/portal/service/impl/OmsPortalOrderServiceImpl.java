@@ -14,24 +14,18 @@ import com.macro.mall.portal.dao.PortalOrderItemDao;
 import com.macro.mall.portal.dao.SmsCouponHistoryDao;
 import com.macro.mall.portal.domain.*;
 import com.macro.mall.portal.service.*;
-import com.macro.mall.portal.util.RedisDistributedLock;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
 
 /**
  * 前台订单管理Service
@@ -78,10 +72,6 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     private PmsCommentMapper commentMapper;
     @Autowired
     private PmsProductMapper productMapper;
-    @Autowired
-    private RedisDistributedLock redisDistributedLock;
-    @Autowired
-    private PlatformTransactionManager transactionManager;
 
     @Override
     public ConfirmOrderResult generateConfirmOrder(List<Long> cartIds) {
@@ -278,120 +268,57 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
     @Override
     @Transactional
     public Integer paySuccess(Long orderId, Integer payType) {
-        log.info("处理订单支付成功：orderId={}, payType={}", orderId, payType);
-
-        // 生成锁的唯一标识
-        String requestId = UUID.randomUUID().toString();
-        try {
-            // 获取分布式锁
-            boolean locked = acquirePayLock(orderId);
-            if (!locked) {
-                log.warn("获取订单支付锁失败，可能有其他线程正在处理该订单: orderId={}", orderId);
-                // 此处可以选择等待并重试，或者直接返回
-                return 0;
-            }
-
-            // 检查订单支付状态，实现幂等性
-            OmsOrder existOrder = orderMapper.selectByPrimaryKey(orderId);
-            if (existOrder == null) {
-                log.error("订单不存在: orderId={}", orderId);
-                Asserts.fail("订单不存在");
-            }
-
-            // 订单已支付，直接返回成功，实现幂等性
-            if (existOrder.getStatus() != 0) {
-                log.info("订单已处理，无需重复处理: orderId={}, status={}", orderId, existOrder.getStatus());
-                return 1; // 返回1表示处理成功，但实际未做变更
-            }
-
-            // 修改订单支付状态
-            OmsOrder order = new OmsOrder();
-            order.setId(orderId);
-            order.setStatus(1);
-            order.setPaymentTime(new Date());
-            order.setPayType(payType);
-
-            OmsOrderExample orderExample = new OmsOrderExample();
-            orderExample.createCriteria()
-                    .andIdEqualTo(order.getId())
-                    .andDeleteStatusEqualTo(0)
-                    .andStatusEqualTo(0);
-
-            // 只修改未付款状态的订单
-            int updateCount = orderMapper.updateByExampleSelective(order, orderExample);
-            if (updateCount == 0) {
-                log.warn("订单支付状态更新失败：orderId={}, 可能订单不存在或状态不是未支付", orderId);
-                Asserts.fail("订单不存在或订单状态不是未支付！");
-            }
-
-            log.info("订单支付状态更新成功：orderId={}, 新状态=已支付", orderId);
-
-            // 获取订单详情，包含订单项
-            OmsOrderDetail orderDetail = portalOrderDao.getDetail(orderId);
-            if (orderDetail == null || CollectionUtils.isEmpty(orderDetail.getOrderItemList())) {
-                log.error("无法获取订单详情或订单项为空：orderId={}", orderId);
-                Asserts.fail("订单详情获取失败");
-            }
-
-            // 处理库存和销量
-            processStockAndSales(orderId, orderDetail.getOrderItemList());
-
-            // 记录订单支付完成事件
-            savePaymentSuccessLog(orderId, payType);
-
-            log.info("订单支付完成处理完毕：orderId={}", orderId);
-
-            // 返回更新的订单数量
-            return updateCount;
-        } finally {
-            // 最终释放分布式锁
-            releasePayLock(orderId);
+        // 修改订单支付状态
+        OmsOrder order = new OmsOrder();
+        order.setId(orderId);
+        order.setStatus(1);
+        order.setPaymentTime(new Date());
+        order.setPayType(payType);
+        OmsOrderExample orderExample = new OmsOrderExample();
+        orderExample.createCriteria()
+                .andIdEqualTo(order.getId())
+                .andDeleteStatusEqualTo(0)
+                .andStatusEqualTo(0);
+        // 只修改未付款状态的订单
+        int updateCount = orderMapper.updateByExampleSelective(order, orderExample);
+        if (updateCount == 0) {
+            Asserts.fail("订单不存在或订单状态不是未支付！");
         }
-    }
-
-    /**
-     * 获取支付分布式锁
-     * 
-     * @param orderId   订单ID
-     * @param requestId 请求ID，用于锁的唯一标识
-     * @return 是否获取成功
-     */
-    private boolean acquirePayLock(Long orderId) {
-        String lockKey = String.format("order:pay:%d", orderId);
-        return redisDistributedLock.acquireLock(lockKey, orderId.toString(), 30L, TimeUnit.SECONDS);
-    }
-
-    /**
-     * 释放支付分布式锁
-     * 
-     * @param orderId 订单ID
-     */
-    private void releasePayLock(Long orderId) {
-        String lockKey = String.format("order:pay:%d", orderId);
-        boolean released = redisDistributedLock.releaseLock(lockKey, orderId.toString());
-        if (released) {
-            log.info("释放支付分布式锁成功: orderId={}", orderId);
-        } else {
-            log.warn("释放支付分布式锁失败: orderId={}", orderId);
+        // 恢复所有下单商品的锁定库存，扣减真实库存
+        OmsOrderDetail orderDetail = portalOrderDao.getDetail(orderId);
+        for (OmsOrderItem orderItem : orderDetail.getOrderItemList()) {
+            int count = portalOrderDao.reduceSkuStock(orderItem.getProductSkuId(), orderItem.getProductQuantity());
+            if (count == 0) {
+                // 库存扣减失败时，由于方法已标记@Transactional，整个事务会回滚
+                log.error("支付成功后扣减库存失败: orderId={}, skuId={}, quantity={}", orderId, orderItem.getProductSkuId(),
+                        orderItem.getProductQuantity());
+                Asserts.fail("库存不足，无法扣减！");
+            }
         }
-    }
 
-    /**
-     * 记录支付成功日志
-     */
-    private void savePaymentSuccessLog(Long orderId, Integer payType) {
-        try {
-            // 可以在这里添加支付成功的日志记录，如支付流水号、支付时间等
-            log.info("记录支付成功信息: orderId={}, payType={}, 支付时间={}",
-                    orderId, payType, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-
-            // 未来可以扩展：
-            // 1. 插入支付流水记录表
-            // 2. 触发支付成功事件，进行异步处理如发送通知等
-        } catch (Exception e) {
-            // 不影响主流程，只记录日志
-            log.error("记录支付日志异常: orderId={}", orderId, e);
+        // 增加商品销量
+        for (OmsOrderItem orderItem : orderDetail.getOrderItemList()) {
+            if (orderItem.getProductId() != null && orderItem.getProductQuantity() != null
+                    && orderItem.getProductQuantity() > 0) {
+                // 注意：这里我们直接更新 PmsProduct 的销量
+                // 如果 SKU 和 Product 的销量是分开统计的，则需要调整逻辑
+                // 假设销量是统计在 PmsProduct 上的
+                int saleUpdateCount = productMapper.increaseSale(orderItem.getProductId(),
+                        orderItem.getProductQuantity());
+                if (saleUpdateCount == 0) {
+                    // 销量增加失败，记录日志，但不一定需要抛出异常中断支付流程，取决于业务要求
+                    // 如果销量更新很重要，则应抛出异常回滚事务
+                    log.warn("支付成功后增加商品销量失败: orderId={}, productId={}, quantity={}", orderId, orderItem.getProductId(),
+                            orderItem.getProductQuantity());
+                    // Asserts.fail("增加商品销量失败！"); // 可选：如果必须成功则取消注释
+                } else {
+                    log.info("商品销量增加成功: productId={}, quantity={}", orderItem.getProductId(),
+                            orderItem.getProductQuantity());
+                }
+            }
         }
+        // 返回更新的订单数量
+        return updateCount;
     }
 
     @Override
@@ -426,115 +353,44 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
 
     @Override
     public void cancelOrder(Long orderId) {
-        log.info("开始取消订单: orderId={}", orderId);
-
         // 查询未付款的取消订单
         OmsOrderExample example = new OmsOrderExample();
         example.createCriteria().andIdEqualTo(orderId).andStatusEqualTo(0).andDeleteStatusEqualTo(0);
         List<OmsOrder> cancelOrderList = orderMapper.selectByExample(example);
-
         if (CollectionUtils.isEmpty(cancelOrderList)) {
-            log.warn("未找到可取消的订单，可能已经处理: orderId={}", orderId);
             return;
         }
-
         OmsOrder cancelOrder = cancelOrderList.get(0);
-        log.info("找到需要取消的订单: orderId={}, orderSn={}, status={}",
-                cancelOrder.getId(), cancelOrder.getOrderSn(), cancelOrder.getStatus());
-
-        try {
+        if (cancelOrder != null) {
             // 修改订单状态为取消
             cancelOrder.setStatus(4);
-            cancelOrder.setNote(cancelOrder.getNote() == null ? "超时自动取消" : cancelOrder.getNote() + ";超时自动取消");
-            // OmsOrder没有setCancelTime方法，使用现有字段
-            cancelOrder.setModifyTime(new Date());
             orderMapper.updateByPrimaryKeySelective(cancelOrder);
-            log.info("订单状态已更新为已取消: orderId={}", orderId);
-
-            // 获取订单商品项
             OmsOrderItemExample orderItemExample = new OmsOrderItemExample();
             orderItemExample.createCriteria().andOrderIdEqualTo(orderId);
             List<OmsOrderItem> orderItemList = orderItemMapper.selectByExample(orderItemExample);
-
-            if (CollectionUtils.isEmpty(orderItemList)) {
-                log.warn("未找到订单商品项，无法释放库存: orderId={}", orderId);
-            } else {
-                log.info("开始释放订单商品库存锁定，商品数量: {}", orderItemList.size());
-                // 批量释放库存锁定
-                List<String> failedItems = new ArrayList<>();
-
-                // 逐个释放库存，记录失败项
+            // 解除订单商品库存锁定
+            if (!CollectionUtils.isEmpty(orderItemList)) {
                 for (OmsOrderItem orderItem : orderItemList) {
                     try {
                         int count = portalOrderDao.releaseStockBySkuId(orderItem.getProductSkuId(),
                                 orderItem.getProductQuantity());
                         if (count == 0) {
-                            failedItems.add(orderItem.getProductName());
-                            log.warn("释放库存失败，库存数据可能不一致: skuId={}, quantity={}",
-                                    orderItem.getProductSkuId(), orderItem.getProductQuantity());
-                        } else {
-                            log.info("成功释放商品库存: skuId={}, quantity={}",
+                            // 日志记录库存释放失败,但不抛出异常
+                            log.warn("释放库存失败,可能库存数据不一致: skuId={}, quantity={}",
                                     orderItem.getProductSkuId(), orderItem.getProductQuantity());
                         }
                     } catch (Exception e) {
-                        failedItems.add(orderItem.getProductName());
-                        log.error("释放库存异常: skuId={}, quantity={}, error={}",
-                                orderItem.getProductSkuId(), orderItem.getProductQuantity(), e.getMessage(), e);
+                        log.error("释放库存异常", e);
                     }
                 }
-
-                // 如果有释放失败的项，记录日志，但不影响后续流程
-                if (!failedItems.isEmpty()) {
-                    log.error("部分商品库存释放失败: {}", String.join(", ", failedItems));
-                    // 可以考虑发送警报或插入到异常处理队列中以便人工介入
-                } else {
-                    log.info("所有商品库存成功释放");
-                }
             }
-
-            // 处理优惠券和积分
-            handleCouponAndIntegrationAfterCancel(cancelOrder);
-
-            log.info("订单取消处理完成: orderId={}", orderId);
-        } catch (Exception e) {
-            log.error("取消订单过程发生异常: orderId={}, error={}", orderId, e.getMessage(), e);
-            throw new RuntimeException("取消订单失败", e);
-        }
-    }
-
-    /**
-     * 处理取消订单后的优惠券和积分返还
-     */
-    private void handleCouponAndIntegrationAfterCancel(OmsOrder cancelOrder) {
-        // 修改优惠券使用状态
-        if (cancelOrder.getCouponId() != null) {
-            try {
-                updateCouponStatus(cancelOrder.getCouponId(), cancelOrder.getMemberId(), 0);
-                log.info("优惠券状态已更新为未使用: couponId={}, memberId={}",
-                        cancelOrder.getCouponId(), cancelOrder.getMemberId());
-            } catch (Exception e) {
-                log.error("更新优惠券状态失败: couponId={}, memberId={}, error={}",
-                        cancelOrder.getCouponId(), cancelOrder.getMemberId(), e.getMessage(), e);
-            }
-        }
-
-        // 返还使用积分
-        if (cancelOrder.getUseIntegration() != null && cancelOrder.getUseIntegration() > 0) {
-            try {
+            // 修改优惠券使用状态
+            updateCouponStatus(cancelOrder.getCouponId(), cancelOrder.getMemberId(), 0);
+            // 返还使用积分
+            if (cancelOrder.getUseIntegration() != null) {
                 UmsMember member = memberService.getById(cancelOrder.getMemberId());
-                if (member != null) {
-                    int currentIntegration = member.getIntegration() == null ? 0 : member.getIntegration();
-                    memberService.updateIntegration(cancelOrder.getMemberId(),
-                            currentIntegration + cancelOrder.getUseIntegration());
-                    log.info("已返还会员使用的积分: memberId={}, returnIntegration={}, currentIntegration={}",
-                            cancelOrder.getMemberId(), cancelOrder.getUseIntegration(),
-                            currentIntegration + cancelOrder.getUseIntegration());
-                } else {
-                    log.error("无法返还积分，会员不存在: memberId={}", cancelOrder.getMemberId());
-                }
-            } catch (Exception e) {
-                log.error("返还会员积分失败: memberId={}, integration={}, error={}",
-                        cancelOrder.getMemberId(), cancelOrder.getUseIntegration(), e.getMessage(), e);
+                memberService.updateIntegration(cancelOrder.getMemberId(),
+                        member.getIntegration() + cancelOrder.getUseIntegration());
             }
         }
     }
@@ -805,38 +661,15 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
 
     @Override
     public void paySuccessByOrderSn(String orderSn, Integer payType) {
-        log.info("根据订单号处理订单支付成功：orderSn={}, payType={}", orderSn, payType);
-
-        // 生成锁的唯一标识
-        String requestId = UUID.randomUUID().toString();
-        String lockKey = "order:pay:sn:" + orderSn;
-
-        try {
-            // 获取分布式锁
-            boolean locked = redisDistributedLock.acquireLock(lockKey, requestId, 30, TimeUnit.SECONDS);
-            if (!locked) {
-                log.warn("获取订单号支付锁失败，可能有其他线程正在处理该订单: orderSn={}", orderSn);
-                return;
-            }
-
-            // 查询订单信息
-            OmsOrderExample example = new OmsOrderExample();
-            example.createCriteria()
-                    .andOrderSnEqualTo(orderSn)
-                    .andStatusEqualTo(0) // 未支付状态
-                    .andDeleteStatusEqualTo(0); // 未删除
-            List<OmsOrder> orderList = orderMapper.selectByExample(example);
-
-            if (CollUtil.isNotEmpty(orderList)) {
-                OmsOrder order = orderList.get(0);
-                paySuccess(order.getId(), payType);
-                log.info("订单号支付处理完成：orderSn={}, orderId={}", orderSn, order.getId());
-            } else {
-                log.warn("找不到符合条件的待支付订单：orderSn={}", orderSn);
-            }
-        } finally {
-            // 释放分布式锁
-            redisDistributedLock.releaseLock(lockKey, requestId);
+        OmsOrderExample example = new OmsOrderExample();
+        example.createCriteria()
+                .andOrderSnEqualTo(orderSn)
+                .andStatusEqualTo(0)
+                .andDeleteStatusEqualTo(0);
+        List<OmsOrder> orderList = orderMapper.selectByExample(example);
+        if (CollUtil.isNotEmpty(orderList)) {
+            OmsOrder order = orderList.get(0);
+            paySuccess(order.getId(), payType);
         }
     }
 
@@ -1144,80 +977,15 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
      * 锁定下单商品的所有库存
      */
     private void lockStock(List<CartPromotionItem> cartPromotionItemList) {
-        log.info("开始锁定商品库存，商品数量：{}", cartPromotionItemList.size());
-
-        if (CollectionUtils.isEmpty(cartPromotionItemList)) {
-            log.warn("商品列表为空，无需锁定库存");
-            return;
-        }
-
-        // 先检查所有SKU是否存在并有足够库存
-        List<StockOperation> stockOperationList = new ArrayList<>();
-        Map<Long, PmsSkuStock> skuStockMap = new HashMap<>();
-
         for (CartPromotionItem cartPromotionItem : cartPromotionItemList) {
             PmsSkuStock skuStock = skuStockMapper.selectByPrimaryKey(cartPromotionItem.getProductSkuId());
-            if (skuStock == null) {
-                log.error("锁定库存失败：SKU不存在, skuId={}", cartPromotionItem.getProductSkuId());
-                Asserts.fail("商品SKU不存在，无法下单");
-            }
-
-            // 缓存SKU信息，避免重复查询
-            skuStockMap.put(skuStock.getId(), skuStock);
-
-            // 预检查库存是否足够
-            if (skuStock.getStock() < cartPromotionItem.getQuantity()) {
-                log.error("锁定库存失败：库存不足, skuId={}, 当前库存={}, 需要数量={}",
-                        cartPromotionItem.getProductSkuId(), skuStock.getStock(), cartPromotionItem.getQuantity());
-                Asserts.fail("商品" + cartPromotionItem.getProductName() + "库存不足，无法下单");
-            }
-
-            // 创建库存操作对象
-            StockOperation stockOperation = new StockOperation(
-                    cartPromotionItem.getProductSkuId(),
-                    cartPromotionItem.getQuantity(),
-                    cartPromotionItem.getProductName());
-            stockOperationList.add(stockOperation);
-        }
-
-        // 使用事务模板确保操作的原子性
-        try {
-            // 1. 先检查库存是否充足 (双重检查，防止高并发下的超卖)
-            List<Long> insufficientStockIds = portalOrderDao.checkStockBySkuIds(stockOperationList);
-            if (!insufficientStockIds.isEmpty()) {
-                // 查找库存不足的商品名称，用于错误提示
-                List<String> insufficientStockNames = new ArrayList<>();
-                for (Long skuId : insufficientStockIds) {
-                    for (CartPromotionItem item : cartPromotionItemList) {
-                        if (item.getProductSkuId().equals(skuId)) {
-                            insufficientStockNames.add(item.getProductName());
-                            break;
-                        }
-                    }
-                }
-                String errorItems = String.join(", ", insufficientStockNames);
-                log.error("锁定库存时检测到库存不足的商品: {}", errorItems);
-                Asserts.fail("商品[" + errorItems + "]库存不足，无法下单");
-            }
-
-            // 2. 执行批量库存锁定
-            int affectedRows = portalOrderDao.batchLockStock(stockOperationList);
-            if (affectedRows <= 0) {
-                log.error("批量锁定库存失败，数据库更新行数为0");
-                Asserts.fail("系统繁忙，请稍后再试");
-            }
-
-            log.info("批量锁定库存成功，影响的行数: {}", affectedRows);
-        } catch (Exception e) {
-            log.error("锁定库存过程发生异常", e);
-            if (e instanceof IllegalArgumentException) {
-                throw e; // 将自定义业务异常往上层抛
-            } else {
-                Asserts.fail("系统异常，无法完成下单");
+            skuStock.setLockStock(skuStock.getLockStock() + cartPromotionItem.getQuantity());
+            int count = portalOrderDao.lockStockBySkuId(cartPromotionItem.getProductSkuId(),
+                    cartPromotionItem.getQuantity());
+            if (count == 0) {
+                Asserts.fail("库存不足，无法下单");
             }
         }
-
-        log.info("所有商品库存锁定成功");
     }
 
     /**
@@ -1540,107 +1308,5 @@ public class OmsPortalOrderServiceImpl implements OmsPortalOrderService {
         // 例如 PmsCommentMapper.xml 中添加 <select id="selectUncommentedItemsByOrderId" ...>
         // SQL: SELECT * FROM oms_order_item WHERE order_id = #{orderId} AND
         // (comment_status = 0 OR comment_status IS NULL)
-    }
-
-    /**
-     * 处理订单支付成功后的库存和销量更新
-     */
-    private void processStockAndSales(Long orderId, List<OmsOrderItem> orderItemList) {
-        log.info("开始处理订单商品库存和销量：orderId={}, 商品数量={}", orderId, orderItemList.size());
-
-        if (CollectionUtils.isEmpty(orderItemList)) {
-            log.warn("订单商品列表为空，无需处理库存和销量: orderId={}", orderId);
-            return;
-        }
-
-        // 准备批量处理库存的参数
-        List<StockOperation> stockOperationList = orderItemList.stream()
-                .map(item -> new StockOperation(item.getProductSkuId(), item.getProductQuantity(),
-                        item.getProductName()))
-                .collect(Collectors.toList());
-
-        // 处理库存：恢复所有下单商品的锁定库存，扣减真实库存
-        try {
-            // 执行批量库存扣减
-            int affectedRows = portalOrderDao.batchReduceStock(stockOperationList);
-            if (affectedRows <= 0) {
-                String errorMsg = "订单支付成功，但库存扣减失败，请联系客服处理";
-                log.error("批量扣减库存失败，数据库更新行数为0: orderId={}", orderId);
-                Asserts.fail(errorMsg);
-            }
-            log.info("批量扣减库存成功，影响的行数: {}", affectedRows);
-        } catch (Exception e) {
-            log.error("批量扣减库存过程发生异常: orderId={}", orderId, e);
-            Asserts.fail("系统异常，无法完成支付处理");
-        }
-
-        // 增加商品销量
-        // 批量处理销量的参数，按产品ID分组
-        Map<Long, Integer> productSalesMap = new HashMap<>();
-        for (OmsOrderItem orderItem : orderItemList) {
-            if (orderItem.getProductId() != null && orderItem.getProductQuantity() != null
-                    && orderItem.getProductQuantity() > 0) {
-                // 累加同一产品的数量
-                productSalesMap.compute(orderItem.getProductId(),
-                        (k, v) -> (v == null) ? orderItem.getProductQuantity() : v + orderItem.getProductQuantity());
-            }
-        }
-
-        if (productSalesMap.isEmpty()) {
-            log.info("没有需要更新销量的商品: orderId={}", orderId);
-            return;
-        }
-
-        // 批量更新销量（需要在PmsProductMapper中添加batchIncreaseSales方法）
-        try {
-            // 因为涉及多表更新，暂时保留循环方式，未来可以优化为批量处理
-            List<String> salesErrorItems = new ArrayList<>();
-            for (Map.Entry<Long, Integer> entry : productSalesMap.entrySet()) {
-                try {
-                    int updateCount = productMapper.increaseSale(entry.getKey(), entry.getValue());
-                    if (updateCount <= 0) {
-                        // 查找对应商品名称用于日志
-                        String productName = orderItemList.stream()
-                                .filter(item -> entry.getKey().equals(item.getProductId()))
-                                .map(OmsOrderItem::getProductName)
-                                .findFirst()
-                                .orElse("未知商品");
-
-                        String errorMsg = String.format("商品[%s]销量更新失败，产品ID: %d, 数量: %d",
-                                productName, entry.getKey(), entry.getValue());
-                        salesErrorItems.add(errorMsg);
-                        log.warn(errorMsg);
-                    } else {
-                        log.info("商品销量更新成功: productId={}, quantity={}",
-                                entry.getKey(), entry.getValue());
-                    }
-                } catch (Exception e) {
-                    String productName = orderItemList.stream()
-                            .filter(item -> entry.getKey().equals(item.getProductId()))
-                            .map(OmsOrderItem::getProductName)
-                            .findFirst()
-                            .orElse("未知商品");
-
-                    String errorMsg = String.format("商品[%s]销量更新异常: %s", productName, e.getMessage());
-                    salesErrorItems.add(errorMsg);
-                    log.error("销量更新异常: orderId={}, productId={}, quantity={}, error={}",
-                            orderId, entry.getKey(), entry.getValue(), e.getMessage(), e);
-                }
-            }
-
-            // 销量更新失败不一定需要回滚整个事务，可以根据业务需求决定
-            // 这里仅记录警告日志，但如果销量更新至关重要，也可以抛出异常回滚事务
-            if (!salesErrorItems.isEmpty()) {
-                log.warn("部分商品销量更新失败，但不影响订单处理: {}", String.join("; ", salesErrorItems));
-
-                // 可以考虑将失败的记录到一个表中，供后续补偿处理
-                // saveFailedSalesUpdateRecords(orderId, salesErrorItems);
-            } else {
-                log.info("所有商品销量更新成功: orderId={}", orderId);
-            }
-        } catch (Exception e) {
-            // 销量更新总异常，记录但不抛出
-            log.error("销量更新过程发生系统异常: orderId={}", orderId, e);
-        }
     }
 }
