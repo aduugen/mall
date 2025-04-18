@@ -22,8 +22,20 @@ public class OmsAfterSaleQueryParam {
     @ApiModelProperty(value = "处理人员")
     private String handleMan;
 
+    @ApiModelProperty(value = "处理时间") // 格式如 yyyy-MM-dd
+    private String handleTime;
+
     @ApiModelProperty(value = "会员用户名或ID")
     private String memberKeyword;
+
+    @ApiModelProperty(value = "会员ID")
+    private Long memberId;
+
+    @ApiModelProperty(value = "会员名称")
+    private String memberName;
+
+    @ApiModelProperty(value = "退款状态")
+    private Integer refundStatus;
 
     // 可以根据需要添加其他查询字段，如退货原因类型等
 }

@@ -51,6 +51,12 @@ public class OmsAfterSaleDetail {
     @ApiModelProperty("更新时间")
     private Date updateTime;
 
+    @ApiModelProperty("删除标记：0->未删除；1->已删除")
+    private Boolean delFlag;
+
+    @ApiModelProperty("版本号")
+    private Integer version;
+
     @ApiModelProperty("售后商品列表")
     private List<OmsAfterSaleItem> itemList;
 
