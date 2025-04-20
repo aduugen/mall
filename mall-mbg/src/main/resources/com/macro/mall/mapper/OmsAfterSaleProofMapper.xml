@@ -98,4 +98,16 @@
         DELETE FROM oms_after_sale_proof
         WHERE item_id = #{itemId}
     </delete>
+
+    <!-- 根据售后单ID列表批量查询售后凭证 -->
+    <select id="selectByAfterSaleIds" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_proof
+        WHERE after_sale_id IN
+        <foreach collection="afterSaleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY create_time DESC
+    </select>
 </mapper> 

@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.mapper.OmsAfterSaleRefundMapper">
+    <resultMap id="BaseResultMap" type="com.macro.mall.model.OmsAfterSaleRefund">
+        <id column="id" property="id"/>
+        <result column="after_sale_id" property="afterSaleId"/>
+        <result column="refund_no" property="refundNo"/>
+        <result column="refund_amount" property="refundAmount"/>
+        <result column="refund_type" property="refundType"/>
+        <result column="refund_status" property="refundStatus"/>
+        <result column="refund_time" property="refundTime"/>
+        <result column="refund_note" property="refundNote"/>
+        <result column="payment_account" property="paymentAccount"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, after_sale_id, refund_no, refund_amount, refund_type, refund_status, refund_time, 
+        refund_note, payment_account, operator_id, create_time, update_time, version
+    </sql>
+
+    <!-- 根据主键查询售后退款 -->
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_refund
+        WHERE id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <!-- 根据售后单ID查询售后退款 -->
+    <select id="selectByAfterSaleId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_refund
+        WHERE after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据售后单ID列表批量查询售后退款 -->
+    <select id="selectByAfterSaleIds" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_refund
+        WHERE after_sale_id IN
+        <foreach collection="afterSaleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据退款单号查询售后退款 -->
+    <select id="selectByRefundNo" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_refund
+        WHERE refund_no = #{refundNo,jdbcType=VARCHAR}
+    </select>
+    
+    <!-- 根据退款状态查询售后退款 -->
+    <select id="selectByRefundStatus" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM oms_after_sale_refund
+        WHERE refund_status = #{refundStatus,jdbcType=INTEGER}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 插入售后退款 -->
+    <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSaleRefund" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO oms_after_sale_refund (
+            after_sale_id, refund_no, refund_amount, refund_type,
+            refund_status, refund_time, refund_note, payment_account, 
+            operator_id, create_time, update_time, version
+        )
+        VALUES (
+            #{afterSaleId,jdbcType=BIGINT}, #{refundNo,jdbcType=VARCHAR}, 
+            #{refundAmount,jdbcType=DECIMAL}, #{refundType,jdbcType=INTEGER},
+            #{refundStatus,jdbcType=INTEGER}, #{refundTime,jdbcType=TIMESTAMP}, 
+            #{refundNote,jdbcType=VARCHAR}, #{paymentAccount,jdbcType=VARCHAR},
+            #{operatorId,jdbcType=BIGINT}, NOW(), NOW(), 0
+        )
+    </insert>
+
+    <!-- 选择性插入售后退款 -->
+    <insert id="insertSelective" parameterType="com.macro.mall.model.OmsAfterSaleRefund" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO oms_after_sale_refund
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="afterSaleId != null">
+                after_sale_id,
+            </if>
+            <if test="refundNo != null">
+                refund_no,
+            </if>
+            <if test="refundAmount != null">
+                refund_amount,
+            </if>
+            <if test="refundType != null">
+                refund_type,
+            </if>
+            <if test="refundStatus != null">
+                refund_status,
+            </if>
+            <if test="refundTime != null">
+                refund_time,
+            </if>
+            <if test="refundNote != null">
+                refund_note,
+            </if>
+            <if test="paymentAccount != null">
+                payment_account,
+            </if>
+            <if test="operatorId != null">
+                operator_id,
+            </if>
+            create_time,
+            update_time,
+            version,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="afterSaleId != null">
+                #{afterSaleId,jdbcType=BIGINT},
+            </if>
+            <if test="refundNo != null">
+                #{refundNo,jdbcType=VARCHAR},
+            </if>
+            <if test="refundAmount != null">
+                #{refundAmount,jdbcType=DECIMAL},
+            </if>
+            <if test="refundType != null">
+                #{refundType,jdbcType=INTEGER},
+            </if>
+            <if test="refundStatus != null">
+                #{refundStatus,jdbcType=INTEGER},
+            </if>
+            <if test="refundTime != null">
+                #{refundTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="refundNote != null">
+                #{refundNote,jdbcType=VARCHAR},
+            </if>
+            <if test="paymentAccount != null">
+                #{paymentAccount,jdbcType=VARCHAR},
+            </if>
+            <if test="operatorId != null">
+                #{operatorId,jdbcType=BIGINT},
+            </if>
+            NOW(),
+            NOW(),
+            0,
+        </trim>
+    </insert>
+    
+    <!-- 根据主键修改售后退款 -->
+    <update id="updateByPrimaryKeySelective" parameterType="com.macro.mall.model.OmsAfterSaleRefund">
+        UPDATE oms_after_sale_refund
+        <set>
+            <if test="afterSaleId != null">
+                after_sale_id = #{afterSaleId,jdbcType=BIGINT},
+            </if>
+            <if test="refundNo != null">
+                refund_no = #{refundNo,jdbcType=VARCHAR},
+            </if>
+            <if test="refundAmount != null">
+                refund_amount = #{refundAmount,jdbcType=DECIMAL},
+            </if>
+            <if test="refundType != null">
+                refund_type = #{refundType,jdbcType=INTEGER},
+            </if>
+            <if test="refundStatus != null">
+                refund_status = #{refundStatus,jdbcType=INTEGER},
+            </if>
+            <if test="refundTime != null">
+                refund_time = #{refundTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="refundNote != null">
+                refund_note = #{refundNote,jdbcType=VARCHAR},
+            </if>
+            <if test="paymentAccount != null">
+                payment_account = #{paymentAccount,jdbcType=VARCHAR},
+            </if>
+            <if test="operatorId != null">
+                operator_id = #{operatorId,jdbcType=BIGINT},
+            </if>
+            update_time = NOW(),
+            version = version + 1,
+        </set>
+        WHERE id = #{id,jdbcType=BIGINT}
+    </update>
+    
+    <!-- 根据主键修改售后退款（全部字段） -->
+    <update id="updateByPrimaryKey" parameterType="com.macro.mall.model.OmsAfterSaleRefund">
+        UPDATE oms_after_sale_refund
+        SET after_sale_id = #{afterSaleId,jdbcType=BIGINT},
+            refund_no = #{refundNo,jdbcType=VARCHAR},
+            refund_amount = #{refundAmount,jdbcType=DECIMAL},
+            refund_type = #{refundType,jdbcType=INTEGER},
+            refund_status = #{refundStatus,jdbcType=INTEGER},
+            refund_time = #{refundTime,jdbcType=TIMESTAMP},
+            refund_note = #{refundNote,jdbcType=VARCHAR},
+            payment_account = #{paymentAccount,jdbcType=VARCHAR},
+            operator_id = #{operatorId,jdbcType=BIGINT},
+            update_time = NOW(),
+            version = version + 1
+        WHERE id = #{id,jdbcType=BIGINT}
+    </update>
+    
+    <!-- 更新退款状态 -->
+    <update id="updateRefundStatus">
+        UPDATE oms_after_sale_refund
+        SET refund_status = #{refundStatus,jdbcType=INTEGER},
+            <if test="refundTime != null">
+                refund_time = #{refundTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="refundNote != null and refundNote != ''">
+                refund_note = #{refundNote,jdbcType=VARCHAR},
+            </if>
+            update_time = NOW(),
+            version = version + 1
+        WHERE id = #{id,jdbcType=BIGINT}
+    </update>
+    
+    <!-- 根据售后单ID更新退款状态 -->
+    <update id="updateRefundStatusByAfterSaleId">
+        UPDATE oms_after_sale_refund
+        SET refund_status = #{refundStatus,jdbcType=INTEGER},
+            <if test="refundTime != null">
+                refund_time = #{refundTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="refundNote != null and refundNote != ''">
+                refund_note = #{refundNote,jdbcType=VARCHAR},
+            </if>
+            update_time = NOW(),
+            version = version + 1
+        WHERE after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </update>
+    
+    <!-- 删除退款记录 -->
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        DELETE FROM oms_after_sale_refund
+        WHERE id = #{id,jdbcType=BIGINT}
+    </delete>
+    
+    <!-- 删除售后单的所有退款记录 -->
+    <delete id="deleteByAfterSaleId" parameterType="java.lang.Long">
+        DELETE FROM oms_after_sale_refund
+        WHERE after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </delete>
+    
+    <!-- 根据售后单ID列表批量删除售后退款 -->
+    <delete id="deleteByAfterSaleIds">
+        DELETE FROM oms_after_sale_refund
+        WHERE after_sale_id IN
+        <foreach collection="afterSaleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <!-- 统计待处理退款数量 -->
+    <select id="countPendingRefund" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM oms_after_sale_refund
+        WHERE refund_status = 0
+    </select>
+    
+    <!-- 统计退款成功数量 -->
+    <select id="countSuccessRefund" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM oms_after_sale_refund
+        WHERE refund_status = 1
+    </select>
+    
+    <!-- 统计退款失败数量 -->
+    <select id="countFailedRefund" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM oms_after_sale_refund
+        WHERE refund_status = 2
+    </select>
+    
+    <!-- 查询退款金额总和 -->
+    <select id="sumRefundAmount" resultType="java.math.BigDecimal">
+        SELECT SUM(refund_amount)
+        FROM oms_after_sale_refund
+        WHERE refund_status = 1
+    </select>
+</mapper> 

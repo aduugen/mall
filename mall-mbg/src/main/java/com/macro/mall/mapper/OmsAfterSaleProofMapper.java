@@ -6,56 +6,66 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * 售后凭证图片数据访问层接口
+ * 售后凭证Mapper接口
  */
 public interface OmsAfterSaleProofMapper {
     /**
-     * 插入凭证记录
-     */
-    int insert(OmsAfterSaleProof record);
-
-    /**
-     * 批量插入凭证记录
-     */
-    int batchInsert(List<OmsAfterSaleProof> list);
-
-    /**
-     * 根据主键查询凭证
+     * 根据主键查询售后凭证
      */
     OmsAfterSaleProof selectByPrimaryKey(Long id);
 
     /**
-     * 根据售后单ID查询凭证
+     * 根据售后单ID查询售后凭证
      */
     List<OmsAfterSaleProof> selectByAfterSaleId(Long afterSaleId);
 
     /**
-     * 根据售后单条目ID查询凭证
+     * 根据售后单ID列表批量查询售后凭证
+     */
+    List<OmsAfterSaleProof> selectByAfterSaleIds(@Param("afterSaleIds") List<Long> afterSaleIds);
+
+    /**
+     * 根据售后商品项ID查询售后凭证
      */
     List<OmsAfterSaleProof> selectByItemId(Long itemId);
 
     /**
-     * 根据类型查询凭证
+     * 新增售后凭证
      */
-    List<OmsAfterSaleProof> selectByPicType(@Param("afterSaleId") Long afterSaleId, @Param("picType") Integer picType);
+    int insert(OmsAfterSaleProof record);
 
     /**
-     * 统计售后单凭证数量
+     * 批量插入售后凭证
      */
-    int countByAfterSaleId(Long afterSaleId);
+    int batchInsert(@Param("list") List<OmsAfterSaleProof> list);
 
     /**
-     * 删除凭证
+     * 根据主键修改售后凭证
+     */
+    int updateByPrimaryKeySelective(OmsAfterSaleProof record);
+
+    /**
+     * 根据主键修改售后凭证（全部字段）
+     */
+    int updateByPrimaryKey(OmsAfterSaleProof record);
+
+    /**
+     * 根据主键删除售后凭证
      */
     int deleteByPrimaryKey(Long id);
 
     /**
-     * 删除售后单的所有凭证
+     * 根据售后单ID删除售后凭证
      */
     int deleteByAfterSaleId(Long afterSaleId);
 
     /**
-     * 删除售后单条目的所有凭证
+     * 根据售后单ID列表批量删除售后凭证
+     */
+    int deleteByAfterSaleIds(@Param("afterSaleIds") List<Long> afterSaleIds);
+
+    /**
+     * 根据售后商品项ID删除售后凭证
      */
     int deleteByItemId(Long itemId);
 }

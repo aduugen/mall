@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.mapper.OmsAfterSaleLogisticsMapper">
+    <resultMap id="BaseResultMap" type="com.macro.mall.model.OmsAfterSaleLogistics">
+        <id column="id" property="id"/>
+        <result column="after_sale_id" property="afterSaleId"/>
+        <result column="service_point_id" property="servicePointId"/>
+        <result column="logistics_company_id" property="logisticsCompanyId"/>
+        <result column="logistics_number" property="logisticsNumber"/>
+        <result column="shipping_time" property="shippingTime"/>
+        <result column="receive_time" property="receiveTime"/>
+        <result column="receive_note" property="receiveNote"/>
+        <result column="return_name" property="returnName"/>
+        <result column="return_phone" property="returnPhone"/>
+        <result column="logistics_status" property="logisticsStatus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, after_sale_id, service_point_id, logistics_company_id, logistics_number,
+        shipping_time, receive_time, receive_note, return_name, return_phone, 
+        logistics_status, create_time, update_time, version
+    </sql>
+
+    <!-- 根据主键查询售后物流 -->
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_logistics
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <!-- 根据售后单ID查询售后物流 -->
+    <select id="selectByAfterSaleId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_logistics
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </select>
+
+    <!-- 根据售后单ID列表批量查询售后物流 -->
+    <select id="selectByAfterSaleIds" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_logistics
+        where after_sale_id in
+        <foreach collection="afterSaleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 根据物流单号查询售后物流 -->
+    <select id="selectByLogisticsNumber" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_logistics
+        where logistics_number = #{logisticsNumber,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 插入售后物流 -->
+    <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSaleLogistics" useGeneratedKeys="true" keyProperty="id">
+        insert into oms_after_sale_logistics (
+            after_sale_id, service_point_id, logistics_company_id, logistics_number,
+            shipping_time, receive_time, receive_note, return_name, return_phone, 
+            logistics_status, create_time, update_time, version
+        )
+        values (
+            #{afterSaleId,jdbcType=BIGINT}, #{servicePointId,jdbcType=BIGINT}, 
+            #{logisticsCompanyId,jdbcType=BIGINT}, #{logisticsNumber,jdbcType=VARCHAR},
+            #{shippingTime,jdbcType=TIMESTAMP}, #{receiveTime,jdbcType=TIMESTAMP}, 
+            #{receiveNote,jdbcType=VARCHAR}, #{returnName,jdbcType=VARCHAR}, 
+            #{returnPhone,jdbcType=VARCHAR}, #{logisticsStatus,jdbcType=INTEGER},
+            now(), now(), 0
+        )
+    </insert>
+
+    <!-- 选择性插入售后物流 -->
+    <insert id="insertSelective" parameterType="com.macro.mall.model.OmsAfterSaleLogistics" useGeneratedKeys="true" keyProperty="id">
+        insert into oms_after_sale_logistics
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="afterSaleId != null">
+                after_sale_id,
+            </if>
+            <if test="servicePointId != null">
+                service_point_id,
+            </if>
+            <if test="logisticsCompanyId != null">
+                logistics_company_id,
+            </if>
+            <if test="logisticsNumber != null">
+                logistics_number,
+            </if>
+            <if test="shippingTime != null">
+                shipping_time,
+            </if>
+            <if test="receiveTime != null">
+                receive_time,
+            </if>
+            <if test="receiveNote != null">
+                receive_note,
+            </if>
+            <if test="returnName != null">
+                return_name,
+            </if>
+            <if test="returnPhone != null">
+                return_phone,
+            </if>
+            <if test="logisticsStatus != null">
+                logistics_status,
+            </if>
+            create_time,
+            update_time,
+            version,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="afterSaleId != null">
+                #{afterSaleId,jdbcType=BIGINT},
+            </if>
+            <if test="servicePointId != null">
+                #{servicePointId,jdbcType=BIGINT},
+            </if>
+            <if test="logisticsCompanyId != null">
+                #{logisticsCompanyId,jdbcType=BIGINT},
+            </if>
+            <if test="logisticsNumber != null">
+                #{logisticsNumber,jdbcType=VARCHAR},
+            </if>
+            <if test="shippingTime != null">
+                #{shippingTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="receiveTime != null">
+                #{receiveTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="receiveNote != null">
+                #{receiveNote,jdbcType=VARCHAR},
+            </if>
+            <if test="returnName != null">
+                #{returnName,jdbcType=VARCHAR},
+            </if>
+            <if test="returnPhone != null">
+                #{returnPhone,jdbcType=VARCHAR},
+            </if>
+            <if test="logisticsStatus != null">
+                #{logisticsStatus,jdbcType=INTEGER},
+            </if>
+            now(),
+            now(),
+            0,
+        </trim>
+    </insert>
+
+    <!-- 根据主键修改售后物流 -->
+    <update id="updateByPrimaryKeySelective" parameterType="com.macro.mall.model.OmsAfterSaleLogistics">
+        update oms_after_sale_logistics
+        <set>
+            <if test="afterSaleId != null">
+                after_sale_id = #{afterSaleId,jdbcType=BIGINT},
+            </if>
+            <if test="servicePointId != null">
+                service_point_id = #{servicePointId,jdbcType=BIGINT},
+            </if>
+            <if test="logisticsCompanyId != null">
+                logistics_company_id = #{logisticsCompanyId,jdbcType=BIGINT},
+            </if>
+            <if test="logisticsNumber != null">
+                logistics_number = #{logisticsNumber,jdbcType=VARCHAR},
+            </if>
+            <if test="shippingTime != null">
+                shipping_time = #{shippingTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="receiveTime != null">
+                receive_time = #{receiveTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="receiveNote != null">
+                receive_note = #{receiveNote,jdbcType=VARCHAR},
+            </if>
+            <if test="returnName != null">
+                return_name = #{returnName,jdbcType=VARCHAR},
+            </if>
+            <if test="returnPhone != null">
+                return_phone = #{returnPhone,jdbcType=VARCHAR},
+            </if>
+            <if test="logisticsStatus != null">
+                logistics_status = #{logisticsStatus,jdbcType=INTEGER},
+            </if>
+            update_time = now(),
+            version = version + 1,
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据主键修改售后物流（全部字段） -->
+    <update id="updateByPrimaryKey" parameterType="com.macro.mall.model.OmsAfterSaleLogistics">
+        update oms_after_sale_logistics
+        set after_sale_id = #{afterSaleId,jdbcType=BIGINT},
+            service_point_id = #{servicePointId,jdbcType=BIGINT},
+            logistics_company_id = #{logisticsCompanyId,jdbcType=BIGINT},
+            logistics_number = #{logisticsNumber,jdbcType=VARCHAR},
+            shipping_time = #{shippingTime,jdbcType=TIMESTAMP},
+            receive_time = #{receiveTime,jdbcType=TIMESTAMP},
+            receive_note = #{receiveNote,jdbcType=VARCHAR},
+            return_name = #{returnName,jdbcType=VARCHAR},
+            return_phone = #{returnPhone,jdbcType=VARCHAR},
+            logistics_status = #{logisticsStatus,jdbcType=INTEGER},
+            update_time = now(),
+            version = version + 1
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据售后单ID修改物流状态 -->
+    <update id="updateLogisticsStatusByAfterSaleId">
+        update oms_after_sale_logistics
+        set logistics_status = #{logisticsStatus,jdbcType=INTEGER},
+            update_time = now(),
+            version = version + 1
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据主键删除售后物流 -->
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from oms_after_sale_logistics
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据售后单ID删除售后物流 -->
+    <delete id="deleteByAfterSaleId" parameterType="java.lang.Long">
+        delete from oms_after_sale_logistics
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据售后单ID列表批量删除售后物流 -->
+    <delete id="deleteByAfterSaleIds">
+        delete from oms_after_sale_logistics
+        where after_sale_id in
+        <foreach collection="afterSaleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 统计待处理物流数量 -->
+    <select id="countPendingLogistics" resultType="java.lang.Integer">
+        select count(*)
+        from oms_after_sale_logistics
+        where logistics_status = 0
+    </select>
+
+    <!-- 统计已收货物流数量 -->
+    <select id="countReceivedLogistics" resultType="java.lang.Integer">
+        select count(*)
+        from oms_after_sale_logistics
+        where logistics_status = 3
+    </select>
+</mapper> 

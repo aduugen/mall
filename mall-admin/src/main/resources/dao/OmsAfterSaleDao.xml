@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.macro.mall.dao.OmsAfterSaleDao">
-    <resultMap id="afterSaleDetailMap" type="com.macro.mall.dto.OmsAfterSaleDetail" extends="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap">
-        <collection property="itemList" columnPrefix="item_" resultMap="com.macro.mall.mapper.OmsAfterSaleItemMapper.BaseResultMap"/>
+    <resultMap id="afterSaleDetailMap" type="com.macro.mall.dto.AdminOmsAfterSaleDTO" extends="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap">
+       <result column="member_nickname" property="memberNickname"/>
+        <result column="member_phone" property="memberPhone"/>
+        <result column="order_total_amount" property="orderTotalAmount"/>
     </resultMap>
 
     <!-- 获取售后申请列表 -->
@@ -57,32 +59,13 @@
             a.*,
             m.nickname as member_nickname,
             m.phone as member_phone,
-            o.total_amount as order_total_amount,
-            i.*,
-            i.id as item_id,
-            i.after_sale_id as item_after_sale_id,
-            i.order_item_id as item_order_item_id,
-            i.product_id as item_product_id,
-            i.product_name as item_product_name,
-            i.product_pic as item_product_pic,
-            i.product_price as item_product_price,
-            i.product_quantity as item_product_quantity,
-            i.product_real_price as item_product_real_price,
-            i.product_attr as item_product_attr,
-            i.product_sku_id as item_product_sku_id,
-            i.product_sku_code as item_product_sku_code,
-            i.return_quantity as item_return_quantity,
-            i.return_reason as item_return_reason,
-            i.proof_pics as item_proof_pics,
-            i.create_time as item_create_time
+            o.total_amount as order_total_amount
         FROM
             oms_after_sale a
         LEFT JOIN 
             ums_member m ON a.member_id = m.id
         LEFT JOIN 
             oms_order o ON a.order_id = o.id
-        LEFT JOIN 
-            oms_after_sale_item i ON a.id = i.after_sale_id
         WHERE
             a.id = #{id}
     </select>

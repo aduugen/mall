@@ -1,6 +1,6 @@
 package com.macro.mall.service;
 
-import com.macro.mall.dto.OmsAfterSaleDetail;
+import com.macro.mall.dto.AdminOmsAfterSaleDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.dto.OmsUpdateStatusParam;
@@ -24,7 +24,7 @@ public interface OmsAfterSaleService {
      * @param pageNum    页码
      * @return 售后列表 (包含商品项)
      */
-    List<OmsAfterSaleDetail> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum);
+    List<AdminOmsAfterSaleDTO> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum);
 
     /**
      * 批量删除申请 (根据业务逻辑，可能不允许删除或有状态限制)
@@ -40,7 +40,7 @@ public interface OmsAfterSaleService {
      * @param id 售后ID
      * @return 售后详情DTO
      */
-    OmsAfterSaleDetail getDetailDTO(Long id);
+    AdminOmsAfterSaleDTO getDetailDTO(Long id);
 
     /**
      * 获取售后单原始信息

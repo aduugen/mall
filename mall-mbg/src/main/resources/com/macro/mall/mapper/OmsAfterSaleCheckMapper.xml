@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.mapper.OmsAfterSaleCheckMapper">
+    <resultMap id="BaseResultMap" type="com.macro.mall.model.OmsAfterSaleCheck">
+        <id column="id" property="id"/>
+        <result column="after_sale_id" property="afterSaleId"/>
+        <result column="check_man_id" property="checkManId"/>
+        <result column="check_time" property="checkTime"/>
+        <result column="check_note" property="checkNote"/>
+        <result column="check_result" property="checkResult"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, after_sale_id, check_man_id, check_time, check_note, check_result, create_time, update_time, version
+    </sql>
+
+    <!-- 根据主键查询售后质检 -->
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_check
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <!-- 根据售后单ID查询售后质检 -->
+    <select id="selectByAfterSaleId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_check
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </select>
+
+    <!-- 根据售后单ID列表批量查询售后质检 -->
+    <select id="selectByAfterSaleIds" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_check
+        where after_sale_id in
+        <foreach collection="afterSaleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 根据质检结果查询售后质检 -->
+    <select id="selectByCheckResult" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_check
+        where check_result = #{checkResult,jdbcType=INTEGER}
+        order by create_time desc
+    </select>
+
+    <!-- 插入售后质检 -->
+    <insert id="insert" parameterType="com.macro.mall.model.OmsAfterSaleCheck" useGeneratedKeys="true" keyProperty="id">
+        insert into oms_after_sale_check (
+            after_sale_id, check_man_id, check_time, check_note, check_result, create_time, update_time, version
+        )
+        values (
+            #{afterSaleId,jdbcType=BIGINT}, #{checkManId,jdbcType=BIGINT}, #{checkTime,jdbcType=TIMESTAMP},
+            #{checkNote,jdbcType=VARCHAR}, #{checkResult,jdbcType=INTEGER}, now(), now(), 0
+        )
+    </insert>
+
+    <!-- 选择性插入售后质检 -->
+    <insert id="insertSelective" parameterType="com.macro.mall.model.OmsAfterSaleCheck" useGeneratedKeys="true" keyProperty="id">
+        insert into oms_after_sale_check
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="afterSaleId != null">
+                after_sale_id,
+            </if>
+            <if test="checkManId != null">
+                check_man_id,
+            </if>
+            <if test="checkTime != null">
+                check_time,
+            </if>
+            <if test="checkNote != null">
+                check_note,
+            </if>
+            <if test="checkResult != null">
+                check_result,
+            </if>
+            create_time,
+            update_time,
+            version,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="afterSaleId != null">
+                #{afterSaleId,jdbcType=BIGINT},
+            </if>
+            <if test="checkManId != null">
+                #{checkManId,jdbcType=BIGINT},
+            </if>
+            <if test="checkTime != null">
+                #{checkTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="checkNote != null">
+                #{checkNote,jdbcType=VARCHAR},
+            </if>
+            <if test="checkResult != null">
+                #{checkResult,jdbcType=INTEGER},
+            </if>
+            now(),
+            now(),
+            0,
+        </trim>
+    </insert>
+
+    <!-- 批量插入售后质检 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into oms_after_sale_check (
+            after_sale_id, check_man_id, check_time, check_note, check_result, create_time, update_time, version
+        )
+        values
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.afterSaleId,jdbcType=BIGINT}, #{item.checkManId,jdbcType=BIGINT}, #{item.checkTime,jdbcType=TIMESTAMP},
+                #{item.checkNote,jdbcType=VARCHAR}, #{item.checkResult,jdbcType=INTEGER}, now(), now(), 0
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据主键修改售后质检 -->
+    <update id="updateByPrimaryKeySelective" parameterType="com.macro.mall.model.OmsAfterSaleCheck">
+        update oms_after_sale_check
+        <set>
+            <if test="afterSaleId != null">
+                after_sale_id = #{afterSaleId,jdbcType=BIGINT},
+            </if>
+            <if test="checkManId != null">
+                check_man_id = #{checkManId,jdbcType=BIGINT},
+            </if>
+            <if test="checkTime != null">
+                check_time = #{checkTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="checkNote != null">
+                check_note = #{checkNote,jdbcType=VARCHAR},
+            </if>
+            <if test="checkResult != null">
+                check_result = #{checkResult,jdbcType=INTEGER},
+            </if>
+            update_time = now(),
+            version = version + 1,
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据主键修改售后质检（全部字段） -->
+    <update id="updateByPrimaryKey" parameterType="com.macro.mall.model.OmsAfterSaleCheck">
+        update oms_after_sale_check
+        set after_sale_id = #{afterSaleId,jdbcType=BIGINT},
+            check_man_id = #{checkManId,jdbcType=BIGINT},
+            check_time = #{checkTime,jdbcType=TIMESTAMP},
+            check_note = #{checkNote,jdbcType=VARCHAR},
+            check_result = #{checkResult,jdbcType=INTEGER},
+            update_time = now(),
+            version = version + 1
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据售后单ID修改质检结果 -->
+    <update id="updateCheckResultByAfterSaleId">
+        update oms_after_sale_check
+        set check_result = #{checkResult,jdbcType=INTEGER},
+            <if test="checkNote != null and checkNote != ''">
+                check_note = #{checkNote,jdbcType=VARCHAR},
+            </if>
+            update_time = now(),
+            version = version + 1
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </update>
+
+    <!-- 根据主键删除售后质检 -->
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from oms_after_sale_check
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据售后单ID删除售后质检 -->
+    <delete id="deleteByAfterSaleId" parameterType="java.lang.Long">
+        delete from oms_after_sale_check
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据售后单ID列表批量删除售后质检 -->
+    <delete id="deleteByAfterSaleIds">
+        delete from oms_after_sale_check
+        where after_sale_id in
+        <foreach collection="afterSaleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 统计待处理质检数量 -->
+    <select id="countPendingCheck" resultType="java.lang.Integer">
+        select count(*)
+        from oms_after_sale_check
+        where check_result is null
+    </select>
+
+    <!-- 统计质检通过数量 -->
+    <select id="countPassedCheck" resultType="java.lang.Integer">
+        select count(*)
+        from oms_after_sale_check
+        where check_result = 1
+    </select>
+
+    <!-- 统计质检不通过数量 -->
+    <select id="countFailedCheck" resultType="java.lang.Integer">
+        select count(*)
+        from oms_after_sale_check
+        where check_result = 0
+    </select>
+</mapper> 

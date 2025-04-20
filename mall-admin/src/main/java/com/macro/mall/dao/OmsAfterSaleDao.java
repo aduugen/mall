@@ -1,6 +1,6 @@
 package com.macro.mall.dao;
 
-import com.macro.mall.dto.OmsAfterSaleDetail;
+import com.macro.mall.dto.AdminOmsAfterSaleDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.model.OmsAfterSaleLog;
@@ -23,7 +23,7 @@ public interface OmsAfterSaleDao {
          * @param queryParam 查询参数
          * @return 售后列表 (包含商品项)
          */
-        List<OmsAfterSaleDetail> getList(@Param("queryParam") OmsAfterSaleQueryParam queryParam);
+        List<AdminOmsAfterSaleDTO> getList(@Param("queryParam") OmsAfterSaleQueryParam queryParam);
 
         /**
          * 获取售后详情
@@ -31,7 +31,7 @@ public interface OmsAfterSaleDao {
          * @param id 售后ID
          * @return 售后详情 DTO
          */
-        OmsAfterSaleDetail getDetail(@Param("id") Long id);
+        AdminOmsAfterSaleDTO getDetail(@Param("id") Long id);
 
         /**
          * 获取售后状态统计数据

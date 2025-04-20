@@ -2,19 +2,13 @@ package com.macro.mall.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.macro.mall.dao.OmsAfterSaleDao;
-import com.macro.mall.dto.OmsAfterSaleDetail;
+import com.macro.mall.dto.AdminOmsAfterSaleDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.dto.OmsUpdateStatusParam;
 import com.macro.mall.exception.BusinessException;
-import com.macro.mall.mapper.OmsAfterSaleItemMapper;
-import com.macro.mall.mapper.OmsAfterSaleLogMapper;
-import com.macro.mall.mapper.OmsAfterSaleMapper;
-import com.macro.mall.model.OmsAfterSale;
-import com.macro.mall.model.OmsAfterSaleExample;
-import com.macro.mall.model.OmsAfterSaleItemExample;
-import com.macro.mall.model.OmsAfterSaleLog;
-import com.macro.mall.model.OmsAfterSaleLogExample;
+import com.macro.mall.mapper.*;
+import com.macro.mall.model.*;
 import com.macro.mall.service.OmsAfterSaleService;
 import com.macro.mall.service.OmsAfterSaleLogService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.HashMap;
-
-// 引入必要的 Mapper 和 Model
-import com.macro.mall.mapper.UmsMemberMapper;
-import com.macro.mall.mapper.OmsOrderMapper;
-import com.macro.mall.model.UmsMember;
-import com.macro.mall.model.OmsOrder;
-import com.macro.mall.model.OmsAfterSaleItem;
+import java.util.ArrayList;
 
 /**
  * 售后服务管理Service实现类
@@ -46,7 +34,6 @@ import com.macro.mall.model.OmsAfterSaleItem;
 @Transactional(rollbackFor = Exception.class)
 public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
 
-    // 注入新的 DAO 和 Mapper
     @Autowired
     private OmsAfterSaleDao afterSaleDao;
     @Autowired
@@ -56,14 +43,17 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     @Autowired
     private OmsAfterSaleLogMapper afterSaleLogMapper;
 
-    // 注入 Member 和 Order Mapper
+    // 添加其他所需的Mapper
     @Autowired
-    private UmsMemberMapper memberMapper;
+    private OmsAfterSaleProcessMapper afterSaleProcessMapper;
     @Autowired
-    private OmsOrderMapper orderMapper;
-
-    // @Autowired // 如果需要扣减销量等操作，可能需要引入 ProductMapper
-    // private PmsProductMapper productMapper;
+    private OmsAfterSaleProofMapper afterSaleProofMapper;
+    @Autowired
+    private OmsAfterSaleLogisticsMapper afterSaleLogisticsMapper;
+    @Autowired
+    private OmsAfterSaleCheckMapper afterSaleCheckMapper;
+    @Autowired
+    private OmsAfterSaleRefundMapper afterSaleRefundMapper;
 
     @Autowired
     private OmsAfterSaleLogService afterSaleLogService;
@@ -72,7 +62,7 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
      * 分页查询售后申请
      */
     @Override
-    public List<OmsAfterSaleDetail> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum) {
+    public List<AdminOmsAfterSaleDTO> list(OmsAfterSaleQueryParam queryParam, Integer pageSize, Integer pageNum) {
         if (pageNum == null || pageNum < 1) {
             pageNum = 1;
         }
@@ -80,17 +70,180 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
             pageSize = 10;
         }
         PageHelper.startPage(pageNum, pageSize);
-        // 调用自定义 DAO 的 getList 方法，它现在返回 OmsAfterSaleDetail
-        List<OmsAfterSaleDetail> list = afterSaleDao.getList(queryParam);
+        // 调用自定义 DAO 的 getList 方法，获取基本售后单信息（不包含关联数据）
+        List<AdminOmsAfterSaleDTO> list = afterSaleDao.getList(queryParam);
 
-        // 日志记录查询情况，便于诊断性能问题
-        if (list != null) {
-            log.debug("售后申请查询成功，查询条件：{}，结果数量：{}", queryParam, list.size());
-        } else {
-            log.warn("售后申请查询返回空列表，查询条件：{}", queryParam);
+        if (list == null || list.isEmpty()) {
+            log.info("售后申请查询返回空列表，查询条件：{}", queryParam);
+            return list;
         }
 
+        log.debug("售后申请查询成功，查询条件：{}，结果数量：{}", queryParam, list.size());
+        /*
+         * // 批量获取所有售后单ID
+         * List<Long> afterSaleIds = list.stream()
+         * .map(AdminOmsAfterSaleDTO::getId)
+         * .collect(Collectors.toList());
+         * 
+         * // 批量查询售后商品项
+         * OmsAfterSaleItemExample itemExample = new OmsAfterSaleItemExample();
+         * itemExample.createCriteria().andAfterSaleIdIn(afterSaleIds);
+         * List<OmsAfterSaleItem> allItems =
+         * afterSaleItemMapper.selectByExample(itemExample);
+         * 
+         * // 查询日志，使用DAO方法获取
+         * Map<Long, List<OmsAfterSaleLog>> logMap = new HashMap<>();
+         * for (Long afterSaleId : afterSaleIds) {
+         * List<OmsAfterSaleLog> logs = afterSaleDao.queryOperationLogs(afterSaleId,
+         * null, null, null, null, null);
+         * if (logs != null && !logs.isEmpty()) {
+         * logMap.put(afterSaleId, logs);
+         * }
+         * }
+         * 
+         * // 使用新增加的Mapper查询关联数据
+         * // 批量查询处理记录
+         * OmsAfterSaleProcessExample processExample = new OmsAfterSaleProcessExample();
+         * processExample.createCriteria().andAfterSaleIdIn(afterSaleIds);
+         * processExample.setOrderByClause("create_time DESC");
+         * List<OmsAfterSaleProcess> allProcesses =
+         * afterSaleProcessMapper.selectByExample(processExample);
+         * 
+         * // 批量查询凭证
+         * List<OmsAfterSaleProof> allProofs =
+         * afterSaleProofMapper.selectByAfterSaleIds(afterSaleIds);
+         * 
+         * // 批量查询物流信息
+         * List<OmsAfterSaleLogistics> allLogistics =
+         * afterSaleLogisticsMapper.selectByAfterSaleIds(afterSaleIds);
+         * 
+         * // 批量查询质检信息
+         * List<OmsAfterSaleCheck> allChecks =
+         * afterSaleCheckMapper.selectByAfterSaleIds(afterSaleIds);
+         * 
+         * // 批量查询退款信息
+         * List<OmsAfterSaleRefund> allRefunds =
+         * afterSaleRefundMapper.selectByAfterSaleIds(afterSaleIds);
+         * 
+         * // 使用Map进行分组，提高查找效率
+         * Map<Long, List<OmsAfterSaleItem>> itemMap = allItems.stream()
+         * .collect(Collectors.groupingBy(OmsAfterSaleItem::getAfterSaleId));
+         * 
+         * Map<Long, List<OmsAfterSaleProcess>> processMap = allProcesses.stream()
+         * .collect(Collectors.groupingBy(OmsAfterSaleProcess::getAfterSaleId));
+         * 
+         * Map<Long, List<OmsAfterSaleProof>> proofMap = new HashMap<>();
+         * if (!CollectionUtils.isEmpty(allProofs)) {
+         * proofMap = allProofs.stream()
+         * .collect(Collectors.groupingBy(OmsAfterSaleProof::getAfterSaleId));
+         * }
+         * 
+         * Map<Long, OmsAfterSaleLogistics> logisticsMap = new HashMap<>();
+         * if (!CollectionUtils.isEmpty(allLogistics)) {
+         * logisticsMap = allLogistics.stream()
+         * .collect(Collectors.toMap(OmsAfterSaleLogistics::getAfterSaleId, logistics ->
+         * logistics));
+         * }
+         * 
+         * Map<Long, OmsAfterSaleCheck> checkMap = new HashMap<>();
+         * if (!CollectionUtils.isEmpty(allChecks)) {
+         * checkMap = allChecks.stream()
+         * .collect(Collectors.toMap(OmsAfterSaleCheck::getAfterSaleId, check ->
+         * check));
+         * }
+         * 
+         * Map<Long, OmsAfterSaleRefund> refundMap = new HashMap<>();
+         * if (!CollectionUtils.isEmpty(allRefunds)) {
+         * refundMap = allRefunds.stream()
+         * .collect(Collectors.toMap(OmsAfterSaleRefund::getAfterSaleId, refund ->
+         * refund));
+         * }
+         * 
+         * // 为每个售后单填充关联数据
+         * for (AdminOmsAfterSaleDTO detail : list) {
+         * Long afterSaleId = detail.getId();
+         * 
+         * // 设置售后商品项
+         * detail.setItemList(itemMap.getOrDefault(afterSaleId, new ArrayList<>()));
+         * 
+         * // 设置处理记录
+         * detail.setProcessList(processMap.getOrDefault(afterSaleId, new
+         * ArrayList<>()));
+         * 
+         * // 设置凭证列表
+         * detail.setProofList(proofMap.getOrDefault(afterSaleId, new ArrayList<>()));
+         * 
+         * // 设置操作日志
+         * detail.setLogList(logMap.getOrDefault(afterSaleId, new ArrayList<>()));
+         * 
+         * // 设置物流信息
+         * detail.setLogistics(logisticsMap.get(afterSaleId));
+         * 
+         * // 设置质检信息
+         * detail.setCheck(checkMap.get(afterSaleId));
+         * 
+         * // 设置退款信息
+         * detail.setRefund(refundMap.get(afterSaleId));
+         * 
+         * // 设置可用操作列表
+         * detail.setAllowableOperations(getAllowableOperations(detail.getStatus()));
+         * 
+         * // 添加调试日志
+         * log.
+         * debug("售后单ID={}, 商品项数量={}, 处理记录数量={}, 凭证数量={}, 操作日志数量={}, 物流信息={}, 质检信息={}, 退款信息={}"
+         * ,
+         * afterSaleId,
+         * detail.getItemList() != null ? detail.getItemList().size() : 0,
+         * detail.getProcessList() != null ? detail.getProcessList().size() : 0,
+         * detail.getProofList() != null ? detail.getProofList().size() : 0,
+         * detail.getLogList() != null ? detail.getLogList().size() : 0,
+         * detail.getLogistics() != null ? "有" : "无",
+         * detail.getCheck() != null ? "有" : "无",
+         * detail.getRefund() != null ? "有" : "无");
+         * }
+         */
         return list;
+    }
+
+    /**
+     * 根据售后单状态获取可用操作列表
+     */
+    private List<String> getAllowableOperations(Integer status) {
+        List<String> operations = new ArrayList<>();
+        if (status == null) {
+            return operations;
+        }
+
+        switch (status) {
+            case OmsAfterSale.STATUS_PENDING:
+                operations.add("审核通过");
+                operations.add("审核拒绝");
+                break;
+            case OmsAfterSale.STATUS_APPROVED:
+                operations.add("确认发货");
+                break;
+            case OmsAfterSale.STATUS_SHIPPED:
+                operations.add("确认收货");
+                break;
+            case OmsAfterSale.STATUS_RECEIVED:
+                operations.add("开始质检");
+                break;
+            case OmsAfterSale.STATUS_CHECKING:
+                operations.add("质检通过");
+                operations.add("质检不通过");
+                break;
+            case OmsAfterSale.STATUS_CHECK_PASS:
+                operations.add("退款处理");
+                break;
+            case OmsAfterSale.STATUS_REFUNDING:
+                operations.add("完成退款");
+                operations.add("退款失败");
+                break;
+            default:
+                break;
+        }
+
+        return operations;
     }
 
     /**
@@ -310,7 +463,7 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
      * 获取售后详情DTO
      */
     @Override
-    public OmsAfterSaleDetail getDetailDTO(Long id) {
+    public AdminOmsAfterSaleDTO getDetailDTO(Long id) {
         return afterSaleDao.getDetail(id);
     }
 

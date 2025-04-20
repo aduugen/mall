@@ -3,7 +3,7 @@ package com.macro.mall.controller;
 import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
 // 引入新的 DTOs
-import com.macro.mall.dto.OmsAfterSaleDetail;
+import com.macro.mall.dto.AdminOmsAfterSaleDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsUpdateStatusParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
@@ -42,14 +42,15 @@ public class OmsAfterSaleController {
     @PreAuthorize("hasRole('ADMIN') or @permissionService.hasPermission('afterSale:list')")
     @ApiOperation("分页查询售后申请")
     @GetMapping("/list")
-    public CommonResult<CommonPage<OmsAfterSaleDetail>> list(OmsAfterSaleQueryParam queryParam,
+    @ResponseBody
+    public CommonResult<CommonPage<AdminOmsAfterSaleDTO>> list(OmsAfterSaleQueryParam queryParam,
             @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
         try {
-            List<OmsAfterSaleDetail> afterSaleList = afterSaleService.list(queryParam, pageSize, pageNum); // 接收
-            // OmsAfterSaleDetail
+            List<AdminOmsAfterSaleDTO> afterSaleList = afterSaleService.list(queryParam, pageSize, pageNum); // 接收
+            // AdminOmsAfterSaleDTO
             // 列表
-            return CommonResult.success(CommonPage.restPage(afterSaleList)); // 传入 OmsAfterSaleDetail 列表
+            return CommonResult.success(CommonPage.restPage(afterSaleList)); // 传入 AdminOmsAfterSaleDTO 列表
         } catch (Exception e) {
             log.error("查询售后列表失败", e);
             return CommonResult.failed("查询售后列表失败: " + e.getMessage());
@@ -80,13 +81,13 @@ public class OmsAfterSaleController {
     @ApiOperation("获取售后申请详情")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<OmsAfterSaleDetail> getItem(@PathVariable Long id) { // 返回新的 Detail DTO
+    public CommonResult<AdminOmsAfterSaleDTO> getItem(@PathVariable Long id) { // 返回新的 Detail DTO
         if (id == null || id <= 0) {
             return CommonResult.failed("售后单ID无效");
         }
 
         try {
-            OmsAfterSaleDetail result = afterSaleService.getDetailDTO(id);
+            AdminOmsAfterSaleDTO result = afterSaleService.getDetailDTO(id);
             if (result != null) {
                 return CommonResult.success(result);
             } else {
