@@ -47,10 +47,10 @@ public class OmsAfterSaleController {
             @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
         try {
-            List<AdminOmsAfterSaleDTO> afterSaleList = afterSaleService.list(queryParam, pageSize, pageNum); // 接收
+            List<AdminOmsAfterSaleDTO> adminOmsAfterSaleDtoList = afterSaleService.list(queryParam, pageSize, pageNum); // 接收
             // AdminOmsAfterSaleDTO
             // 列表
-            return CommonResult.success(CommonPage.restPage(afterSaleList)); // 传入 AdminOmsAfterSaleDTO 列表
+            return CommonResult.success(CommonPage.restPage(adminOmsAfterSaleDtoList)); // 传入 AdminOmsAfterSaleDTO 列表
         } catch (Exception e) {
             log.error("查询售后列表失败", e);
             return CommonResult.failed("查询售后列表失败: " + e.getMessage());

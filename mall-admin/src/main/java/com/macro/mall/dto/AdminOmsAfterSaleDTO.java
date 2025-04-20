@@ -21,8 +21,6 @@ public class AdminOmsAfterSaleDTO {
     private Long orderId;
     @ApiModelProperty("会员ID")
     private Long memberId;
-    @ApiModelProperty("退款金额")
-    private BigDecimal returnAmount;
     @ApiModelProperty("申请状态")
     private Integer status;
     @ApiModelProperty("描述")
@@ -39,8 +37,6 @@ public class AdminOmsAfterSaleDTO {
     private String memberNickname;
     @ApiModelProperty("会员手机号")
     private String memberPhone;
-    @ApiModelProperty("订单总金额")
-    private BigDecimal orderTotalAmount;
 
     /*
      * @ApiModelProperty("售后单ID")

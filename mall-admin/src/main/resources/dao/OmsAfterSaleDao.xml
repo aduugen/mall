@@ -12,14 +12,11 @@
         SELECT
             a.*,
             m.nickname as member_nickname,
-            m.phone as member_phone,
-            o.total_amount as order_total_amount
+            m.phone as member_phone
         FROM
             oms_after_sale a
         LEFT JOIN 
             ums_member m ON a.member_id = m.id
-        LEFT JOIN 
-            oms_order o ON a.order_id = o.id
         <where>
             <if test="queryParam.id != null">
                 AND a.id = #{queryParam.id}
@@ -30,27 +27,48 @@
             <if test="queryParam.memberId != null">
                 AND a.member_id = #{queryParam.memberId}
             </if>
-            <if test="queryParam.memberName != null and queryParam.memberName != ''">
+            <if test="queryParam.memberName != null">
                 AND (m.username LIKE concat('%',#{queryParam.memberName},'%') 
-                     OR m.nickname LIKE concat('%',#{queryParam.memberName},'%'))
-            </if>
-            <if test="queryParam.orderSn != null and queryParam.orderSn != ''">
-                AND a.order_sn LIKE concat('%',#{queryParam.orderSn},'%')
+                    OR m.nickname LIKE concat('%',#{queryParam.memberName},'%'))
             </if>
             <if test="queryParam.createTime != null and queryParam.createTime != ''">
-                AND DATE_FORMAT(a.create_time, '%Y-%m-%d') = #{queryParam.createTime}
+                AND a.create_time >= STR_TO_DATE(#{queryParam.createTime}, '%Y-%m-%d')
+                AND a.create_time &lt; DATE_ADD(STR_TO_DATE(#{queryParam.createTime}, '%Y-%m-%d'), INTERVAL 1 DAY)
             </if>
             <if test="queryParam.handleMan != null and queryParam.handleMan != ''">
                 AND a.handle_man LIKE concat('%',#{queryParam.handleMan},'%')
             </if>
             <if test="queryParam.handleTime != null and queryParam.handleTime != ''">
-                AND DATE_FORMAT(a.handle_time, '%Y-%m-%d') = #{queryParam.handleTime}
+                AND a.handle_time >= STR_TO_DATE(#{queryParam.handleTime}, '%Y-%m-%d')
+                AND a.handle_time &lt; DATE_ADD(STR_TO_DATE(#{queryParam.handleTime}, '%Y-%m-%d'), INTERVAL 1 DAY)
             </if>
             <if test="queryParam.refundStatus != null">
                 AND a.refund_status = #{queryParam.refundStatus}
             </if>
         </where>
         ORDER BY a.create_time DESC
+    </select>
+
+    <select id="selectAfterSaleItems" resultType="com.macro.mall.model.OmsAfterSaleItem">
+        SELECT * FROM oms_after_sale_item
+        WHERE after_sale_id = #{id} AND del_flag = 0
+    </select>
+
+    <select id="selectAfterSaleProcesses" resultType="com.macro.mall.model.OmsAfterSaleProcess">
+        SELECT * FROM oms_after_sale_process
+        WHERE after_sale_id = #{id}
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectAfterSaleProofs" resultType="com.macro.mall.model.OmsAfterSaleProof">
+        SELECT * FROM oms_after_sale_proof
+        WHERE after_sale_id = #{id}
+    </select>
+
+    <select id="selectAfterSaleLogs" resultType="com.macro.mall.model.OmsAfterSaleLog">
+        SELECT * FROM oms_after_sale_log
+        WHERE after_sale_id = #{id}
+        ORDER BY create_time ASC
     </select>
 
     <!-- 获取售后申请详情 -->
