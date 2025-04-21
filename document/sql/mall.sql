@@ -3048,7 +3048,7 @@ INSERT INTO `ums_menu` VALUES (24, 21, '2020-02-07 16:30:53', '菜单列表', 1,
 INSERT INTO `ums_menu` VALUES (25, 21, '2020-02-07 16:31:13', '资源列表', 1, 0, 'resource', 'ums-resource', 0);
 INSERT INTO `ums_menu` VALUES (26, 21, '2020-02-07 16:31:13', '会员信息', 1, 0, 'memberInfo', 'user', 0);
 INSERT INTO `ums_menu` VALUES (27, 21, '2020-02-07 16:31:13', '会员消费信息', 1, 0, 'memberConsumption', 'money', 0);
-
+INSERT INTO `ums_menu` VALUES (28, 21, '2024-04-21 16:31:13', '合作网点管理', 1, 0, 'servicePoint', 'service-location', 0);
 -- ----------------------------
 -- Table structure for ums_permission
 -- ----------------------------
@@ -3227,6 +3227,7 @@ INSERT INTO `ums_role_menu_relation` VALUES (94, 5, 24);
 INSERT INTO `ums_role_menu_relation` VALUES (95, 5, 25);
 INSERT INTO `ums_role_menu_relation` VALUES (96, 5, 26);
 INSERT INTO `ums_role_menu_relation` VALUES (97, 5, 27);
+INSERT INTO `ums_role_menu_relation` VALUES (98, 5, 28);
 INSERT INTO `ums_role_menu_relation` VALUES (121, 1, 1);
 INSERT INTO `ums_role_menu_relation` VALUES (122, 1, 2);
 INSERT INTO `ums_role_menu_relation` VALUES (123, 1, 3);

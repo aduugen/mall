@@ -46,7 +46,7 @@
             <generatedKey column="id" sqlStatement="MySql" identity="true"/>
         </table>
         -->
-         <table tableName="oms_after_sale" domainObjectName="OmsAfterSale"
+         <table tableName="ptn_service_point" domainObjectName="PtnServicePoint"
            enableCountByExample="true" enableUpdateByExample="true"
            enableDeleteByExample="true" enableSelectByExample="true"
            selectByExampleQueryId="true">
@@ -54,15 +54,5 @@
         <!-- 如果主键是自增的，添加这个 -->
         <generatedKey column="id" sqlStatement="MySql" identity="true"/>
     </table>
-
-    <table tableName="oms_after_sale_item" domainObjectName="OmsAfterSaleItem"
-           enableCountByExample="true" enableUpdateByExample="true"
-           enableDeleteByExample="true" enableSelectByExample="true"
-           selectByExampleQueryId="true">
-        <property name="useActualColumnNames" value="false"/>
-        <!-- 如果主键是自增的，添加这个 -->
-        <generatedKey column="id" sqlStatement="MySql" identity="true"/>
-    </table>
-
     </context>
 </generatorConfiguration>
