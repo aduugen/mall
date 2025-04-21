@@ -1,14 +1,138 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.macro.mall.dao.OmsAfterSaleDao">
-    <resultMap id="afterSaleDetailMap" type="com.macro.mall.dto.AdminOmsAfterSaleDTO" extends="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap">
+    <resultMap id="adminAfterSaleMap" type="com.macro.mall.dto.AdminOmsAfterSaleDTO" extends="com.macro.mall.mapper.OmsAfterSaleMapper.BaseResultMap">
        <result column="member_nickname" property="memberNickname"/>
         <result column="member_phone" property="memberPhone"/>
         <result column="order_total_amount" property="orderTotalAmount"/>
     </resultMap>
+    
+    <resultMap id="adminAfterSaleDetailMap" type="com.macro.mall.dto.AdminOmsAfterSaleDetailDTO">
+        <!-- 基本售后单信息 -->
+        <id column="id" property="id"/>
+        <result column="order_id" property="orderId"/>
+        <result column="member_id" property="memberId"/>
+        <result column="return_amount" property="returnAmount"/>
+        <result column="status" property="status"/>
+        <result column="description" property="description"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="del_flag" property="delFlag"/>
+        <result column="version" property="version"/>
+        
+        <!-- 扩展信息 -->
+        <result column="member_nickname" property="memberNickname"/>
+        <result column="member_phone" property="memberPhone"/>
+        <result column="order_total_amount" property="orderTotalAmount"/>
+        
+        <!-- 物流信息映射 - 一对一关系 -->
+        <association property="logistics" javaType="com.macro.mall.model.OmsAfterSaleLogistics">
+            <id column="logistics_id" property="id"/>
+            <result column="logistics_after_sale_id" property="afterSaleId"/>
+            <result column="logistics_service_point_id" property="servicePointId"/>
+            <result column="logistics_company_id" property="logisticsCompanyId"/>
+            <result column="logistics_number" property="logisticsNumber"/>
+            <result column="logistics_shipping_time" property="shippingTime"/>
+            <result column="logistics_receive_time" property="receiveTime"/>
+            <result column="logistics_receive_note" property="receiveNote"/>
+            <result column="logistics_return_name" property="returnName"/>
+            <result column="logistics_return_phone" property="returnPhone"/>
+            <result column="logistics_status" property="logisticsStatus"/>
+            <result column="logistics_create_time" property="createTime"/>
+            <result column="logistics_update_time" property="updateTime"/>
+            <result column="logistics_version" property="version"/>
+        </association>
+        
+        <!-- 质检信息映射 - 一对一关系 -->
+        <association property="check" javaType="com.macro.mall.model.OmsAfterSaleCheck">
+            <id column="check_id" property="id"/>
+            <result column="check_after_sale_id" property="afterSaleId"/>
+            <result column="check_man_id" property="checkManId"/>
+            <result column="check_time" property="checkTime"/>
+            <result column="check_note" property="checkNote"/>
+            <result column="check_result" property="checkResult"/>
+            <result column="check_create_time" property="createTime"/>
+            <result column="check_update_time" property="updateTime"/>
+            <result column="check_version" property="version"/>
+        </association>
+        
+        <!-- 退款信息映射 - 一对一关系 -->
+        <association property="refund" javaType="com.macro.mall.model.OmsAfterSaleRefund">
+            <id column="refund_id" property="id"/>
+            <result column="refund_after_sale_id" property="afterSaleId"/>
+            <result column="refund_no" property="refundNo"/>
+            <result column="refund_amount" property="refundAmount"/>
+            <result column="refund_type" property="refundType"/>
+            <result column="refund_status" property="refundStatus"/>
+            <result column="refund_time" property="refundTime"/>
+            <result column="refund_note" property="refundNote"/>
+            <result column="refund_payment_account" property="paymentAccount"/>
+            <result column="refund_operator_id" property="operatorId"/>
+            <result column="refund_create_time" property="createTime"/>
+            <result column="refund_update_time" property="updateTime"/>
+            <result column="refund_version" property="version"/>
+        </association>
+        
+        <!-- 售后商品列表 - 一对多关系 -->
+        <collection property="itemList" ofType="com.macro.mall.model.OmsAfterSaleItem">
+            <id column="item_id" property="id"/>
+            <result column="item_after_sale_id" property="afterSaleId"/>
+            <result column="item_order_item_id" property="orderItemId"/>
+            <result column="item_product_id" property="productId"/>
+            <result column="item_product_name" property="productName"/>
+            <result column="item_product_pic" property="productPic"/>
+            <result column="item_product_brand" property="productBrand"/>
+            <result column="item_product_attr" property="productAttr"/>
+            <result column="item_product_price" property="productPrice"/>
+            <result column="item_product_real_price" property="productRealPrice"/>
+            <result column="item_product_quantity" property="productQuantity"/>
+            <result column="item_return_quantity" property="returnQuantity"/>
+            <result column="item_return_reason" property="returnReason"/>
+            <result column="item_create_time" property="createTime"/>
+            <result column="item_update_time" property="updateTime"/>
+            <result column="item_del_flag" property="delFlag"/>
+            <result column="item_version" property="version"/>
+        </collection>
+        
+        <!-- 处理过程记录 - 一对多关系 -->
+        <collection property="processList" ofType="com.macro.mall.model.OmsAfterSaleProcess">
+            <id column="process_id" property="id"/>
+            <result column="process_after_sale_id" property="afterSaleId"/>
+            <result column="process_handle_man_id" property="handleManId"/>
+            <result column="process_handle_time" property="handleTime"/>
+            <result column="process_handle_note" property="handleNote"/>
+            <result column="process_process_type" property="processType"/>
+            <result column="process_process_result" property="processResult"/>
+            <result column="process_create_time" property="createTime"/>
+            <result column="process_update_time" property="updateTime"/>
+            <result column="process_version" property="version"/>
+        </collection>
+        
+        <!-- 凭证列表 - 一对多关系 -->
+        <collection property="proofList" ofType="com.macro.mall.model.OmsAfterSaleProof">
+            <id column="proof_id" property="id"/>
+            <result column="proof_after_sale_id" property="afterSaleId"/>
+            <result column="proof_item_id" property="itemId"/>
+            <result column="proof_pic_url" property="picUrl"/>
+            <result column="proof_pic_type" property="picType"/>
+            <result column="proof_create_time" property="createTime"/>
+        </collection>
+        
+        <!-- 操作日志 - 一对多关系 -->
+        <collection property="logList" ofType="com.macro.mall.model.OmsAfterSaleLog">
+            <id column="log_id" property="id"/>
+            <result column="log_after_sale_id" property="afterSaleId"/>
+            <result column="log_operator_id" property="operatorId"/>
+            <result column="log_operator_type" property="operatorType"/>
+            <result column="log_operate_type" property="operateType"/>
+            <result column="log_status" property="status"/>
+            <result column="log_note" property="note"/>
+            <result column="log_create_time" property="createTime"/>
+        </collection>
+    </resultMap>
 
     <!-- 获取售后申请列表 -->
-    <select id="getList" resultMap="afterSaleDetailMap">
+    <select id="getList" resultMap="adminAfterSaleMap">
         SELECT
             a.*,
             m.nickname as member_nickname,
@@ -71,21 +195,139 @@
         ORDER BY create_time ASC
     </select>
 
-    <!-- 获取售后申请详情 -->
-    <select id="getDetail" resultMap="afterSaleDetailMap">
+    <!-- 获取售后申请详情（一次性查询所有关联数据，避免N+1问题） -->
+    <select id="getDetail" resultMap="adminAfterSaleDetailMap">
         SELECT
+            /* 售后单基本信息 */
             a.*,
-            m.nickname as member_nickname,
-            m.phone as member_phone,
-            o.total_amount as order_total_amount
+            m.nickname AS member_nickname,
+            m.phone AS member_phone,
+            o.total_amount AS order_total_amount,
+            
+            /* 物流信息 */
+            lg.id AS logistics_id,
+            lg.after_sale_id AS logistics_after_sale_id,
+            lg.service_point_id AS logistics_service_point_id,
+            lg.logistics_company_id AS logistics_company_id,
+            lg.logistics_number AS logistics_number,
+            lg.shipping_time AS logistics_shipping_time,
+            lg.receive_time AS logistics_receive_time,
+            lg.receive_note AS logistics_receive_note,
+            lg.return_name AS logistics_return_name,
+            lg.return_phone AS logistics_return_phone,
+            lg.logistics_status AS logistics_status,
+            lg.create_time AS logistics_create_time,
+            lg.update_time AS logistics_update_time,
+            lg.version AS logistics_version,
+            
+            /* 质检信息 */
+            ck.id AS check_id,
+            ck.after_sale_id AS check_after_sale_id,
+            ck.check_man_id AS check_man_id,
+            ck.check_time AS check_time,
+            ck.check_note AS check_note,
+            ck.check_result AS check_result,
+            ck.create_time AS check_create_time,
+            ck.update_time AS check_update_time,
+            ck.version AS check_version,
+            
+            /* 退款信息 */
+            rf.id AS refund_id,
+            rf.after_sale_id AS refund_after_sale_id,
+            rf.refund_no AS refund_no,
+            rf.refund_amount AS refund_amount,
+            rf.refund_type AS refund_type,
+            rf.refund_status AS refund_status,
+            rf.refund_time AS refund_time,
+            rf.refund_note AS refund_note,
+            rf.payment_account AS refund_payment_account,
+            rf.operator_id AS refund_operator_id,
+            rf.create_time AS refund_create_time,
+            rf.update_time AS refund_update_time,
+            rf.version AS refund_version,
+            
+            /* 售后商品信息 */
+            i.id AS item_id,
+            i.after_sale_id AS item_after_sale_id,
+            i.order_item_id AS item_order_item_id,
+            i.product_id AS item_product_id,
+            i.product_name AS item_product_name,
+            i.product_pic AS item_product_pic,
+            i.product_brand AS item_product_brand,
+            i.product_attr AS item_product_attr,
+            i.product_price AS item_product_price,
+            i.product_real_price AS item_product_real_price,
+            i.product_quantity AS item_product_quantity,
+            i.return_quantity AS item_return_quantity,
+            i.return_reason AS item_return_reason,
+            i.create_time AS item_create_time,
+            i.update_time AS item_update_time,
+            i.del_flag AS item_del_flag,
+            i.version AS item_version,
+            
+            /* 处理过程信息 */
+            p.id AS process_id,
+            p.after_sale_id AS process_after_sale_id,
+            p.handle_man_id AS process_handle_man_id,
+            p.handle_time AS process_handle_time,
+            p.handle_note AS process_handle_note,
+            p.process_type AS process_process_type,
+            p.process_result AS process_process_result,
+            p.create_time AS process_create_time,
+            p.update_time AS process_update_time,
+            p.version AS process_version,
+            
+            /* 凭证信息 */
+            pf.id AS proof_id,
+            pf.after_sale_id AS proof_after_sale_id,
+            pf.item_id AS proof_item_id,
+            pf.pic_url AS proof_pic_url,
+            pf.pic_type AS proof_pic_type,
+            pf.create_time AS proof_create_time,
+            
+            /* 操作日志信息 */
+            l.id AS log_id,
+            l.after_sale_id AS log_after_sale_id,
+            l.operator_id AS log_operator_id,
+            l.operator_type AS log_operator_type,
+            l.operate_type AS log_operate_type,
+            l.after_sale_status AS log_status,
+            l.note AS log_note,
+            l.create_time AS log_create_time
         FROM
             oms_after_sale a
         LEFT JOIN 
             ums_member m ON a.member_id = m.id
         LEFT JOIN 
             oms_order o ON a.order_id = o.id
+        /* 物流信息关联 - 一对一关系 */
+        LEFT JOIN
+            oms_after_sale_logistics lg ON a.id = lg.after_sale_id
+        /* 质检信息关联 - 一对一关系 */
+        LEFT JOIN
+            oms_after_sale_check ck ON a.id = ck.after_sale_id
+        /* 退款信息关联 - 一对一关系 */
+        LEFT JOIN
+            oms_after_sale_refund rf ON a.id = rf.after_sale_id
+        /* 商品列表关联 - 一对多关系 */
+        LEFT JOIN
+            oms_after_sale_item i ON a.id = i.after_sale_id AND i.del_flag = 0
+        /* 处理过程关联 - 一对多关系 */
+        LEFT JOIN
+            oms_after_sale_process p ON a.id = p.after_sale_id
+        /* 凭证列表关联 - 一对多关系 */
+        LEFT JOIN
+            oms_after_sale_proof pf ON a.id = pf.after_sale_id
+        /* 操作日志关联 - 一对多关系 */
+        LEFT JOIN
+            oms_after_sale_log l ON a.id = l.after_sale_id
         WHERE
             a.id = #{id}
+        ORDER BY
+            i.create_time DESC,
+            p.create_time ASC,
+            pf.create_time DESC,
+            l.create_time ASC
     </select>
 
     <!-- 获取售后状态统计 -->

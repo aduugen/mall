@@ -264,4 +264,60 @@
             version = version + 1
         where id = #{id,jdbcType=BIGINT}
     </update>
+
+    <!-- 更新处理状态 -->
+    <update id="updateProcessStatus">
+        update oms_after_sale_process
+        set process_result = #{processResult,jdbcType=INTEGER},
+            handle_note = #{handleNote,jdbcType=VARCHAR},
+            handle_time = now(),
+            update_time = now(),
+            version = version + 1
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 批量更新处理状态 -->
+    <update id="batchUpdateProcessStatus">
+        update oms_after_sale_process
+        set process_result = #{processResult,jdbcType=INTEGER},
+            handle_note = #{handleNote,jdbcType=VARCHAR},
+            handle_time = now(),
+            update_time = now(),
+            version = version + 1
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 根据售后ID删除处理记录 -->
+    <delete id="deleteByAfterSaleId" parameterType="java.lang.Long">
+        delete from oms_after_sale_process
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据处理类型统计记录数 -->
+    <select id="countByProcessType" parameterType="java.lang.Integer" resultType="java.lang.Long">
+        select count(*)
+        from oms_after_sale_process
+        where process_type = #{processType,jdbcType=INTEGER}
+    </select>
+
+    <!-- 根据处理结果统计记录数 -->
+    <select id="countByProcessResult" parameterType="java.lang.Integer" resultType="java.lang.Long">
+        select count(*)
+        from oms_after_sale_process
+        where process_result = #{processResult,jdbcType=INTEGER}
+    </select>
+
+    <!-- 根据售后ID和处理类型查询处理记录 -->
+    <select id="selectByAfterSaleIdAndProcessType" resultMap="BaseResultMap">
+        select 
+        <include refid="Base_Column_List"/>
+        from oms_after_sale_process
+        where after_sale_id = #{afterSaleId,jdbcType=BIGINT}
+        and process_type = #{processType,jdbcType=INTEGER}
+        order by create_time desc
+        limit 1
+    </select>
 </mapper> 

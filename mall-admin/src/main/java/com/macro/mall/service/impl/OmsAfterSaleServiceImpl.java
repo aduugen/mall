@@ -3,6 +3,7 @@ package com.macro.mall.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.macro.mall.dao.OmsAfterSaleDao;
 import com.macro.mall.dto.AdminOmsAfterSaleDTO;
+import com.macro.mall.dto.AdminOmsAfterSaleDetailDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.dto.OmsUpdateStatusParam;
@@ -206,38 +207,64 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     }
 
     /**
-     * 根据售后单状态获取可用操作列表
+     * 获取售后单详情
+     */
+    @Override
+    public AdminOmsAfterSaleDetailDTO getDetailDTO(Long id) {
+        AdminOmsAfterSaleDetailDTO detailDTO = afterSaleDao.getDetail(id);
+        if (detailDTO == null) {
+            throw new BusinessException("售后单不存在");
+        }
+
+        // 设置可用操作类型
+        List<String> allowableOperations = getAllowableOperations(detailDTO.getStatus());
+        detailDTO.setAllowableOperations(allowableOperations);
+
+        return detailDTO;
+    }
+
+    /**
+     * 获取可用操作类型
      */
     private List<String> getAllowableOperations(Integer status) {
         List<String> operations = new ArrayList<>();
-        if (status == null) {
-            return operations;
-        }
 
         switch (status) {
             case OmsAfterSale.STATUS_PENDING:
-                operations.add("审核通过");
-                operations.add("审核拒绝");
+                // 待处理状态
+                operations.add("approve");
+                operations.add("reject");
                 break;
             case OmsAfterSale.STATUS_APPROVED:
-                operations.add("确认发货");
+                // 已批准，等待顾客寄回商品
+                operations.add("cancel");
                 break;
             case OmsAfterSale.STATUS_SHIPPED:
-                operations.add("确认收货");
+                // 顾客已发货，等待商家收货
+                operations.add("receive");
                 break;
             case OmsAfterSale.STATUS_RECEIVED:
-                operations.add("开始质检");
+                // 商家已收货，准备质检
+                operations.add("check");
                 break;
             case OmsAfterSale.STATUS_CHECKING:
-                operations.add("质检通过");
-                operations.add("质检不通过");
+                // 质检中
+                operations.add("checkPass");
+                operations.add("checkFail");
                 break;
             case OmsAfterSale.STATUS_CHECK_PASS:
-                operations.add("退款处理");
+                // 质检通过，准备退款
+                operations.add("refund");
+                break;
+            case OmsAfterSale.STATUS_CHECK_FAIL:
+                // 质检未通过，等待顾客处理
+                operations.add("reject");
+                operations.add("recheck");
                 break;
             case OmsAfterSale.STATUS_REFUNDING:
-                operations.add("完成退款");
-                operations.add("退款失败");
+                // 退款中
+                operations.add("completeRefund");
+                operations.add("failRefund");
                 break;
             default:
                 break;
@@ -457,14 +484,6 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
             default:
                 return 0;
         }
-    }
-
-    /**
-     * 获取售后详情DTO
-     */
-    @Override
-    public AdminOmsAfterSaleDTO getDetailDTO(Long id) {
-        return afterSaleDao.getDetail(id);
     }
 
     /**

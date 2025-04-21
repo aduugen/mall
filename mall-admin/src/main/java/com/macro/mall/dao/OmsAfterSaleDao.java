@@ -1,6 +1,7 @@
 package com.macro.mall.dao;
 
 import com.macro.mall.dto.AdminOmsAfterSaleDTO;
+import com.macro.mall.dto.AdminOmsAfterSaleDetailDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.model.OmsAfterSaleLog;
@@ -31,7 +32,7 @@ public interface OmsAfterSaleDao {
          * @param id 售后ID
          * @return 售后详情 DTO
          */
-        AdminOmsAfterSaleDTO getDetail(@Param("id") Long id);
+        AdminOmsAfterSaleDetailDTO getDetail(@Param("id") Long id);
 
         /**
          * 获取售后状态统计数据

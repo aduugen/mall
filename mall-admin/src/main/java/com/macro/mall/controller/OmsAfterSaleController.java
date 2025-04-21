@@ -4,6 +4,7 @@ import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
 // 引入新的 DTOs
 import com.macro.mall.dto.AdminOmsAfterSaleDTO;
+import com.macro.mall.dto.AdminOmsAfterSaleDetailDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsUpdateStatusParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
@@ -81,13 +82,13 @@ public class OmsAfterSaleController {
     @ApiOperation("获取售后申请详情")
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<AdminOmsAfterSaleDTO> getItem(@PathVariable Long id) { // 返回新的 Detail DTO
+    public CommonResult<AdminOmsAfterSaleDetailDTO> getItem(@PathVariable Long id) { // 返回新的 Detail DTO
         if (id == null || id <= 0) {
             return CommonResult.failed("售后单ID无效");
         }
 
         try {
-            AdminOmsAfterSaleDTO result = afterSaleService.getDetailDTO(id);
+            AdminOmsAfterSaleDetailDTO result = afterSaleService.getDetailDTO(id);
             if (result != null) {
                 return CommonResult.success(result);
             } else {
