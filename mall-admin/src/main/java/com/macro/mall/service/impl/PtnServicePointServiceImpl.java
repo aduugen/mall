@@ -9,8 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PtnServicePointServiceImpl implements PtnServicePointService {
@@ -88,5 +91,49 @@ public class PtnServicePointServiceImpl implements PtnServicePointService {
     @Override
     public int updateServiceRating(Long id, Integer rating) {
         return servicePointMapper.updateServiceRating(id, rating);
+    }
+
+    @Override
+    public List<PtnServicePoint> searchReceivePoints(String keyword, Integer status) {
+        List<PtnServicePoint> result = new ArrayList<>();
+
+        // 首先通过mapper.selectByType获取两种类型的服务点
+        List<PtnServicePoint> typeOnePoints = servicePointMapper.selectByType(1); // 收货点
+        List<PtnServicePoint> typeTwoPoints = servicePointMapper.selectByType(2); // 综合点
+
+        // 合并两种类型的点
+        if (typeOnePoints != null) {
+            result.addAll(typeOnePoints);
+        }
+        if (typeTwoPoints != null) {
+            result.addAll(typeTwoPoints);
+        }
+
+        // 根据状态过滤
+        if (status != null) {
+            result = result.stream()
+                    .filter(point -> status.equals(point.getServicePointStatus()))
+                    .collect(Collectors.toList());
+        }
+
+        // 根据关键字过滤
+        if (!StringUtils.isEmpty(keyword)) {
+            final String finalKeyword = keyword.toLowerCase();
+            result = result.stream()
+                    .filter(point -> point.getLocationName() != null &&
+                            point.getLocationName().toLowerCase().contains(finalKeyword))
+                    .collect(Collectors.toList());
+        }
+
+        // 按创建时间排序
+        result.sort((p1, p2) -> {
+            if (p1.getCreateTime() == null)
+                return 1;
+            if (p2.getCreateTime() == null)
+                return -1;
+            return p2.getCreateTime().compareTo(p1.getCreateTime());
+        });
+
+        return result;
     }
 }

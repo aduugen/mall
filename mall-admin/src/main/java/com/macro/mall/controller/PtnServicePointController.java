@@ -139,4 +139,15 @@ public class PtnServicePointController {
         }
         return CommonResult.failed();
     }
+
+    @ApiOperation("搜索收货服务网点")
+    @RequestMapping(value = "/searchReceivePoints", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<List<PtnServicePoint>> searchReceivePoints(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "status", defaultValue = "0") Integer status) {
+        // 查询类型为1(收货点)或2(综合点)的服务网点
+        List<PtnServicePoint> pointList = servicePointService.searchReceivePoints(keyword, status);
+        return CommonResult.success(pointList);
+    }
 }

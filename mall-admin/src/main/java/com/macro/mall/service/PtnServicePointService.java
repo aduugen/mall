@@ -54,4 +54,9 @@ public interface PtnServicePointService {
      * 更新网点服务星级
      */
     int updateServiceRating(Long id, Integer rating);
+
+    /**
+     * 搜索收货点
+     */
+    List<PtnServicePoint> searchReceivePoints(String keyword, Integer status);
 }
