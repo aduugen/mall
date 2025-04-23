@@ -34,4 +34,24 @@ public interface PtnServicePointService {
      * 分页查询合作网点
      */
     List<PtnServicePoint> list(String keyword, Integer pageSize, Integer pageNum);
+
+    /**
+     * 根据网点类型查询
+     */
+    List<PtnServicePoint> listByType(Integer type);
+
+    /**
+     * 更新网点状态
+     */
+    int updateStatus(Long id, Integer status);
+
+    /**
+     * 更新业务数量
+     */
+    int updateBillCount(Long id, Integer selfPickCount, Integer receiveCount);
+
+    /**
+     * 更新网点服务星级
+     */
+    int updateServiceRating(Long id, Integer rating);
 }

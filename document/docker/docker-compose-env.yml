@@ -153,8 +153,8 @@ services:
     volumes:
       - /mydata/minio/data:/data #数据目录挂载
     environment:
-      - "MINIO_ROOT_USER=minioadmin"
-      - "MINIO_ROOT_PASSWORD=minioadmin"
+      - "MINIO_ROOT_USER=miniodev"
+      - "MINIO_ROOT_PASSWORD=miniodev"
     ports:
       - 9090:9000
       - 9001:9001

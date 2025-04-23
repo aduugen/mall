@@ -89,4 +89,54 @@ public class PtnServicePointController {
         List<PtnServicePoint> pointList = servicePointService.list(keyword, pageSize, pageNum);
         return CommonResult.success(CommonPage.restPage(pointList));
     }
+
+    @ApiOperation("根据网点类型获取网点列表")
+    @RequestMapping(value = "/type/{type}", method = RequestMethod.GET)
+    @ResponseBody
+    @PreAuthorize("hasAuthority('pms:servicePoint:read')")
+    public CommonResult<List<PtnServicePoint>> getTypeList(@PathVariable Integer type) {
+        List<PtnServicePoint> pointList = servicePointService.listByType(type);
+        return CommonResult.success(pointList);
+    }
+
+    @ApiOperation("更新网点状态")
+    @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
+    @ResponseBody
+    @PreAuthorize("hasAuthority('pms:servicePoint:update')")
+    public CommonResult updateStatus(@RequestParam("id") Long id, @RequestParam("status") Integer status) {
+        int count = servicePointService.updateStatus(id, status);
+        if (count > 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
+
+    @ApiOperation("更新网点业务数量")
+    @RequestMapping(value = "/updateBillCount", method = RequestMethod.POST)
+    @ResponseBody
+    @PreAuthorize("hasAuthority('pms:servicePoint:update')")
+    public CommonResult updateBillCount(
+            @RequestParam("id") Long id,
+            @RequestParam(value = "selfPickCount", required = false) Integer selfPickCount,
+            @RequestParam(value = "receiveCount", required = false) Integer receiveCount) {
+        int count = servicePointService.updateBillCount(id, selfPickCount, receiveCount);
+        if (count > 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
+
+    @ApiOperation("更新网点服务星级")
+    @RequestMapping(value = "/updateServiceRating", method = RequestMethod.POST)
+    @ResponseBody
+    @PreAuthorize("hasAuthority('pms:servicePoint:update')")
+    public CommonResult updateServiceRating(
+            @RequestParam("id") Long id,
+            @RequestParam("rating") Integer rating) {
+        int count = servicePointService.updateServiceRating(id, rating);
+        if (count > 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed();
+    }
 }

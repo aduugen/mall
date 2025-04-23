@@ -29,6 +29,18 @@ public class PtnServicePointServiceImpl implements PtnServicePointService {
 
     @Override
     public int create(PtnServicePoint point) {
+        if (point.getServicePointStatus() == null) {
+            point.setServicePointStatus(0); // 默认状态为正常
+        }
+        if (point.getSelfPickBillCount() == null) {
+            point.setSelfPickBillCount(0); // 默认自提单量为0
+        }
+        if (point.getReceiveBillCount() == null) {
+            point.setReceiveBillCount(0); // 默认收货单量为0
+        }
+        if (point.getServiceStarRating() == null) {
+            point.setServiceStarRating(3); // 默认3星
+        }
         point.setCreateTime(new Date());
         point.setUpdateTime(new Date());
         return servicePointMapper.insertSelective(point);
@@ -54,6 +66,27 @@ public class PtnServicePointServiceImpl implements PtnServicePointService {
         if (!StringUtils.isEmpty(keyword)) {
             criteria.andLocationNameLike("%" + keyword + "%");
         }
+        example.setOrderByClause("create_time desc");
         return servicePointMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<PtnServicePoint> listByType(Integer type) {
+        return servicePointMapper.selectByType(type);
+    }
+
+    @Override
+    public int updateStatus(Long id, Integer status) {
+        return servicePointMapper.updateStatus(id, status);
+    }
+
+    @Override
+    public int updateBillCount(Long id, Integer selfPickCount, Integer receiveCount) {
+        return servicePointMapper.updateBillCount(id, selfPickCount, receiveCount);
+    }
+
+    @Override
+    public int updateServiceRating(Long id, Integer rating) {
+        return servicePointMapper.updateServiceRating(id, rating);
     }
 }
