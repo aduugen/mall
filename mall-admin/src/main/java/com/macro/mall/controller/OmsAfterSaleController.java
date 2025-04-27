@@ -122,8 +122,8 @@ public class OmsAfterSaleController {
             statusParam.setHandleMan(currentUser);
 
             // 检查操作权限
-            OmsAfterSale afterSale = afterSaleService.getDetail(id);
-            if (afterSale == null) {
+            AdminOmsAfterSaleDetailDTO result = afterSaleService.getDetailDTO(id);
+            if (result == null) {
                 return CommonResult.failed("售后单不存在");
             }
 

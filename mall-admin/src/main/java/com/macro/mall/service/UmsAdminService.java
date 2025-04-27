@@ -27,14 +27,16 @@ public interface UmsAdminService {
 
     /**
      * 登录功能
+     * 
      * @param username 用户名
      * @param password 密码
      * @return 生成的JWT的token
      */
-    String login(String username,String password);
+    String login(String username, String password);
 
     /**
      * 刷新token的功能
+     * 
      * @param oldToken 旧的token
      */
     String refreshToken(String oldToken);
@@ -92,7 +94,16 @@ public interface UmsAdminService {
 
     /**
      * 登出功能
+     * 
      * @param username 用户名
      */
     void logout(String username);
+
+    /**
+     * 根据用户名获取管理员ID
+     * 
+     * @param username 用户名
+     * @return 管理员ID
+     */
+    Long getAdminIdByUsername(String username);
 }

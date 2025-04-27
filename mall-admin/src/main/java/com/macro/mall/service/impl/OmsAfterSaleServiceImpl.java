@@ -12,6 +12,7 @@ import com.macro.mall.mapper.*;
 import com.macro.mall.model.*;
 import com.macro.mall.service.OmsAfterSaleService;
 import com.macro.mall.service.OmsAfterSaleLogService;
+import com.macro.mall.service.UmsAdminService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,9 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
 
     @Autowired
     private OmsAfterSaleLogService afterSaleLogService;
+
+    @Autowired
+    private UmsAdminService adminService;
 
     /**
      * 分页查询售后申请
@@ -332,23 +336,23 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
         log.info("更新售后单状态: id={}, status={}", id, statusParam.getStatus());
         try {
             // 获取售后单信息
-            OmsAfterSale afterSale = afterSaleMapper.selectByPrimaryKey(id);
-            if (afterSale == null) {
+            AdminOmsAfterSaleDetailDTO detailDTO = getDetailDTO(id);
+            if (detailDTO == null) {
                 log.error("售后单不存在: id={}", id);
                 throw new BusinessException("售后单不存在");
             }
 
             // 乐观锁控制，检查版本
-            if (statusParam.getVersion() != null && !statusParam.getVersion().equals(afterSale.getVersion())) {
+            if (statusParam.getVersion() != null && !statusParam.getVersion().equals(detailDTO.getVersion())) {
                 log.error("数据已被修改，请刷新后重试: 当前版本={}, 请求版本={}",
-                        afterSale.getVersion(), statusParam.getVersion());
+                        detailDTO.getVersion(), statusParam.getVersion());
                 throw new BusinessException("数据已被修改，请刷新后重试");
             }
 
             // 验证状态转换是否合法
-            if (!isValidStatusTransition(afterSale.getStatus(), statusParam.getStatus())) {
+            if (!isValidStatusTransition(detailDTO.getStatus(), statusParam.getStatus())) {
                 log.error("状态转换不合法: 当前状态={}, 目标状态={}",
-                        afterSale.getStatus(), statusParam.getStatus());
+                        detailDTO.getStatus(), statusParam.getStatus());
                 throw new BusinessException("状态转换不合法");
             }
 
@@ -366,66 +370,130 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
                 }
 
                 // 验证退款金额不超过订单总金额
-                if (afterSale.getOrderTotalAmount() != null &&
-                        statusParam.getReturnAmount().compareTo(afterSale.getOrderTotalAmount()) > 0) {
+                if (detailDTO.getOrderTotalAmount() != null &&
+                        statusParam.getReturnAmount().compareTo(detailDTO.getOrderTotalAmount()) > 0) {
                     log.error("退款金额不能大于订单总金额: 退款金额={}, 订单总金额={}",
-                            statusParam.getReturnAmount(), afterSale.getOrderTotalAmount());
+                            statusParam.getReturnAmount(), detailDTO.getOrderTotalAmount());
                     throw new BusinessException("退款金额不能大于订单总金额");
                 }
             }
 
-            // 更新售后单状态
+            // 更新售后单主表状态
             OmsAfterSale record = new OmsAfterSale();
             record.setId(id);
             record.setStatus(statusParam.getStatus());
-            record.setHandleMan(statusParam.getHandleMan());
-            record.setHandleNote(statusParam.getHandleNote());
-            record.setUpdateTime(new Date());
-
-            // 根据状态设置其他字段
-            if (statusParam.getStatus() == OmsAfterSale.STATUS_SHIPPED) {
-                record.setLogisticsCompany(statusParam.getLogisticsCompany());
-                record.setLogisticsNumber(statusParam.getLogisticsNumber());
-                record.setShippingTime(new Date());
-            } else if (statusParam.getStatus() == OmsAfterSale.STATUS_RECEIVED) {
-                record.setReceiveMan(statusParam.getHandleMan());
-                record.setReceiveNote(statusParam.getReceiveNote());
-                record.setReceiveTime(new Date());
-            } else if (statusParam.getStatus() == OmsAfterSale.STATUS_REFUNDING) {
-                record.setReturnAmount(statusParam.getReturnAmount());
-                record.setRefundType(statusParam.getRefundType());
-                record.setRefundNote(statusParam.getRefundNote());
-                record.setRefundTime(new Date());
-            }
 
             // 更新版本号
-            Integer newVersion = afterSale.getVersion() != null ? afterSale.getVersion() + 1 : 1;
+            Integer newVersion = detailDTO.getVersion() != null ? detailDTO.getVersion() + 1 : 1;
             record.setVersion(newVersion);
 
             // 执行更新
             int count = afterSaleMapper.updateByPrimaryKeySelective(record);
-
-            if (count > 0) {
-                // 记录操作日志
-                try {
-                    saveOperationLog(id, afterSale.getStatus(), statusParam);
-                    log.info("售后单状态更新成功: id={}, status={}", id, statusParam.getStatus());
-                    return true;
-                } catch (Exception e) {
-                    // 记录日志失败不影响主业务
-                    log.error("保存售后操作日志失败: id={}", id, e);
-                    return true;
-                }
+            if (count <= 0) {
+                log.error("更新售后单状态失败: id={}", id);
+                throw new BusinessException("更新售后单状态失败");
             }
 
-            log.error("售后单状态更新失败: id={}", id);
-            return false;
+            // 插入售后单处理记录
+            OmsAfterSaleProcess process = new OmsAfterSaleProcess();
+            process.setAfterSaleId(id);
+            process.setHandleManId(getHandleManId(statusParam.getHandleMan()));
+            process.setHandleTime(new Date());
+            process.setHandleNote(statusParam.getHandleNote());
+            process.setCreateTime(new Date());
+            process.setUpdateTime(new Date());
+            process.setVersion(0);
+
+            // 设置处理类型和结果
+            switch (statusParam.getStatus()) {
+                case OmsAfterSale.STATUS_APPROVED: // 已批准
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_AUDIT);
+                    process.setProcessResult(OmsAfterSaleProcess.PROCESS_RESULT_PASS);
+                    break;
+                case OmsAfterSale.STATUS_REJECTED: // 已拒绝
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_AUDIT);
+                    process.setProcessResult(OmsAfterSaleProcess.PROCESS_RESULT_FAIL);
+                    break;
+                case OmsAfterSale.STATUS_SHIPPED: // 已发货
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_SHIP);
+                    process.setProcessResult(OmsAfterSaleProcess.PROCESS_RESULT_PASS);
+                    break;
+                case OmsAfterSale.STATUS_RECEIVED: // 已收货
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_RECEIVE);
+                    process.setProcessResult(OmsAfterSaleProcess.PROCESS_RESULT_PASS);
+                    break;
+                case OmsAfterSale.STATUS_CHECKING: // 质检中
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_CHECK);
+                    // 进入质检状态，不设置结果
+                    break;
+                case OmsAfterSale.STATUS_CHECK_PASS: // 质检通过
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_CHECK);
+                    process.setProcessResult(OmsAfterSaleProcess.PROCESS_RESULT_PASS);
+                    break;
+                case OmsAfterSale.STATUS_CHECK_FAIL: // 质检不通过
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_CHECK);
+                    process.setProcessResult(OmsAfterSaleProcess.PROCESS_RESULT_FAIL);
+                    break;
+                case OmsAfterSale.STATUS_REFUNDING: // 退款中
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_REFUND);
+                    // 进入退款状态，不设置结果
+                    break;
+                case OmsAfterSale.STATUS_COMPLETED: // 已完成
+                    process.setProcessType(OmsAfterSaleProcess.PROCESS_TYPE_REFUND);
+                    process.setProcessResult(OmsAfterSaleProcess.PROCESS_RESULT_PASS);
+                    break;
+            }
+
+            // 插入处理记录
+            int processCount = afterSaleProcessMapper.insert(process);
+            if (processCount <= 0) {
+                log.error("插入售后单处理记录失败: id={}", id);
+                throw new BusinessException("插入售后单处理记录失败");
+            }
+
+            // 记录操作日志
+            try {
+                saveOperationLog(id, detailDTO.getStatus(), statusParam);
+                log.info("售后单状态更新成功: id={}, status={}", id, statusParam.getStatus());
+            } catch (Exception e) {
+                // 记录日志失败不影响主业务
+                log.error("保存售后操作日志失败: id={}", id, e);
+            }
+
+            return true;
         } catch (BusinessException e) {
             // 业务异常直接抛出
             throw e;
         } catch (Exception e) {
             log.error("更新售后单状态异常: id={}", id, e);
             throw new BusinessException("系统异常，请稍后重试");
+        }
+    }
+
+    /**
+     * 获取处理人ID
+     * 实际应用中需要查询用户系统获取ID
+     */
+    private Long getHandleManId(String handleMan) {
+        // 参数检查
+        if (StringUtils.isEmpty(handleMan)) {
+            log.warn("处理人名称为空，使用默认管理员ID");
+            return 1L; // 默认管理员ID
+        }
+
+        try {
+            // 通过用户服务查询用户ID
+            Long adminId = adminService.getAdminIdByUsername(handleMan);
+            if (adminId != null) {
+                log.debug("成功获取处理人ID: handleMan={}, adminId={}", handleMan, adminId);
+                return adminId;
+            } else {
+                log.warn("未找到处理人ID: handleMan={}, 使用默认管理员ID", handleMan);
+                return 1L; // 默认管理员ID
+            }
+        } catch (Exception e) {
+            log.error("获取处理人ID异常: handleMan={}", handleMan, e);
+            return 1L; // 发生异常时使用默认管理员ID
         }
     }
 
