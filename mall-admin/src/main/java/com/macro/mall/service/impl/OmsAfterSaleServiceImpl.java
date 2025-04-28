@@ -243,7 +243,7 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
                 break;
             case OmsAfterSale.STATUS_APPROVED:
                 // 已批准，等待顾客寄回商品
-                operations.add("cancel");
+                // 移除了取消申请功能
                 break;
             case OmsAfterSale.STATUS_SHIPPED:
                 // 顾客已发货，等待商家收货
