@@ -25,6 +25,9 @@
         <result column="member_phone" property="memberPhone"/>
         <result column="order_total_amount" property="orderTotalAmount"/>
         
+        <!-- 服务点信息 -->
+        <result column="logistics_service_point_id" property="servicePointId"/>
+        
         <!-- 物流信息映射 - 一对一关系 -->
         <association property="logistics" javaType="com.macro.mall.model.OmsAfterSaleLogistics">
             <id column="logistics_id" property="id"/>

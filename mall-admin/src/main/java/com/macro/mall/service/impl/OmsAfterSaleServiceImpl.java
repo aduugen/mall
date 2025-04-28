@@ -7,6 +7,7 @@ import com.macro.mall.dto.AdminOmsAfterSaleDetailDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.dto.OmsUpdateStatusParam;
+import com.macro.mall.dto.PtnServicePointDTO;
 import com.macro.mall.dto.UpdateResult;
 import com.macro.mall.exception.BusinessException;
 import com.macro.mall.mapper.*;
@@ -59,6 +60,8 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     private OmsAfterSaleCheckMapper afterSaleCheckMapper;
     @Autowired
     private OmsAfterSaleRefundMapper afterSaleRefundMapper;
+    @Autowired
+    private PtnServicePointMapper servicePointMapper;
 
     @Autowired
     private OmsAfterSaleLogService afterSaleLogService;
@@ -227,7 +230,70 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
         List<String> allowableOperations = getAllowableOperations(detailDTO.getStatus());
         detailDTO.setAllowableOperations(allowableOperations);
 
+        // 当状态为已批准或更高状态时，查询服务点信息
+        if (detailDTO.getStatus() >= OmsAfterSale.STATUS_APPROVED) {
+            // 查询物流信息
+            OmsAfterSaleLogistics logistics = afterSaleLogisticsMapper.selectByAfterSaleId(id);
+            if (logistics != null && logistics.getServicePointId() != null) {
+                // 设置服务点基本信息
+                detailDTO.setServicePointId(logistics.getServicePointId());
+
+                // 查询服务点详情
+                PtnServicePoint servicePoint = servicePointMapper.selectByPrimaryKey(logistics.getServicePointId());
+                if (servicePoint != null) {
+                    // 设置服务点名称
+                    detailDTO.setServicePointName(servicePoint.getLocationName());
+
+                    // 转换为DTO
+                    PtnServicePointDTO servicePointDTO = new PtnServicePointDTO();
+                    servicePointDTO.setId(servicePoint.getId());
+                    servicePointDTO.setPointName(servicePoint.getLocationName());
+                    servicePointDTO.setAddress(servicePoint.getLocationAddress());
+                    // 解析地址获取省市区
+                    parseAddress(servicePoint.getLocationAddress(), servicePointDTO);
+                    servicePointDTO.setContact(servicePoint.getContactName());
+                    servicePointDTO.setPhone(servicePoint.getContactPhone());
+                    servicePointDTO.setServicePointStatus(servicePoint.getServicePointStatus());
+                    servicePointDTO.setServicePointType(servicePoint.getServicePointType());
+                    servicePointDTO.setCreateTime(servicePoint.getCreateTime());
+                    servicePointDTO.setUpdateTime(servicePoint.getUpdateTime());
+
+                    detailDTO.setServicePointDetail(servicePointDTO);
+                }
+            }
+        }
+
         return detailDTO;
+    }
+
+    /**
+     * 解析地址字符串，设置省市区字段
+     * 
+     * @param address 地址字符串
+     * @param dto     服务点DTO
+     */
+    private void parseAddress(String address, PtnServicePointDTO dto) {
+        if (address == null || address.isEmpty()) {
+            return;
+        }
+
+        // 简单解析，仅作为示例，实际项目中需根据具体格式调整
+        String[] parts = address.split(" ");
+        if (parts.length >= 3) {
+            dto.setProvince(parts[0]);
+            dto.setCity(parts[1]);
+            dto.setDistrict(parts[2]);
+
+            // 剩余部分作为详细地址
+            StringBuilder detailAddress = new StringBuilder();
+            for (int i = 3; i < parts.length; i++) {
+                detailAddress.append(parts[i]).append(" ");
+            }
+            dto.setAddress(detailAddress.toString().trim());
+        } else {
+            // 地址格式不符合预期，保留原样
+            dto.setAddress(address);
+        }
     }
 
     /**
@@ -1023,6 +1089,9 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UpdateResult updateStatusWithLogistics(Long id, OmsUpdateStatusParam statusParam) {
+        log.info("更新售后状态并处理物流信息: id={}, status={}, servicePointId={}, servicePointName={}",
+                id, statusParam.getStatus(), statusParam.getServicePointId(), statusParam.getServicePointName());
+
         // 首先更新售后状态
         UpdateResult result = updateStatus(id, statusParam);
 
@@ -1032,6 +1101,7 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
                 statusParam.getServicePointId() != null) {
 
             try {
+                // 处理物流信息
                 boolean logisticsResult = createOrUpdateLogistics(
                         id,
                         statusParam.getServicePointId());
@@ -1040,6 +1110,9 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
                     log.warn("物流信息更新失败，但售后状态已更新: afterSaleId={}", id);
                     // 不回滚状态更新，返回部分成功的结果
                     result.setMessage("售后状态已更新，但物流信息更新失败");
+                } else {
+                    log.info("物流信息更新成功: afterSaleId={}, servicePointId={}",
+                            id, statusParam.getServicePointId());
                 }
             } catch (Exception e) {
                 log.error("更新物流信息异常: afterSaleId={}", id, e);

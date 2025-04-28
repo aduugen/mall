@@ -41,6 +41,15 @@ public class AdminOmsAfterSaleDetailDTO {
     private BigDecimal returnAmount;
     @ApiModelProperty("订单总金额")
     private BigDecimal orderTotalAmount;
+
+    // 服务点相关字段
+    @ApiModelProperty("服务点ID")
+    private Long servicePointId;
+    @ApiModelProperty("服务点名称")
+    private String servicePointName;
+    @ApiModelProperty("服务点详情")
+    private PtnServicePointDTO servicePointDetail;
+
     @ApiModelProperty("售后商品列表")
     private List<OmsAfterSaleItem> itemList;
     @ApiModelProperty("售后处理记录列表")

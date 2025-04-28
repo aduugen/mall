@@ -58,6 +58,9 @@ public class OmsUpdateStatusParam {
     @ApiModelProperty(value = "服务点ID")
     private Long servicePointId;
 
+    @ApiModelProperty(value = "服务点名称")
+    private String servicePointName;
+
     @ApiModelProperty(value = "退款金额")
     @DecimalMin(value = "0.01", message = "退款金额必须大于0")
     @DecimalMax(value = "9999999.99", message = "退款金额过大")
