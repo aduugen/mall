@@ -23,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Date;
@@ -232,6 +233,35 @@ public class OmsAfterSaleController {
             return CommonResult.success(statistic);
         } catch (Exception e) {
             return CommonResult.failed("获取售后统计信息失败: " + e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or @permissionService.hasPermission('afterSale:update')")
+    @ApiOperation("回退售后单到待审核状态")
+    @PostMapping("/rollback/{id}")
+    @ResponseBody
+    public CommonResult rollbackToAudit(
+            @PathVariable Long id,
+            @RequestParam Integer version,
+            @RequestParam String rollbackReason) {
+        if (id == null || id <= 0) {
+            return CommonResult.failed("售后单ID无效");
+        }
+
+        if (StringUtils.isEmpty(rollbackReason)) {
+            return CommonResult.failed("回退原因不能为空");
+        }
+
+        try {
+            UpdateResult updateResult = afterSaleService.rollbackToAudit(id, version, rollbackReason);
+            if (updateResult.isSuccess()) {
+                return CommonResult.success("已成功回退到待审核状态");
+            } else {
+                return CommonResult.failed(updateResult.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("回退售后单状态失败", e);
+            return CommonResult.failed("回退售后单状态失败: " + e.getMessage());
         }
     }
 }

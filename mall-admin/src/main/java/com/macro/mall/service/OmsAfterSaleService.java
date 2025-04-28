@@ -96,4 +96,14 @@ public interface OmsAfterSaleService {
      * 获取售后统计信息
      */
     OmsAfterSaleStatistic getStatistic();
+
+    /**
+     * 回退售后单到待审核状态
+     * 
+     * @param id             售后单ID
+     * @param version        版本号（乐观锁）
+     * @param rollbackReason 回退原因
+     * @return 操作结果
+     */
+    UpdateResult rollbackToAudit(Long id, Integer version, String rollbackReason);
 }

@@ -16,6 +16,7 @@ import com.macro.mall.service.OmsAfterSaleLogService;
 import com.macro.mall.service.UmsAdminService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -824,5 +825,91 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
         }
 
         return isValid;
+    }
+
+    /**
+     * 回退售后单到待审核状态
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UpdateResult rollbackToAudit(Long id, Integer version, String rollbackReason) {
+        log.info("回退售后单到待审核状态: id={}, version={}", id, version);
+        try {
+            // 获取售后单信息
+            AdminOmsAfterSaleDetailDTO detailDTO = getDetailDTO(id);
+            if (detailDTO == null) {
+                log.error("售后单不存在: id={}", id);
+                return new UpdateResult(false, "售后单不存在");
+            }
+
+            // 乐观锁控制，检查版本
+            if (version != null && !version.equals(detailDTO.getVersion())) {
+                log.info("数据已被修改，请刷新后重试: 当前版本={}, 请求版本={}",
+                        detailDTO.getVersion(), version);
+                return new UpdateResult(false, "数据已被其他用户修改，请刷新页面后重试", detailDTO.getVersion());
+            }
+
+            // 验证当前状态是否允许回退
+            if (!(detailDTO.getStatus() == OmsAfterSale.STATUS_APPROVED ||
+                    detailDTO.getStatus() == OmsAfterSale.STATUS_REJECTED)) {
+                log.error("当前状态不允许回退: status={}", detailDTO.getStatus());
+                return new UpdateResult(false, "当前状态不允许回退到待审核状态");
+            }
+
+            // 回退原因不能为空
+            if (StringUtils.isEmpty(rollbackReason)) {
+                return new UpdateResult(false, "回退原因不能为空");
+            }
+
+            // 删除之前的审核处理记录
+            OmsAfterSaleProcessExample processExample = new OmsAfterSaleProcessExample();
+            processExample.createCriteria()
+                    .andAfterSaleIdEqualTo(id)
+                    .andProcessTypeEqualTo(OmsAfterSaleProcess.PROCESS_TYPE_AUDIT);
+            int deleteCount = afterSaleProcessMapper.deleteByExample(processExample);
+            log.info("删除售后单审核处理记录: id={}, 删除数量={}", id, deleteCount);
+
+            // 更新售后单主表状态
+            OmsAfterSale record = new OmsAfterSale();
+            record.setId(id);
+            record.setStatus(OmsAfterSale.STATUS_PENDING);
+
+            // 更新版本号
+            Integer newVersion = detailDTO.getVersion() != null ? detailDTO.getVersion() + 1 : 1;
+            record.setVersion(newVersion);
+
+            // 执行更新
+            int count = afterSaleMapper.updateByPrimaryKeySelective(record);
+            if (count <= 0) {
+                log.error("回退售后单状态失败: id={}", id);
+                return new UpdateResult(false, "回退售后单状态失败");
+            }
+
+            // 记录操作日志
+            try {
+                OmsAfterSaleLog logRecord = new OmsAfterSaleLog();
+                logRecord.setAfterSaleId(id);
+                // 获取当前操作人ID
+                String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+                Long operatorId = getHandleManId(currentUsername);
+                logRecord.setOperatorId(operatorId);
+                logRecord.setOperatorType(OmsAfterSaleLog.OPERATOR_TYPE_ADMIN);
+                logRecord.setOperateType(11); // 回退审核操作类型
+                logRecord.setStatus(OmsAfterSale.STATUS_PENDING);
+                logRecord.setNote("回退到待审核状态，原因：" + rollbackReason);
+                logRecord.setCreateTime(new Date());
+
+                afterSaleLogService.saveLog(logRecord);
+                log.info("售后单回退到待审核状态成功: id={}", id);
+            } catch (Exception e) {
+                // 记录日志失败不影响主业务
+                log.error("保存售后操作日志失败: id={}", id, e);
+            }
+
+            return new UpdateResult(true, "回退成功", newVersion);
+        } catch (Exception e) {
+            log.error("回退售后单状态异常: id={}", id, e);
+            return new UpdateResult(false, "系统异常，请稍后重试");
+        }
     }
 }

@@ -43,6 +43,7 @@ public class OmsAfterSaleLog implements Serializable {
     public static final int OPERATE_TYPE_CHECK = 5; // 质检
     public static final int OPERATE_TYPE_REFUND = 6; // 退款
     public static final int OPERATE_TYPE_COMPLETE = 7; // 完成
+    public static final int OPERATE_TYPE_ROLLBACK = 11; // 回退审核
 
     // 操作人类型常量
     public static final int OPERATOR_TYPE_MEMBER = 0; // 会员
