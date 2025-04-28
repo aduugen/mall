@@ -7,6 +7,7 @@ import com.macro.mall.dto.AdminOmsAfterSaleDetailDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.dto.OmsUpdateStatusParam;
+import com.macro.mall.dto.UpdateResult;
 import com.macro.mall.exception.BusinessException;
 import com.macro.mall.mapper.*;
 import com.macro.mall.model.*;
@@ -332,28 +333,28 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateStatus(Long id, OmsUpdateStatusParam statusParam) {
+    public UpdateResult updateStatus(Long id, OmsUpdateStatusParam statusParam) {
         log.info("更新售后单状态: id={}, status={}", id, statusParam.getStatus());
         try {
             // 获取售后单信息
             AdminOmsAfterSaleDetailDTO detailDTO = getDetailDTO(id);
             if (detailDTO == null) {
                 log.error("售后单不存在: id={}", id);
-                throw new BusinessException("售后单不存在");
+                return new UpdateResult(false, "售后单不存在");
             }
 
             // 乐观锁控制，检查版本
             if (statusParam.getVersion() != null && !statusParam.getVersion().equals(detailDTO.getVersion())) {
-                log.error("数据已被修改，请刷新后重试: 当前版本={}, 请求版本={}",
+                log.info("数据已被修改，请刷新后重试: 当前版本={}, 请求版本={}",
                         detailDTO.getVersion(), statusParam.getVersion());
-                throw new BusinessException("数据已被修改，请刷新后重试");
+                return new UpdateResult(false, "数据已被其他用户修改，请刷新页面后重试", detailDTO.getVersion());
             }
 
             // 验证状态转换是否合法
             if (!isValidStatusTransition(detailDTO.getStatus(), statusParam.getStatus())) {
                 log.error("状态转换不合法: 当前状态={}, 目标状态={}",
                         detailDTO.getStatus(), statusParam.getStatus());
-                throw new BusinessException("状态转换不合法");
+                return new UpdateResult(false, "状态转换不合法");
             }
 
             // 验证退款金额
@@ -361,12 +362,12 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
                     statusParam.getStatus() == OmsAfterSale.STATUS_COMPLETED) {
                 if (statusParam.getReturnAmount() == null) {
                     log.error("退款金额不能为空: status={}", statusParam.getStatus());
-                    throw new BusinessException("退款金额不能为空");
+                    return new UpdateResult(false, "退款金额不能为空");
                 }
 
                 if (statusParam.getReturnAmount().compareTo(BigDecimal.ZERO) < 0) {
                     log.error("退款金额不能小于0: 退款金额={}", statusParam.getReturnAmount());
-                    throw new BusinessException("退款金额不能小于0");
+                    return new UpdateResult(false, "退款金额不能小于0");
                 }
 
                 // 验证退款金额不超过订单总金额
@@ -374,7 +375,7 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
                         statusParam.getReturnAmount().compareTo(detailDTO.getOrderTotalAmount()) > 0) {
                     log.error("退款金额不能大于订单总金额: 退款金额={}, 订单总金额={}",
                             statusParam.getReturnAmount(), detailDTO.getOrderTotalAmount());
-                    throw new BusinessException("退款金额不能大于订单总金额");
+                    return new UpdateResult(false, "退款金额不能大于订单总金额");
                 }
             }
 
@@ -391,7 +392,7 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
             int count = afterSaleMapper.updateByPrimaryKeySelective(record);
             if (count <= 0) {
                 log.error("更新售后单状态失败: id={}", id);
-                throw new BusinessException("更新售后单状态失败");
+                return new UpdateResult(false, "更新售后单状态失败");
             }
 
             // 插入售后单处理记录
@@ -448,7 +449,7 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
             int processCount = afterSaleProcessMapper.insert(process);
             if (processCount <= 0) {
                 log.error("插入售后单处理记录失败: id={}", id);
-                throw new BusinessException("插入售后单处理记录失败");
+                return new UpdateResult(false, "插入售后单处理记录失败");
             }
 
             // 记录操作日志
@@ -460,13 +461,14 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
                 log.error("保存售后操作日志失败: id={}", id, e);
             }
 
-            return true;
+            return new UpdateResult(true, "更新成功", newVersion);
         } catch (BusinessException e) {
-            // 业务异常直接抛出
-            throw e;
+            // 业务异常转换为结构化结果返回
+            log.warn("更新售后单状态业务异常: id={}, 错误={}", id, e.getMessage());
+            return new UpdateResult(false, e.getMessage());
         } catch (Exception e) {
             log.error("更新售后单状态异常: id={}", id, e);
-            throw new BusinessException("系统异常，请稍后重试");
+            return new UpdateResult(false, "系统异常，请稍后重试");
         }
     }
 

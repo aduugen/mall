@@ -30,7 +30,7 @@ public class AdminOmsAfterSaleDTO {
     @ApiModelProperty("更新时间")
     private Date updateTime;
     @ApiModelProperty("删除标记")
-    private Boolean delFlag;
+    private Integer delFlag;
     @ApiModelProperty("版本号")
     private Integer version;
     @ApiModelProperty("会员昵称")

@@ -1,5 +1,6 @@
 package com.macro.mall.controller;
 
+import com.github.pagehelper.PageHelper;
 import com.macro.mall.common.api.CommonPage;
 import com.macro.mall.common.api.CommonResult;
 // 引入新的 DTOs
@@ -8,6 +9,7 @@ import com.macro.mall.dto.AdminOmsAfterSaleDetailDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsUpdateStatusParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
+import com.macro.mall.dto.UpdateResult;
 import com.macro.mall.model.OmsAfterSale; // 引入新的 Model 或列表 DTO
 import com.macro.mall.model.OmsAfterSaleLog;
 import com.macro.mall.service.OmsAfterSaleService; // 引入新的 Service 接口
@@ -21,7 +23,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.format.annotation.DateTimeFormat;
-import com.github.pagehelper.PageHelper;
 
 import java.util.List;
 import java.util.Date;
@@ -103,11 +104,7 @@ public class OmsAfterSaleController {
     @PreAuthorize("hasRole('ADMIN') or @permissionService.hasPermission('afterSale:update')")
     @ApiOperation("修改售后申请状态")
     @PostMapping("/update/status/{id}")
-    public CommonResult updateStatus(@PathVariable Long id, @Validated @RequestBody OmsUpdateStatusParam statusParam) { // statusParam
-        // DTO
-        // 保持不变，但
-        // Service
-        // 层处理逻辑已变
+    public CommonResult updateStatus(@PathVariable Long id, @Validated @RequestBody OmsUpdateStatusParam statusParam) {
         if (id == null || id <= 0) {
             return CommonResult.failed("售后单ID无效");
         }
@@ -127,14 +124,12 @@ public class OmsAfterSaleController {
                 return CommonResult.failed("售后单不存在");
             }
 
-            // 金额验证逻辑已移至Service层，这里不再重复验证
-            // 删除了对不存在的getOrderTotalAmount()方法的调用
-
-            boolean success = afterSaleService.updateStatus(id, statusParam);
-            if (success) {
+            // 更新状态
+            UpdateResult updateResult = afterSaleService.updateStatus(id, statusParam);
+            if (updateResult.isSuccess()) {
                 return CommonResult.success("状态更新成功");
             } else {
-                return CommonResult.failed("状态更新失败");
+                return CommonResult.failed(updateResult.getMessage());
             }
         } catch (Exception e) {
             log.error("更新售后状态失败", e);

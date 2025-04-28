@@ -257,35 +257,17 @@
       <if test="record.orderId != null">
         order_id = #{record.orderId,jdbcType=BIGINT},
       </if>
-      <if test="record.orderSn != null">
-        order_sn = #{record.orderSn,jdbcType=VARCHAR},
-      </if>
       <if test="record.memberId != null">
         member_id = #{record.memberId,jdbcType=BIGINT},
-      </if>
-      <if test="record.memberUsername != null">
-        member_username = #{record.memberUsername,jdbcType=VARCHAR},
       </if>
       <if test="record.returnAmount != null">
         return_amount = #{record.returnAmount,jdbcType=DECIMAL},
       </if>
-      <if test="record.orderTotalAmount != null">
-        order_total_amount = #{record.orderTotalAmount,jdbcType=DECIMAL},
-      </if>
-      <if test="record.type != null">
-        type = #{record.type,jdbcType=INTEGER},
-      </if>
       <if test="record.status != null">
         status = #{record.status,jdbcType=INTEGER},
       </if>
-      <if test="record.handleMan != null">
-        handle_man = #{record.handleMan,jdbcType=VARCHAR},
-      </if>
-      <if test="record.handleNote != null">
-        handle_note = #{record.handleNote,jdbcType=VARCHAR},
-      </if>
-      <if test="record.handleTime != null">
-        handle_time = #{record.handleTime,jdbcType=TIMESTAMP},
+      <if test="record.description != null">
+        description = #{record.description,jdbcType=VARCHAR},
       </if>
       <if test="record.createTime != null">
         create_time = #{record.createTime,jdbcType=TIMESTAMP},
@@ -293,53 +275,8 @@
       <if test="record.updateTime != null">
         update_time = #{record.updateTime,jdbcType=TIMESTAMP},
       </if>
-      <if test="record.companyAddressId != null">
-        company_address_id = #{record.companyAddressId,jdbcType=BIGINT},
-      </if>
-      <if test="record.returnName != null">
-        return_name = #{record.returnName,jdbcType=VARCHAR},
-      </if>
-      <if test="record.returnPhone != null">
-        return_phone = #{record.returnPhone,jdbcType=VARCHAR},
-      </if>
-      <if test="record.reason != null">
-        reason = #{record.reason,jdbcType=VARCHAR},
-      </if>
-      <if test="record.description != null">
-        description = #{record.description,jdbcType=VARCHAR},
-      </if>
-      <if test="record.proofPics != null">
-        proof_pics = #{record.proofPics,jdbcType=VARCHAR},
-      </if>
-      <if test="record.receiveMan != null">
-        receive_man = #{record.receiveMan,jdbcType=VARCHAR},
-      </if>
-      <if test="record.receiveTime != null">
-        receive_time = #{record.receiveTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="record.receiveNote != null">
-        receive_note = #{record.receiveNote,jdbcType=VARCHAR},
-      </if>
-      <if test="record.logisticsCompany != null">
-        logistics_company = #{record.logisticsCompany,jdbcType=VARCHAR},
-      </if>
-      <if test="record.logisticsNumber != null">
-        logistics_number = #{record.logisticsNumber,jdbcType=VARCHAR},
-      </if>
-      <if test="record.shippingTime != null">
-        shipping_time = #{record.shippingTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="record.checkMan != null">
-        check_man = #{record.checkMan,jdbcType=VARCHAR},
-      </if>
-      <if test="record.checkTime != null">
-        check_time = #{record.checkTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="record.checkResult != null">
-        check_result = #{record.checkResult,jdbcType=INTEGER},
-      </if>
-      <if test="record.checkNote != null">
-        check_note = #{record.checkNote,jdbcType=VARCHAR},
+      <if test="record.delFlag != null">
+        del_flag = #{record.delFlag,jdbcType=INTEGER},
       </if>
       <if test="record.version != null">
         version = #{record.version,jdbcType=INTEGER},
@@ -358,34 +295,13 @@
     update oms_after_sale
     set id = #{record.id,jdbcType=BIGINT},
       order_id = #{record.orderId,jdbcType=BIGINT},
-      order_sn = #{record.orderSn,jdbcType=VARCHAR},
       member_id = #{record.memberId,jdbcType=BIGINT},
-      member_username = #{record.memberUsername,jdbcType=VARCHAR},
       return_amount = #{record.returnAmount,jdbcType=DECIMAL},
-      order_total_amount = #{record.orderTotalAmount,jdbcType=DECIMAL},
-      type = #{record.type,jdbcType=INTEGER},
       status = #{record.status,jdbcType=INTEGER},
-      handle_man = #{record.handleMan,jdbcType=VARCHAR},
-      handle_note = #{record.handleNote,jdbcType=VARCHAR},
-      handle_time = #{record.handleTime,jdbcType=TIMESTAMP},
+      description = #{record.description,jdbcType=VARCHAR},
       create_time = #{record.createTime,jdbcType=TIMESTAMP},
       update_time = #{record.updateTime,jdbcType=TIMESTAMP},
-      company_address_id = #{record.companyAddressId,jdbcType=BIGINT},
-      return_name = #{record.returnName,jdbcType=VARCHAR},
-      return_phone = #{record.returnPhone,jdbcType=VARCHAR},
-      reason = #{record.reason,jdbcType=VARCHAR},
-      description = #{record.description,jdbcType=VARCHAR},
-      proof_pics = #{record.proofPics,jdbcType=VARCHAR},
-      receive_man = #{record.receiveMan,jdbcType=VARCHAR},
-      receive_time = #{record.receiveTime,jdbcType=TIMESTAMP},
-      receive_note = #{record.receiveNote,jdbcType=VARCHAR},
-      logistics_company = #{record.logisticsCompany,jdbcType=VARCHAR},
-      logistics_number = #{record.logisticsNumber,jdbcType=VARCHAR},
-      shipping_time = #{record.shippingTime,jdbcType=TIMESTAMP},
-      check_man = #{record.checkMan,jdbcType=VARCHAR},
-      check_time = #{record.checkTime,jdbcType=TIMESTAMP},
-      check_result = #{record.checkResult,jdbcType=INTEGER},
-      check_note = #{record.checkNote,jdbcType=VARCHAR},
+      del_flag = #{record.delFlag,jdbcType=INTEGER},
       version = #{record.version,jdbcType=INTEGER}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -402,35 +318,17 @@
       <if test="orderId != null">
         order_id = #{orderId,jdbcType=BIGINT},
       </if>
-      <if test="orderSn != null">
-        order_sn = #{orderSn,jdbcType=VARCHAR},
-      </if>
       <if test="memberId != null">
         member_id = #{memberId,jdbcType=BIGINT},
-      </if>
-      <if test="memberUsername != null">
-        member_username = #{memberUsername,jdbcType=VARCHAR},
       </if>
       <if test="returnAmount != null">
         return_amount = #{returnAmount,jdbcType=DECIMAL},
       </if>
-      <if test="orderTotalAmount != null">
-        order_total_amount = #{orderTotalAmount,jdbcType=DECIMAL},
-      </if>
-      <if test="type != null">
-        type = #{type,jdbcType=INTEGER},
-      </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
       </if>
-      <if test="handleMan != null">
-        handle_man = #{handleMan,jdbcType=VARCHAR},
-      </if>
-      <if test="handleNote != null">
-        handle_note = #{handleNote,jdbcType=VARCHAR},
-      </if>
-      <if test="handleTime != null">
-        handle_time = #{handleTime,jdbcType=TIMESTAMP},
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
       </if>
       <if test="createTime != null">
         create_time = #{createTime,jdbcType=TIMESTAMP},
@@ -438,53 +336,8 @@
       <if test="updateTime != null">
         update_time = #{updateTime,jdbcType=TIMESTAMP},
       </if>
-      <if test="companyAddressId != null">
-        company_address_id = #{companyAddressId,jdbcType=BIGINT},
-      </if>
-      <if test="returnName != null">
-        return_name = #{returnName,jdbcType=VARCHAR},
-      </if>
-      <if test="returnPhone != null">
-        return_phone = #{returnPhone,jdbcType=VARCHAR},
-      </if>
-      <if test="reason != null">
-        reason = #{reason,jdbcType=VARCHAR},
-      </if>
-      <if test="description != null">
-        description = #{description,jdbcType=VARCHAR},
-      </if>
-      <if test="proofPics != null">
-        proof_pics = #{proofPics,jdbcType=VARCHAR},
-      </if>
-      <if test="receiveMan != null">
-        receive_man = #{receiveMan,jdbcType=VARCHAR},
-      </if>
-      <if test="receiveTime != null">
-        receive_time = #{receiveTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="receiveNote != null">
-        receive_note = #{receiveNote,jdbcType=VARCHAR},
-      </if>
-      <if test="logisticsCompany != null">
-        logistics_company = #{logisticsCompany,jdbcType=VARCHAR},
-      </if>
-      <if test="logisticsNumber != null">
-        logistics_number = #{logisticsNumber,jdbcType=VARCHAR},
-      </if>
-      <if test="shippingTime != null">
-        shipping_time = #{shippingTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="checkMan != null">
-        check_man = #{checkMan,jdbcType=VARCHAR},
-      </if>
-      <if test="checkTime != null">
-        check_time = #{checkTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="checkResult != null">
-        check_result = #{checkResult,jdbcType=INTEGER},
-      </if>
-      <if test="checkNote != null">
-        check_note = #{checkNote,jdbcType=VARCHAR},
+      <if test="delFlag != null">
+        del_flag = #{delFlag,jdbcType=INTEGER},
       </if>
       <if test="version != null">
         version = #{version,jdbcType=INTEGER},
@@ -500,34 +353,13 @@
     -->
     update oms_after_sale
     set order_id = #{orderId,jdbcType=BIGINT},
-      order_sn = #{orderSn,jdbcType=VARCHAR},
       member_id = #{memberId,jdbcType=BIGINT},
-      member_username = #{memberUsername,jdbcType=VARCHAR},
       return_amount = #{returnAmount,jdbcType=DECIMAL},
-      order_total_amount = #{orderTotalAmount,jdbcType=DECIMAL},
-      type = #{type,jdbcType=INTEGER},
       status = #{status,jdbcType=INTEGER},
-      handle_man = #{handleMan,jdbcType=VARCHAR},
-      handle_note = #{handleNote,jdbcType=VARCHAR},
-      handle_time = #{handleTime,jdbcType=TIMESTAMP},
+      description = #{description,jdbcType=VARCHAR},
       create_time = #{createTime,jdbcType=TIMESTAMP},
       update_time = #{updateTime,jdbcType=TIMESTAMP},
-      company_address_id = #{companyAddressId,jdbcType=BIGINT},
-      return_name = #{returnName,jdbcType=VARCHAR},
-      return_phone = #{returnPhone,jdbcType=VARCHAR},
-      reason = #{reason,jdbcType=VARCHAR},
-      description = #{description,jdbcType=VARCHAR},
-      proof_pics = #{proofPics,jdbcType=VARCHAR},
-      receive_man = #{receiveMan,jdbcType=VARCHAR},
-      receive_time = #{receiveTime,jdbcType=TIMESTAMP},
-      receive_note = #{receiveNote,jdbcType=VARCHAR},
-      logistics_company = #{logisticsCompany,jdbcType=VARCHAR},
-      logistics_number = #{logisticsNumber,jdbcType=VARCHAR},
-      shipping_time = #{shippingTime,jdbcType=TIMESTAMP},
-      check_man = #{checkMan,jdbcType=VARCHAR},
-      check_time = #{checkTime,jdbcType=TIMESTAMP},
-      check_result = #{checkResult,jdbcType=INTEGER},
-      check_note = #{checkNote,jdbcType=VARCHAR},
+      del_flag = #{delFlag,jdbcType=INTEGER},
       version = #{version,jdbcType=INTEGER}
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -539,35 +371,17 @@
       <if test="orderId != null">
         order_id = #{orderId,jdbcType=BIGINT},
       </if>
-      <if test="orderSn != null">
-        order_sn = #{orderSn,jdbcType=VARCHAR},
-      </if>
       <if test="memberId != null">
         member_id = #{memberId,jdbcType=BIGINT},
-      </if>
-      <if test="memberUsername != null">
-        member_username = #{memberUsername,jdbcType=VARCHAR},
       </if>
       <if test="returnAmount != null">
         return_amount = #{returnAmount,jdbcType=DECIMAL},
       </if>
-      <if test="orderTotalAmount != null">
-        order_total_amount = #{orderTotalAmount,jdbcType=DECIMAL},
-      </if>
-      <if test="type != null">
-        type = #{type,jdbcType=INTEGER},
-      </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
       </if>
-      <if test="handleMan != null">
-        handle_man = #{handleMan,jdbcType=VARCHAR},
-      </if>
-      <if test="handleNote != null">
-        handle_note = #{handleNote,jdbcType=VARCHAR},
-      </if>
-      <if test="handleTime != null">
-        handle_time = #{handleTime,jdbcType=TIMESTAMP},
+      <if test="description != null">
+        description = #{description,jdbcType=VARCHAR},
       </if>
       <if test="createTime != null">
         create_time = #{createTime,jdbcType=TIMESTAMP},
@@ -575,53 +389,8 @@
       <if test="updateTime != null">
         update_time = #{updateTime,jdbcType=TIMESTAMP},
       </if>
-      <if test="companyAddressId != null">
-        company_address_id = #{companyAddressId,jdbcType=BIGINT},
-      </if>
-      <if test="returnName != null">
-        return_name = #{returnName,jdbcType=VARCHAR},
-      </if>
-      <if test="returnPhone != null">
-        return_phone = #{returnPhone,jdbcType=VARCHAR},
-      </if>
-      <if test="reason != null">
-        reason = #{reason,jdbcType=VARCHAR},
-      </if>
-      <if test="description != null">
-        description = #{description,jdbcType=VARCHAR},
-      </if>
-      <if test="proofPics != null">
-        proof_pics = #{proofPics,jdbcType=VARCHAR},
-      </if>
-      <if test="receiveMan != null">
-        receive_man = #{receiveMan,jdbcType=VARCHAR},
-      </if>
-      <if test="receiveTime != null">
-        receive_time = #{receiveTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="receiveNote != null">
-        receive_note = #{receiveNote,jdbcType=VARCHAR},
-      </if>
-      <if test="logisticsCompany != null">
-        logistics_company = #{logisticsCompany,jdbcType=VARCHAR},
-      </if>
-      <if test="logisticsNumber != null">
-        logistics_number = #{logisticsNumber,jdbcType=VARCHAR},
-      </if>
-      <if test="shippingTime != null">
-        shipping_time = #{shippingTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="checkMan != null">
-        check_man = #{checkMan,jdbcType=VARCHAR},
-      </if>
-      <if test="checkTime != null">
-        check_time = #{checkTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="checkResult != null">
-        check_result = #{checkResult,jdbcType=INTEGER},
-      </if>
-      <if test="checkNote != null">
-        check_note = #{checkNote,jdbcType=VARCHAR},
+      <if test="delFlag != null">
+        del_flag = #{delFlag,jdbcType=INTEGER},
       </if>
       version = version + 1,
     </set>

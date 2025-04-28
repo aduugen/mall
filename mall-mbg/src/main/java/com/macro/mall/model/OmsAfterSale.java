@@ -25,6 +25,9 @@ public class OmsAfterSale implements Serializable {
      */
     private Long orderId;
 
+    @ApiModelProperty(value = "订单编号")
+    private String orderSn;
+
     @ApiModelProperty(value = "会员ID")
     /**
      *
@@ -150,6 +153,20 @@ public class OmsAfterSale implements Serializable {
      */
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
+    }
+
+    /**
+     * 获取订单编号
+     */
+    public String getOrderSn() {
+        return orderSn;
+    }
+
+    /**
+     * 设置订单编号
+     */
+    public void setOrderSn(String orderSn) {
+        this.orderSn = orderSn;
     }
 
     /**

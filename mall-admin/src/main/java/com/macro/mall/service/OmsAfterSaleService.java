@@ -5,6 +5,7 @@ import com.macro.mall.dto.AdminOmsAfterSaleDetailDTO;
 import com.macro.mall.dto.OmsAfterSaleQueryParam;
 import com.macro.mall.dto.OmsAfterSaleStatistic;
 import com.macro.mall.dto.OmsUpdateStatusParam;
+import com.macro.mall.dto.UpdateResult;
 import com.macro.mall.model.OmsAfterSale;
 import com.macro.mall.model.OmsAfterSaleLog;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,9 +57,9 @@ public interface OmsAfterSaleService {
      * 
      * @param id          售后ID
      * @param statusParam 状态参数
-     * @return 是否更新成功
+     * @return 更新结果
      */
-    boolean updateStatus(Long id, OmsUpdateStatusParam statusParam);
+    UpdateResult updateStatus(Long id, OmsUpdateStatusParam statusParam);
 
     /**
      * 获取售后状态统计
