@@ -62,6 +62,24 @@ public interface OmsAfterSaleService {
     UpdateResult updateStatus(Long id, OmsUpdateStatusParam statusParam);
 
     /**
+     * 在更新售后状态的同时，创建或更新物流信息
+     * 
+     * @param id          售后ID
+     * @param statusParam 状态参数，包含服务点信息
+     * @return 更新结果
+     */
+    UpdateResult updateStatusWithLogistics(Long id, OmsUpdateStatusParam statusParam);
+
+    /**
+     * 创建或更新售后物流信息
+     * 
+     * @param afterSaleId    售后单ID
+     * @param servicePointId 服务点ID
+     * @return 是否成功
+     */
+    boolean createOrUpdateLogistics(Long afterSaleId, Long servicePointId);
+
+    /**
      * 获取售后状态统计
      * 
      * @return 统计结果DTO
@@ -74,7 +92,24 @@ public interface OmsAfterSaleService {
      * @param days 超过多少天未更新视为异常
      * @return 异常售后单列表
      */
-    List<OmsAfterSale> checkAbnormalAfterSales(int days);
+    List<AdminOmsAfterSaleDTO> checkAbnormalAfterSale(Integer days);
+
+    /**
+     * 回退售后单到待处理状态
+     * 
+     * @param id             售后单ID
+     * @param rollbackReason 回退原因
+     * @param version        版本号
+     * @return 更新结果
+     */
+    UpdateResult rollbackToPending(Long id, String rollbackReason, Integer version);
+
+    /**
+     * 获取售后统计信息
+     * 
+     * @return 统计信息
+     */
+    OmsAfterSaleStatistic getStatistic();
 
     /**
      * 获取售后单操作日志列表
@@ -91,11 +126,6 @@ public interface OmsAfterSaleService {
      * 统计状态转换耗时
      */
     List<Map<String, Object>> getStatusTransitionTime(Date startTime, Date endTime);
-
-    /**
-     * 获取售后统计信息
-     */
-    OmsAfterSaleStatistic getStatistic();
 
     /**
      * 回退售后单到待审核状态

@@ -126,7 +126,16 @@ public class OmsAfterSaleController {
             }
 
             // 更新状态
-            UpdateResult updateResult = afterSaleService.updateStatus(id, statusParam);
+            UpdateResult updateResult;
+            // 如果状态为已同意(1)且提供了服务点ID，则使用updateStatusWithLogistics方法
+            if (statusParam.getStatus() == OmsAfterSale.STATUS_APPROVED && statusParam.getServicePointId() != null) {
+                log.info("使用updateStatusWithLogistics方法更新状态及物流信息: id={}, servicePointId={}",
+                        id, statusParam.getServicePointId());
+                updateResult = afterSaleService.updateStatusWithLogistics(id, statusParam);
+            } else {
+                updateResult = afterSaleService.updateStatus(id, statusParam);
+            }
+
             if (updateResult.isSuccess()) {
                 return CommonResult.success("状态更新成功");
             } else {
@@ -154,14 +163,14 @@ public class OmsAfterSaleController {
     @ApiOperation("检查异常售后单")
     @RequestMapping(value = "/checkAbnormal", method = RequestMethod.GET)
     @ResponseBody
-    public CommonResult<List<OmsAfterSale>> checkAbnormalAfterSales(
+    public CommonResult<List<AdminOmsAfterSaleDTO>> checkAbnormalAfterSales(
             @RequestParam(value = "days", defaultValue = "7") Integer days) {
         if (days == null || days <= 0) {
             return CommonResult.failed("天数参数无效，请提供大于0的值");
         }
 
         try {
-            List<OmsAfterSale> abnormalList = afterSaleService.checkAbnormalAfterSales(days);
+            List<AdminOmsAfterSaleDTO> abnormalList = afterSaleService.checkAbnormalAfterSale(days);
             return CommonResult.success(abnormalList);
         } catch (Exception e) {
             log.error("检查异常售后单失败", e);

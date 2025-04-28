@@ -15,6 +15,7 @@ import com.macro.mall.service.OmsAfterSaleService;
 import com.macro.mall.service.OmsAfterSaleLogService;
 import com.macro.mall.service.UmsAdminService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -582,21 +583,35 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
     }
 
     /**
-     * 检查售后进度是否异常
-     * 定时任务可调用此方法检查长时间未流转的售后单
+     * 检查异常售后单
+     * 
+     * @param days 超过多少天未更新视为异常
+     * @return 异常售后单列表
      */
-    public List<OmsAfterSale> checkAbnormalAfterSales(int days) {
+    @Override
+    public List<AdminOmsAfterSaleDTO> checkAbnormalAfterSale(Integer days) {
         log.info("检查异常售后单，超过{}天未流转", days);
         // 查询超过指定天数未更新的售后单
         Date checkTime = new Date(System.currentTimeMillis() - days * 24 * 60 * 60 * 1000L);
 
+        // 查询异常售后单
         OmsAfterSaleExample example = new OmsAfterSaleExample();
         example.createCriteria()
                 .andStatusNotEqualTo(OmsAfterSale.STATUS_COMPLETED)
                 .andStatusNotEqualTo(OmsAfterSale.STATUS_REJECTED)
                 .andUpdateTimeLessThan(checkTime);
 
-        List<OmsAfterSale> abnormalList = afterSaleMapper.selectByExample(example);
+        List<OmsAfterSale> abnormalOrders = afterSaleMapper.selectByExample(example);
+        // 转换为DTO
+        List<AdminOmsAfterSaleDTO> abnormalList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(abnormalOrders)) {
+            for (OmsAfterSale abnormalOrder : abnormalOrders) {
+                AdminOmsAfterSaleDTO dto = new AdminOmsAfterSaleDTO();
+                BeanUtils.copyProperties(abnormalOrder, dto);
+                // 可以在这里添加必要的额外信息
+                abnormalList.add(dto);
+            }
+        }
 
         if (!CollectionUtils.isEmpty(abnormalList)) {
             log.warn("发现{}个异常售后单需要处理", abnormalList.size());
@@ -829,6 +844,11 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
 
     /**
      * 回退售后单到待审核状态
+     * 
+     * @param id             售后单ID
+     * @param version        版本号
+     * @param rollbackReason 回退原因
+     * @return 更新结果
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -910,6 +930,164 @@ public class OmsAfterSaleServiceImpl implements OmsAfterSaleService {
         } catch (Exception e) {
             log.error("回退售后单状态异常: id={}", id, e);
             return new UpdateResult(false, "系统异常，请稍后重试");
+        }
+    }
+
+    /**
+     * 回退售后单到待处理状态
+     * 
+     * @param id             售后单ID
+     * @param rollbackReason 回退原因
+     * @param version        版本号
+     * @return 更新结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UpdateResult rollbackToPending(Long id, String rollbackReason, Integer version) {
+        log.info("回退售后单到待处理状态: id={}, version={}", id, version);
+        try {
+            // 获取售后单信息
+            AdminOmsAfterSaleDetailDTO detailDTO = getDetailDTO(id);
+            if (detailDTO == null) {
+                log.error("售后单不存在: id={}", id);
+                return new UpdateResult(false, "售后单不存在");
+            }
+
+            // 乐观锁控制，检查版本
+            if (version != null && !version.equals(detailDTO.getVersion())) {
+                log.info("数据已被修改，请刷新后重试: 当前版本={}, 请求版本={}",
+                        detailDTO.getVersion(), version);
+                return new UpdateResult(false, "数据已被其他用户修改，请刷新页面后重试", detailDTO.getVersion());
+            }
+
+            // 验证当前状态是否允许回退到待处理状态
+            if (detailDTO.getStatus() != OmsAfterSale.STATUS_APPROVED &&
+                    detailDTO.getStatus() != OmsAfterSale.STATUS_SHIPPED &&
+                    detailDTO.getStatus() != OmsAfterSale.STATUS_RECEIVED) {
+                log.error("当前状态不允许回退到待处理: status={}", detailDTO.getStatus());
+                return new UpdateResult(false, "当前状态不允许回退到待处理状态");
+            }
+
+            // 回退原因不能为空
+            if (StringUtils.isEmpty(rollbackReason)) {
+                return new UpdateResult(false, "回退原因不能为空");
+            }
+
+            // 更新售后单主表状态
+            OmsAfterSale record = new OmsAfterSale();
+            record.setId(id);
+            record.setStatus(OmsAfterSale.STATUS_PENDING);
+
+            // 更新版本号
+            Integer newVersion = detailDTO.getVersion() != null ? detailDTO.getVersion() + 1 : 1;
+            record.setVersion(newVersion);
+
+            // 执行更新
+            int count = afterSaleMapper.updateByPrimaryKeySelective(record);
+            if (count <= 0) {
+                log.error("回退售后单状态失败: id={}", id);
+                return new UpdateResult(false, "回退售后单状态失败");
+            }
+
+            // 记录操作日志
+            try {
+                OmsAfterSaleLog logRecord = new OmsAfterSaleLog();
+                logRecord.setAfterSaleId(id);
+                // 获取当前操作人ID
+                String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+                Long operatorId = getHandleManId(currentUsername);
+                logRecord.setOperatorId(operatorId);
+                logRecord.setOperatorType(OmsAfterSaleLog.OPERATOR_TYPE_ADMIN);
+                logRecord.setOperateType(12); // 回退到待处理操作类型
+                logRecord.setStatus(OmsAfterSale.STATUS_PENDING);
+                logRecord.setNote("回退到待处理状态，原因：" + rollbackReason);
+                logRecord.setCreateTime(new Date());
+
+                afterSaleLogService.saveLog(logRecord);
+                log.info("售后单回退到待处理状态成功: id={}", id);
+            } catch (Exception e) {
+                // 记录日志失败不影响主业务
+                log.error("保存售后操作日志失败: id={}", id, e);
+            }
+
+            return new UpdateResult(true, "回退成功", newVersion);
+        } catch (Exception e) {
+            log.error("回退售后单状态异常: id={}", id, e);
+            return new UpdateResult(false, "系统异常，请稍后重试");
+        }
+    }
+
+    /**
+     * 在更新售后状态的同时，创建或更新物流信息
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UpdateResult updateStatusWithLogistics(Long id, OmsUpdateStatusParam statusParam) {
+        // 首先更新售后状态
+        UpdateResult result = updateStatus(id, statusParam);
+
+        // 如果状态更新成功且状态为已同意，且提供了服务点信息，则更新物流信息
+        if (result.isSuccess() &&
+                statusParam.getStatus() == OmsAfterSale.STATUS_APPROVED &&
+                statusParam.getServicePointId() != null) {
+
+            try {
+                boolean logisticsResult = createOrUpdateLogistics(
+                        id,
+                        statusParam.getServicePointId());
+
+                if (!logisticsResult) {
+                    log.warn("物流信息更新失败，但售后状态已更新: afterSaleId={}", id);
+                    // 不回滚状态更新，返回部分成功的结果
+                    result.setMessage("售后状态已更新，但物流信息更新失败");
+                }
+            } catch (Exception e) {
+                log.error("更新物流信息异常: afterSaleId={}", id, e);
+                // 不回滚状态更新，返回部分成功的结果
+                result.setMessage("售后状态已更新，但物流信息更新失败: " + e.getMessage());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 创建或更新售后物流信息
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean createOrUpdateLogistics(Long afterSaleId, Long servicePointId) {
+        log.info("创建或更新售后物流信息: afterSaleId={}, servicePointId={}", afterSaleId, servicePointId);
+
+        if (afterSaleId == null || servicePointId == null) {
+            log.error("参数错误: afterSaleId={}, servicePointId={}", afterSaleId, servicePointId);
+            return false;
+        }
+
+        // 查询是否已存在物流记录
+        OmsAfterSaleLogistics logistics = afterSaleLogisticsMapper.selectByAfterSaleId(afterSaleId);
+
+        Date now = new Date();
+
+        if (logistics == null) {
+            // 不存在则创建新记录
+            logistics = new OmsAfterSaleLogistics();
+            logistics.setAfterSaleId(afterSaleId);
+            logistics.setServicePointId(servicePointId);
+            logistics.setLogisticsStatus(OmsAfterSaleLogistics.LOGISTICS_STATUS_PENDING); // 设置为待发货状态
+            logistics.setCreateTime(now);
+            logistics.setUpdateTime(now);
+            logistics.setVersion(1);
+
+            return afterSaleLogisticsMapper.insert(logistics) > 0;
+        } else {
+            // 已存在则更新记录
+            logistics.setServicePointId(servicePointId);
+            logistics.setUpdateTime(now);
+            logistics.setVersion(logistics.getVersion() + 1);
+
+            // 用乐观锁方式更新
+            return afterSaleLogisticsMapper.updateByPrimaryKeySelective(logistics) > 0;
         }
     }
 }

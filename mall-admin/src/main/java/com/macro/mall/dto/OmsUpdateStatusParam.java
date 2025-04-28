@@ -55,18 +55,21 @@ public class OmsUpdateStatusParam {
     @Size(max = 200, message = "质检备注不能超过200个字符")
     private String checkNote;
 
+    @ApiModelProperty(value = "服务点ID")
+    private Long servicePointId;
+
     @ApiModelProperty(value = "退款金额")
-    @DecimalMin(value = "0.00", message = "退款金额不能小于0")
-    @DecimalMax(value = "999999.99", message = "退款金额超过允许范围")
+    @DecimalMin(value = "0.01", message = "退款金额必须大于0")
+    @DecimalMax(value = "9999999.99", message = "退款金额过大")
     private BigDecimal returnAmount;
 
-    @ApiModelProperty(value = "退款方式：1->原路退回；2->其他方式")
-    @Range(min = 1, max = 2, message = "退款方式无效")
+    @ApiModelProperty(value = "退款方式：0->原路退回；1->支付宝；2->微信；3->银行转账")
+    @Range(min = 0, max = 3, message = "退款方式无效")
     private Integer refundType;
 
-    @ApiModelProperty(value = "退款备注")
-    @Size(max = 200, message = "退款备注不能超过200个字符")
-    private String refundNote;
+    @ApiModelProperty(value = "退款账户")
+    @Size(max = 100, message = "退款账户不能超过100个字符")
+    private String refundAccount;
 
     @ApiModelProperty(value = "版本号")
     @NotNull(message = "版本号不能为空")
