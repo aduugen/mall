@@ -9,7 +9,14 @@ spring:
       max-file-size: 10MB #限制文件上传大小为10M
   mvc:
     pathmatch:
-      matching-strategy: ant_path_matcher
+      matching-strategy: ANT_PATH_MATCHER
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
 
 mybatis:
   mapper-locations:

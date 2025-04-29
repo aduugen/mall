@@ -105,6 +105,7 @@ public class OmsAfterSaleController {
     @PreAuthorize("hasRole('ADMIN') or @permissionService.hasPermission('afterSale:update')")
     @ApiOperation("修改售后申请状态")
     @PostMapping("/update/status/{id}")
+    @ResponseBody
     public CommonResult updateStatus(@PathVariable Long id, @Validated @RequestBody OmsUpdateStatusParam statusParam) {
         if (id == null || id <= 0) {
             return CommonResult.failed("售后单ID无效");
