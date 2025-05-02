@@ -5,6 +5,7 @@ import com.macro.mall.common.exception.Asserts;
 import com.macro.mall.mapper.OmsAfterSaleItemMapper;
 import com.macro.mall.mapper.OmsAfterSaleMapper;
 import com.macro.mall.mapper.OmsAfterSaleProofMapper;
+import com.macro.mall.mapper.OmsAfterSaleProcessMapper;
 import com.macro.mall.mapper.OmsOrderItemMapper;
 import com.macro.mall.mapper.OmsOrderMapper;
 import com.macro.mall.model.*;
@@ -45,6 +46,9 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
     @Autowired
     private OmsAfterSaleProofMapper proofMapper;
+
+    @Autowired
+    private OmsAfterSaleProcessMapper afterSaleProcessMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -275,6 +279,13 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
         // 查询凭证图片
         List<OmsAfterSaleProof> proofList = proofMapper.selectByAfterSaleId(id);
         detail.setProofList(proofList);
+
+        // 查询售后处理记录
+        OmsAfterSaleProcessExample processExample = new OmsAfterSaleProcessExample();
+        processExample.createCriteria().andAfterSaleIdEqualTo(id);
+        processExample.setOrderByClause("create_time ASC"); // 按创建时间升序排序
+        List<OmsAfterSaleProcess> processList = afterSaleProcessMapper.selectByExample(processExample);
+        detail.setProcessList(processList);
 
         return detail;
     }
