@@ -349,4 +349,27 @@ public class MemberAfterSaleController {
         }
         return CommonResult.failed("提交失败");
     }
+
+    /**
+     * 获取寄回商品所需的信息，包含收件人信息和寄件人信息
+     */
+    @ApiOperation("获取寄回商品信息")
+    @RequestMapping(value = "/getReturnShippingInfo", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<Map<String, Object>> getReturnShippingInfo(@RequestParam Long afterSaleId) {
+        UmsMember currentMember = memberService.getCurrentMember();
+        Map<String, Object> result = afterSaleService.getReturnShippingInfo(afterSaleId, currentMember.getId());
+        return CommonResult.success(result);
+    }
+
+    /**
+     * 获取常用物流公司列表
+     */
+    @ApiOperation("获取物流公司列表")
+    @RequestMapping(value = "/logisticsCompanies", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<List<Map<String, Object>>> getLogisticsCompanies() {
+        List<Map<String, Object>> companies = afterSaleService.getLogisticsCompanies();
+        return CommonResult.success(companies);
+    }
 }

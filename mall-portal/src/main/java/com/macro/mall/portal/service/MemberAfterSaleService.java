@@ -52,4 +52,14 @@ public interface MemberAfterSaleService {
      * 提交寄回物流信息
      */
     int submitReturnShipping(OmsAfterSaleLogistics logistics, Long memberId);
+
+    /**
+     * 获取寄回商品所需的信息，包含收件人信息和寄件人信息
+     */
+    Map<String, Object> getReturnShippingInfo(Long afterSaleId, Long memberId);
+
+    /**
+     * 获取常用物流公司列表
+     */
+    List<Map<String, Object>> getLogisticsCompanies();
 }

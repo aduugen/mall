@@ -686,4 +686,93 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
         return count;
     }
+
+    @Override
+    public Map<String, Object> getReturnShippingInfo(Long afterSaleId, Long memberId) {
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> receiver = new HashMap<>();
+        Map<String, Object> sender = new HashMap<>();
+
+        // 1. 验证售后单是否存在且属于当前会员
+        OmsAfterSale afterSale = afterSaleMapper.selectByPrimaryKey(afterSaleId);
+        if (afterSale == null) {
+            Asserts.fail("售后单不存在");
+        }
+
+        if (!afterSale.getMemberId().equals(memberId)) {
+            Asserts.fail("无权操作该售后单");
+        }
+
+        // 2. 获取收件人信息：从售后物流表获取服务点ID，然后查询服务点表获取地址信息
+        OmsAfterSaleLogistics logistics = afterSaleLogisticsMapper.selectByAfterSaleId(afterSaleId);
+        if (logistics != null && logistics.getServicePointId() != null) {
+            PtnServicePoint servicePoint = servicePointMapper.selectByPrimaryKey(logistics.getServicePointId());
+            if (servicePoint != null) {
+                receiver.put("name", servicePoint.getContactName());
+                receiver.put("phone", servicePoint.getContactPhone());
+                receiver.put("address", servicePoint.getLocationAddress());
+            }
+        }
+
+        // 3. 获取寄件人信息：从售后单获取订单ID，然后查询订单表获取收件人信息作为寄件人
+        Long orderId = afterSale.getOrderId();
+        if (orderId != null) {
+            OmsOrder order = orderMapper.selectByPrimaryKey(orderId);
+            if (order != null) {
+                sender.put("name", order.getReceiverName());
+                sender.put("phone", order.getReceiverPhone());
+
+                // 组合完整地址
+                StringBuilder addressBuilder = new StringBuilder();
+                if (order.getReceiverProvince() != null) {
+                    addressBuilder.append(order.getReceiverProvince()).append(" ");
+                }
+                if (order.getReceiverCity() != null) {
+                    addressBuilder.append(order.getReceiverCity()).append(" ");
+                }
+                if (order.getReceiverRegion() != null) {
+                    addressBuilder.append(order.getReceiverRegion()).append(" ");
+                }
+                if (order.getReceiverDetailAddress() != null) {
+                    addressBuilder.append(order.getReceiverDetailAddress());
+                }
+
+                sender.put("address", addressBuilder.toString().trim());
+            }
+        }
+
+        result.put("receiver", receiver.isEmpty() ? null : receiver);
+        result.put("sender", sender.isEmpty() ? null : sender);
+
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getLogisticsCompanies() {
+        List<Map<String, Object>> companies = new ArrayList<>();
+
+        // 添加常用物流公司
+        companies.add(createCompany("1", "顺丰速运", "SF"));
+        companies.add(createCompany("2", "圆通速递", "YTO"));
+        companies.add(createCompany("3", "中通快递", "ZTO"));
+        companies.add(createCompany("4", "申通快递", "STO"));
+        companies.add(createCompany("5", "韵达速递", "YD"));
+        companies.add(createCompany("6", "邮政快递包裹", "YZPY"));
+        companies.add(createCompany("7", "京东物流", "JD"));
+        companies.add(createCompany("8", "德邦快递", "DBL"));
+        companies.add(createCompany("9", "百世快递", "HTKY"));
+
+        return companies;
+    }
+
+    /**
+     * 创建物流公司信息
+     */
+    private Map<String, Object> createCompany(String id, String name, String code) {
+        Map<String, Object> company = new HashMap<>();
+        company.put("id", id);
+        company.put("name", name);
+        company.put("code", code);
+        return company;
+    }
 }
