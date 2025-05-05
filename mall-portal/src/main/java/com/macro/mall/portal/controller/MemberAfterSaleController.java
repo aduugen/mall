@@ -324,4 +324,29 @@ public class MemberAfterSaleController {
             return CommonResult.failed("检查订单售后状态失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 检查售后单是否可以寄回商品
+     */
+    @RequestMapping(value = "/checkReturnShipStatus", method = RequestMethod.GET)
+    @ResponseBody
+    public CommonResult<Map<String, Object>> checkReturnShipStatus(@RequestParam Long afterSaleId) {
+        UmsMember currentMember = memberService.getCurrentMember();
+        Map<String, Object> result = afterSaleService.checkReturnShipStatus(afterSaleId, currentMember.getId());
+        return CommonResult.success(result);
+    }
+
+    /**
+     * 提交寄回物流信息
+     */
+    @RequestMapping(value = "/submitReturnShipping", method = RequestMethod.POST)
+    @ResponseBody
+    public CommonResult submitReturnShipping(@RequestBody OmsAfterSaleLogistics logistics) {
+        UmsMember currentMember = memberService.getCurrentMember();
+        int count = afterSaleService.submitReturnShipping(logistics, currentMember.getId());
+        if (count > 0) {
+            return CommonResult.success(count);
+        }
+        return CommonResult.failed("提交失败");
+    }
 }

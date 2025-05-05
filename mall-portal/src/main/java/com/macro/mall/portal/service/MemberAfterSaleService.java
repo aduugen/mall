@@ -2,10 +2,12 @@ package com.macro.mall.portal.service;
 
 import com.macro.mall.model.OmsAfterSale;
 import com.macro.mall.model.OmsAfterSaleItem;
+import com.macro.mall.model.OmsAfterSaleLogistics;
 import com.macro.mall.portal.domain.AfterSaleParam;
 import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
 import com.macro.mall.portal.domain.PortalOmsAfterSaleDTO;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 会员售后Service
@@ -40,4 +42,14 @@ public interface MemberAfterSaleService {
      * 获取售后申请的商品项列表
      */
     List<OmsAfterSaleItem> getAfterSaleItems(Long afterSaleId);
+
+    /**
+     * 检查售后单是否可以寄回商品
+     */
+    Map<String, Object> checkReturnShipStatus(Long afterSaleId, Long memberId);
+
+    /**
+     * 提交寄回物流信息
+     */
+    int submitReturnShipping(OmsAfterSaleLogistics logistics, Long memberId);
 }

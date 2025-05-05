@@ -8,6 +8,9 @@ import com.macro.mall.mapper.OmsAfterSaleProofMapper;
 import com.macro.mall.mapper.OmsAfterSaleProcessMapper;
 import com.macro.mall.mapper.OmsOrderItemMapper;
 import com.macro.mall.mapper.OmsOrderMapper;
+import com.macro.mall.mapper.OmsAfterSaleLogisticsMapper;
+import com.macro.mall.mapper.PtnServicePointMapper;
+import com.macro.mall.mapper.OmsAfterSaleLogMapper;
 import com.macro.mall.model.*;
 import com.macro.mall.portal.domain.AfterSaleItemParam;
 import com.macro.mall.portal.domain.AfterSaleParam;
@@ -23,6 +26,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 会员售后Service实现类
@@ -49,6 +54,15 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
     @Autowired
     private OmsAfterSaleProcessMapper afterSaleProcessMapper;
+
+    @Autowired
+    private OmsAfterSaleLogisticsMapper afterSaleLogisticsMapper;
+
+    @Autowired
+    private PtnServicePointMapper servicePointMapper;
+
+    @Autowired
+    private OmsAfterSaleLogMapper afterSaleLogMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -512,5 +526,164 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    @Override
+    public Map<String, Object> checkReturnShipStatus(Long afterSaleId, Long memberId) {
+        Map<String, Object> result = new HashMap<>();
+        boolean canReturn = false;
+        String message = "";
+
+        // 1. 验证售后单是否存在且属于当前会员
+        OmsAfterSale afterSale = afterSaleMapper.selectByPrimaryKey(afterSaleId);
+        if (afterSale == null) {
+            message = "售后单不存在";
+            result.put("canReturn", canReturn);
+            result.put("message", message);
+            return result;
+        }
+
+        if (!afterSale.getMemberId().equals(memberId)) {
+            message = "无权操作该售后单";
+            result.put("canReturn", canReturn);
+            result.put("message", message);
+            return result;
+        }
+
+        // 2. 查询处理记录，检查是否有审核通过的记录
+        OmsAfterSaleProcessExample example = new OmsAfterSaleProcessExample();
+        example.createCriteria()
+                .andAfterSaleIdEqualTo(afterSaleId)
+                .andProcessTypeEqualTo(1) // 审核类型
+                .andProcessResultEqualTo(1); // 审核通过
+
+        List<OmsAfterSaleProcess> processList = afterSaleProcessMapper.selectByExample(example);
+
+        if (!CollectionUtils.isEmpty(processList)) {
+            // 有审核通过的记录，可以寄回商品
+            canReturn = true;
+
+            // 3. 还需检查是否已有发货记录（避免重复发货）
+            OmsAfterSaleProcessExample shipExample = new OmsAfterSaleProcessExample();
+            shipExample.createCriteria()
+                    .andAfterSaleIdEqualTo(afterSaleId)
+                    .andProcessTypeEqualTo(2); // 发货类型
+
+            List<OmsAfterSaleProcess> shipProcessList = afterSaleProcessMapper.selectByExample(shipExample);
+
+            if (!CollectionUtils.isEmpty(shipProcessList)) {
+                canReturn = false;
+                message = "已寄回商品，无需重复操作";
+            } else {
+                message = "请按照提示寄回商品";
+            }
+        } else {
+            message = "售后申请尚未审核通过，暂不能寄回商品";
+        }
+
+        // 4. 获取服务点信息，用于寄回地址显示
+        OmsAfterSaleLogistics logistics = afterSaleLogisticsMapper.selectByAfterSaleId(afterSaleId);
+        if (logistics != null && logistics.getServicePointId() != null) {
+            PtnServicePoint servicePoint = servicePointMapper.selectByPrimaryKey(logistics.getServicePointId());
+            if (servicePoint != null) {
+                Map<String, String> addressInfo = new HashMap<>();
+                addressInfo.put("name", servicePoint.getContactName());
+                addressInfo.put("phone", servicePoint.getContactPhone());
+                addressInfo.put("address", servicePoint.getLocationAddress());
+                result.put("addressInfo", addressInfo);
+            }
+        }
+
+        result.put("canReturn", canReturn);
+        result.put("message", message);
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int submitReturnShipping(OmsAfterSaleLogistics logistics, Long memberId) {
+        // 验证售后单是否存在且属于当前会员
+        Long afterSaleId = logistics.getAfterSaleId();
+        OmsAfterSale afterSale = afterSaleMapper.selectByPrimaryKey(afterSaleId);
+        if (afterSale == null) {
+            Asserts.fail("售后单不存在");
+        }
+
+        if (!afterSale.getMemberId().equals(memberId)) {
+            Asserts.fail("无权操作该售后单");
+        }
+
+        // 检查是否有审核通过的记录
+        OmsAfterSaleProcessExample example = new OmsAfterSaleProcessExample();
+        example.createCriteria()
+                .andAfterSaleIdEqualTo(afterSaleId)
+                .andProcessTypeEqualTo(1) // 审核类型
+                .andProcessResultEqualTo(1); // 审核通过
+
+        List<OmsAfterSaleProcess> processList = afterSaleProcessMapper.selectByExample(example);
+
+        if (CollectionUtils.isEmpty(processList)) {
+            Asserts.fail("售后申请尚未审核通过，不能寄回商品");
+        }
+
+        // 检查是否已有发货记录
+        OmsAfterSaleProcessExample shipExample = new OmsAfterSaleProcessExample();
+        shipExample.createCriteria()
+                .andAfterSaleIdEqualTo(afterSaleId)
+                .andProcessTypeEqualTo(2); // 发货类型
+
+        List<OmsAfterSaleProcess> shipProcessList = afterSaleProcessMapper.selectByExample(shipExample);
+
+        if (!CollectionUtils.isEmpty(shipProcessList)) {
+            Asserts.fail("已寄回商品，无需重复操作");
+        }
+
+        // 更新或创建物流信息
+        OmsAfterSaleLogistics existingLogistics = afterSaleLogisticsMapper.selectByAfterSaleId(afterSaleId);
+        int count = 0;
+
+        // 设置物流状态为已发货
+        logistics.setLogisticsStatus(1); // 已发货
+        logistics.setShippingTime(new Date());
+
+        if (existingLogistics != null) {
+            // 更新已有的物流信息
+            BeanUtils.copyProperties(logistics, existingLogistics, "id", "createTime", "servicePointId");
+            existingLogistics.setUpdateTime(new Date());
+            count = afterSaleLogisticsMapper.updateByPrimaryKeySelective(existingLogistics);
+        } else {
+            // 创建新的物流信息
+            logistics.setCreateTime(new Date());
+            logistics.setUpdateTime(new Date());
+            count = afterSaleLogisticsMapper.insert(logistics);
+        }
+
+        // 创建发货处理记录
+        OmsAfterSaleProcess shipProcess = new OmsAfterSaleProcess();
+        shipProcess.setAfterSaleId(afterSaleId);
+        shipProcess.setProcessType(2); // 发货类型
+        shipProcess.setProcessResult(1); // 成功
+        shipProcess.setHandleNote("用户已寄回商品");
+        shipProcess.setHandleTime(new Date());
+        shipProcess.setCreateTime(new Date());
+        shipProcess.setUpdateTime(new Date());
+        shipProcess.setHandleManId(memberId); // 用户操作
+        shipProcess.setVersion(0);
+
+        afterSaleProcessMapper.insert(shipProcess);
+
+        // 创建售后日志记录
+        OmsAfterSaleLog log = new OmsAfterSaleLog();
+        log.setAfterSaleId(afterSaleId);
+        log.setOperatorId(memberId);
+        log.setOperatorType(OmsAfterSaleLog.OPERATOR_TYPE_MEMBER); // 用户操作
+        log.setOperateType(OmsAfterSaleLog.OPERATE_TYPE_SHIP); // 发货
+        log.setStatus(afterSale.getStatus()); // 维持当前状态
+        log.setNote("用户已寄回商品: " + logistics.getLogisticsCompanyId() + " - " + logistics.getLogisticsNumber());
+        log.setCreateTime(new Date());
+
+        afterSaleLogMapper.insert(log);
+
+        return count;
     }
 }
