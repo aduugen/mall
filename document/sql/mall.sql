@@ -700,13 +700,31 @@ CREATE TABLE oms_after_sale_logistics (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='售后物流信息表';
 
 DROP TABLE IF EXISTS `ptn_logistics_company`;
-CREATE TABLE `ptn_logistics_company` (
+CREATE TABLE IF NOT EXISTS `ptn_logistics_company` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `name` varchar(100) DEFAULT NULL COMMENT '物流公司名称',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间', 
+  `code` varchar(50) DEFAULT NULL COMMENT '物流公司编码',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (id)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='合作物流公司信息表';
+INSERT INTO `ptn_logistics_company` (`name`, `code`) VALUES 
+('顺丰速运', 'SF'),
+('圆通速递', 'YTO'),
+('中通快递', 'ZTO'),
+('申通快递', 'STO'),
+('韵达速递', 'YD'),
+('邮政快递包裹', 'YZPY'),
+('京东物流', 'JD'),
+('德邦快递', 'DBL'),
+('百世快递', 'HTKY'),
+('天天快递', 'TTKDEX'),
+('极兔速递', 'JT'),
+('安能物流', 'ANE'),
+('优速快递', 'UC'),
+('全峰快递', 'QFKD'),
+('快捷快递', 'FAST'),
+('EMS', 'EMS'); 
 
 -- ----------------------------
 -- Table structure for oms_after_sale_point_location

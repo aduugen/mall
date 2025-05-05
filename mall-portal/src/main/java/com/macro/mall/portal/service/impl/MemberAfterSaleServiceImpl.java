@@ -18,6 +18,7 @@ import com.macro.mall.portal.domain.PortalOmsAfterSaleDetail;
 import com.macro.mall.portal.domain.PortalOmsAfterSaleDTO;
 import com.macro.mall.portal.service.MemberAfterSaleService;
 import com.macro.mall.portal.service.UmsMemberService;
+import com.macro.mall.portal.service.LogisticsCompanyService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,6 +64,9 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
     @Autowired
     private OmsAfterSaleLogMapper afterSaleLogMapper;
+
+    @Autowired
+    private LogisticsCompanyService logisticsCompanyService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -749,24 +753,12 @@ public class MemberAfterSaleServiceImpl implements MemberAfterSaleService {
 
     @Override
     public List<Map<String, Object>> getLogisticsCompanies() {
-        List<Map<String, Object>> companies = new ArrayList<>();
-
-        // 添加常用物流公司
-        companies.add(createCompany("1", "顺丰速运", "SF"));
-        companies.add(createCompany("2", "圆通速递", "YTO"));
-        companies.add(createCompany("3", "中通快递", "ZTO"));
-        companies.add(createCompany("4", "申通快递", "STO"));
-        companies.add(createCompany("5", "韵达速递", "YD"));
-        companies.add(createCompany("6", "邮政快递包裹", "YZPY"));
-        companies.add(createCompany("7", "京东物流", "JD"));
-        companies.add(createCompany("8", "德邦快递", "DBL"));
-        companies.add(createCompany("9", "百世快递", "HTKY"));
-
-        return companies;
+        // 使用物流公司服务获取数据
+        return logisticsCompanyService.getLogisticsCompaniesForDisplay();
     }
 
     /**
-     * 创建物流公司信息
+     * 创建物流公司信息 - 保留此方法用于兼容性
      */
     private Map<String, Object> createCompany(String id, String name, String code) {
         Map<String, Object> company = new HashMap<>();

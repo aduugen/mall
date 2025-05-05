@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.macro.mall.mapper.PtnLogisticsCompanyMapper">
+    <resultMap id="BaseResultMap" type="com.macro.mall.model.PtnLogisticsCompany">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, code, create_time, update_time
+    </sql>
+
+    <!-- 根据主键查询 -->
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from ptn_logistics_company
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <!-- 查询所有物流公司 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from ptn_logistics_company
+        order by id asc
+    </select>
+
+    <!-- 根据名称查询 -->
+    <select id="selectByName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from ptn_logistics_company
+        where name like concat('%', #{name,jdbcType=VARCHAR}, '%')
+    </select>
+
+    <!-- 插入记录 -->
+    <insert id="insert" parameterType="com.macro.mall.model.PtnLogisticsCompany">
+        insert into ptn_logistics_company (name, code)
+        values (#{name,jdbcType=VARCHAR}, #{code,jdbcType=VARCHAR})
+    </insert>
+</mapper> 
